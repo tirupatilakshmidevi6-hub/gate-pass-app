@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="60" viewBox="0 0 200 60">
+  <rect width="200" height="60" rx="12" fill="#0d2b7e"/>
+  <text
+    x="100"
+    y="39"
+    font-family="Arial Black, Arial, Helvetica, sans-serif"
+    font-size="28"
+    font-weight="900"
+    fill="white"
+    text-anchor="middle"
+    letter-spacing="1"
+  >NxtWave</text>
+</svg>
