@@ -26,7 +26,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         reportingDate: entry.reporting_date,
         pocName: entry.poc_name,
         buildingName: entry.building_name,
-        photoUrl: entry.photo_url ? `${appUrl}${entry.photo_url}` : undefined,
+        photoUrl: entry.photo_url ?? undefined,
       };
       const viewUrl = entry.invite_token ? `${appUrl}/register/${entry.invite_token}/success` : undefined;
       try {

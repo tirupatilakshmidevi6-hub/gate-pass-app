@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import path from 'path';
-import fs from 'fs';
-import { v4 as uuidv4 } from 'uuid';
 import { getEntryByToken, submitRegistration } from '@/lib/db';
 import { generateGatePassBodyHtml } from '@/lib/gate-pass';
 import { sendFacilitiesNotificationEmail } from '@/lib/email';
+import { supabase } from '@/lib/supabase';
+
+const STORAGE_BUCKET = 'gate-pass-photos';
 
 type Params = { params: Promise<{ token: string }> };
 
@@ -13,7 +13,6 @@ export async function GET(_req: NextRequest, { params }: Params) {
   const data = await getEntryByToken(token);
   if (!data) return NextResponse.json({ error: 'Invalid or expired registration link' }, { status: 404 });
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
   let gatePassBodyHtml: string | undefined;
 
   if (data.entry.status === 'Approved' && data.entry.pass_id) {
@@ -25,7 +24,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
       reportingDate: data.entry.reporting_date,
       pocName: data.entry.poc_name,
       buildingName: data.entry.building_name,
-      photoUrl: data.entry.photo_url ? `${appUrl}${data.entry.photo_url}` : undefined,
+      photoUrl: data.entry.photo_url ?? undefined,
     });
   }
 
@@ -57,18 +56,32 @@ export async function POST(req: NextRequest, { params }: Params) {
   const formData = await req.formData();
   const photoFile = formData.get('photo') as File | null;
 
-  let photoPath: string | null = null;
+  let photoUrl: string | null = null;
   if (photoFile && photoFile.size > 0) {
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-    fs.mkdirSync(uploadDir, { recursive: true });
     const ext = photoFile.name.split('.').pop() ?? 'jpg';
-    const filename = `${uuidv4()}.${ext}`;
+    const filename = `${data.entry.id}-${Date.now()}.${ext}`;
     const bytes = await photoFile.arrayBuffer();
-    fs.writeFileSync(path.join(uploadDir, filename), Buffer.from(bytes));
-    photoPath = `/uploads/${filename}`;
+
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from(STORAGE_BUCKET)
+      .upload(filename, Buffer.from(bytes), {
+        contentType: photoFile.type || 'image/jpeg',
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error('[Storage] Upload failed:', uploadError.message);
+      return NextResponse.json({ error: 'Photo upload failed. Please try again.' }, { status: 500 });
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from(STORAGE_BUCKET)
+      .getPublicUrl(uploadData.path);
+
+    photoUrl = publicUrlData.publicUrl;
   }
 
-  await submitRegistration({ entryId: data.entry.id, photoPath });
+  await submitRegistration({ entryId: data.entry.id, photoPath: photoUrl });
 
   try {
     await sendFacilitiesNotificationEmail({
