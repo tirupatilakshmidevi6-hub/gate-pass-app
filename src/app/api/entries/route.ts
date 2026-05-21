@@ -9,7 +9,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { name, email, mobile_number, role, purpose, reporting_date, poc_name, contact_no, building_name } = body;
+  const { name, email, mobile_number, role, purpose, reporting_date, employee_id, poc_name, contact_no, building_name } = body;
 
   if (!name || !email || !purpose || !reporting_date || !poc_name || !contact_no || !building_name) {
     return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
 
   let entry;
   try {
-    entry = await createEntry({ name, email, mobile_number, role, purpose, reporting_date, poc_name, contact_no, building_name });
+    entry = await createEntry({ name, email, mobile_number, role, purpose, reporting_date, employee_id, poc_name, contact_no, building_name });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('[DB] createEntry failed:', msg);

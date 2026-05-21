@@ -11,6 +11,7 @@ export type EntryRow = {
   role: string | null;
   purpose: string;
   reporting_date: string;
+  employee_id: string | null;
   poc_name: string;
   contact_no: string;
   building_name: string;
@@ -159,6 +160,7 @@ export async function createEntry(data: {
   role?: string;
   purpose: string;
   reporting_date: string;
+  employee_id?: string;
   poc_name: string;
   contact_no: string;
   building_name: string;
@@ -171,6 +173,7 @@ export async function createEntry(data: {
     role: data.role ?? null,
     purpose: data.purpose,
     reporting_date: data.reporting_date,
+    employee_id: data.employee_id ?? null,
     poc_name: data.poc_name,
     contact_no: data.contact_no,
     building_name: data.building_name,

@@ -7,7 +7,7 @@ import { CalendarDays } from 'lucide-react';
 type EntryRow = {
   id: string; name: string; email: string | null; mobile_number: string | null;
   role: string | null; purpose: string; reporting_date: string;
-  poc_name: string; contact_no: string; building_name: string;
+  employee_id: string | null; poc_name: string; contact_no: string; building_name: string;
   status: string; pass_id: string | null; photo_url: string | null;
   created_at: string; created_by: string;
 };
@@ -61,19 +61,20 @@ export default function EntryListPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
-              <tr>{['#','Name','Email','Role','Purpose','Reporting Date','Building','Status','Actions'].map((h) => (
+              <tr>{['#','Name','Employee ID','Email','Role','Purpose','Reporting Date','Building','Status','Actions'].map((h) => (
                 <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
               ))}</tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filtered.length === 0 ? (
-                <tr><td colSpan={9} className="px-6 py-10 text-center text-gray-400">No entries found.</td></tr>
+                <tr><td colSpan={10} className="px-6 py-10 text-center text-gray-400">No entries found.</td></tr>
               ) : filtered.map((e, idx) => {
                 const rs = getRoleStyle(e.role ?? '');
                 return (
                   <tr key={e.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 text-gray-400 text-xs font-medium">{idx + 1}</td>
                     <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{e.name}</td>
+                    <td className="px-4 py-3 text-gray-500 text-xs font-mono">{e.employee_id ?? '—'}</td>
                     <td className="px-4 py-3 text-gray-500 text-xs">{e.email ?? '—'}</td>
                     <td className="px-4 py-3">
                       {e.role && <span style={{ background: rs.bg, color: rs.text, border: `1px solid ${rs.border}` }}
@@ -120,6 +121,7 @@ export default function EntryListPage() {
                 <DR label="Role" value={selected.role ?? '—'} />
                 <DR label="Purpose" value={selected.purpose} />
                 <DR label="Reporting Date" value={selected.reporting_date} />
+                <DR label="Employee ID" value={selected.employee_id ?? '—'} />
                 <DR label="POC Name" value={selected.poc_name} />
                 <DR label="Contact No" value={selected.contact_no} />
                 <DR label="Building" value={selected.building_name} />

@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
         role: row.role ?? undefined,
         purpose: row.purpose,
         reporting_date: row.reporting_date,
+        employee_id: row.employee_id ?? undefined,
         poc_name: row.poc_name,
         contact_no: row.contact_no,
         building_name: row.building_name,

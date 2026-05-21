@@ -7,7 +7,7 @@ import { getRoleStyle } from '@/lib/constants';
 type Entry = {
   id: string; name: string; email: string | null; mobile_number: string | null;
   role: string | null; purpose: string; reporting_date: string;
-  poc_name: string; building_name: string; status: string;
+  employee_id: string | null; poc_name: string; building_name: string; status: string;
   otp: string | null; pass_id: string | null; photo_url: string | null;
 };
 
@@ -121,7 +121,7 @@ export default function FacilitiesApprovals({ userRole }: { userRole: 'admin' | 
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50">
                     <tr>
-                      {['Photo','Name','Email','Role','Purpose','Date','Building','POC','Status',
+                      {['Photo','Name','Employee ID','Email','Role','Purpose','Date','Building','POC','Status',
                         ...(userRole === 'facilities' ? ['Actions'] : [])].map((h) => (
                         <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
                       ))}
@@ -137,6 +137,7 @@ export default function FacilitiesApprovals({ userRole }: { userRole: 'admin' | 
                           }
                         </td>
                         <td className="px-4 py-3 font-semibold text-gray-900 whitespace-nowrap">{e.name}</td>
+                        <td className="px-4 py-3 text-gray-500 text-xs font-mono">{e.employee_id ?? '—'}</td>
                         <td className="px-4 py-3 text-gray-500 text-xs">{e.email ?? '—'}</td>
                         <td className="px-4 py-3"><RoleBadge role={e.role} /></td>
                         <td className="px-4 py-3"><span className="bg-blue-100 text-blue-700 text-xs font-medium px-2 py-0.5 rounded-full">{e.purpose}</span></td>

@@ -8,11 +8,20 @@ const PURPOSES = ['Interview', 'Onboarding', 'Induction', 'Visitor'];
 
 type Building = { id: string; name: string };
 
+// Accepts 10-digit numbers (adds +91) or numbers already starting with +91/91
+function normalizeMobile(raw: string): string {
+  const stripped = raw.trim().replace(/[\s\-().]/g, '');
+  if (/^\+91\d{10}$/.test(stripped)) return stripped;
+  if (/^91\d{10}$/.test(stripped))   return `+${stripped}`;
+  if (/^[6-9]\d{9}$/.test(stripped)) return `+91${stripped}`;
+  return stripped; // return as-is if unrecognised format
+}
+
 export default function NewEntryPage() {
   const router = useRouter();
   const [form, setForm] = useState({
     name: '', email: '', mobile_number: '', role: '', purpose: 'Interview',
-    reporting_date: '', poc_name: '', contact_no: '', building_name: '',
+    reporting_date: '', employee_id: '', poc_name: '', contact_no: '', building_name: '',
   });
   const [customBuilding, setCustomBuilding] = useState('');
   const [isOtherBuilding, setIsOtherBuilding] = useState(false);
@@ -47,7 +56,11 @@ export default function NewEntryPage() {
     else { setIsOtherRole(false); setCustomRole(''); setForm((f) => ({ ...f, role: val })); }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleMobileBlur(field: 'mobile_number' | 'contact_no') {
+    setForm((f) => ({ ...f, [field]: normalizeMobile(f[field]) }));
+  }
+
+  async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
     const finalBuilding = isOtherBuilding ? customBuilding.trim() : form.building_name;
     const finalRole = isOtherRole ? customRole.trim() : form.role;
@@ -56,7 +69,13 @@ export default function NewEntryPage() {
     try {
       const res = await fetch('/api/entries', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, building_name: finalBuilding, role: finalRole || undefined }),
+        body: JSON.stringify({
+          ...form,
+          mobile_number: normalizeMobile(form.mobile_number),
+          contact_no:    normalizeMobile(form.contact_no),
+          building_name: finalBuilding,
+          role:          finalRole || undefined,
+        }),
       });
       if (!res.ok) { const d = await res.json(); setError(d.error ?? 'Failed'); return; }
       setCreated(await res.json());
@@ -65,7 +84,7 @@ export default function NewEntryPage() {
 
   function reset() {
     setCreated(null);
-    setForm({ name: '', email: '', mobile_number: '', role: '', purpose: 'Interview', reporting_date: '', poc_name: '', contact_no: '', building_name: '' });
+    setForm({ name: '', email: '', mobile_number: '', role: '', purpose: 'Interview', reporting_date: '', employee_id: '', poc_name: '', contact_no: '', building_name: '' });
     setCustomBuilding(''); setIsOtherBuilding(false); setCustomRole(''); setIsOtherRole(false);
   }
 
@@ -121,7 +140,7 @@ export default function NewEntryPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <Field label="Email *"><input name="email" type="email" value={form.email} onChange={handleChange} required placeholder="john@email.com" className="input" /></Field>
-            <Field label="Mobile *"><input name="mobile_number" type="tel" value={form.mobile_number} onChange={handleChange} required placeholder="9876543210" pattern="[0-9]{10}" className="input" /></Field>
+            <Field label="Mobile *"><input name="mobile_number" type="tel" value={form.mobile_number} onChange={handleChange} onBlur={() => handleMobileBlur('mobile_number')} required placeholder="9876543210" className="input" /></Field>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -142,9 +161,13 @@ export default function NewEntryPage() {
 
           <Field label="Reporting Date *"><input name="reporting_date" type="date" value={form.reporting_date} onChange={handleChange} required className="input" /></Field>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="POC Name *"><input name="poc_name" value={form.poc_name} onChange={handleChange} required placeholder="Jane Smith" className="input" /></Field>
-            <Field label="Contact No *"><input name="contact_no" value={form.contact_no} onChange={handleChange} required placeholder="9876543210" className="input" /></Field>
+          <div className="space-y-3">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Point of Contact</p>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="POC Name *"><input name="poc_name" value={form.poc_name} onChange={handleChange} required placeholder="Syam Kumar" className="input" /></Field>
+              <Field label="Employee ID"><input name="employee_id" value={form.employee_id} onChange={handleChange} placeholder="EMP2847 (optional)" className="input" /></Field>
+            </div>
+            <Field label="Contact No *"><input name="contact_no" type="tel" value={form.contact_no} onChange={handleChange} onBlur={() => handleMobileBlur('contact_no')} required placeholder="9876543210" className="input" /></Field>
           </div>
 
           <Field label="Building *">

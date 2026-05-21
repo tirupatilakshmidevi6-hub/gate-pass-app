@@ -24,7 +24,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         role: entry.role ?? undefined,
         purpose: entry.purpose,
         reportingDate: entry.reporting_date,
+        employeeId: entry.employee_id ?? undefined,
         pocName: entry.poc_name,
+        contactNo: entry.contact_no ?? undefined,
         buildingName: entry.building_name,
         photoUrl: entry.photo_url ?? undefined,
       };

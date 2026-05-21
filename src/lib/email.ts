@@ -54,12 +54,8 @@ function inviteHtml(name: string, url: string) {
 <div style="max-width:560px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
   <div style="height:4px;background:linear-gradient(90deg,#1e3a8a,#2563eb,#60a5fa,#2563eb,#1e3a8a);"></div>
   <div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);padding:32px;text-align:center;">
-    <div style="display:inline-flex;align-items:center;gap:12px;">
-      <div style="width:44px;height:44px;border-radius:11px;background:rgba(255,255,255,0.18);border:2px solid rgba(255,255,255,0.4);display:inline-flex;align-items:center;justify-content:center;">
-        <span style="font-size:17px;font-weight:900;color:#fff;">NW</span></div>
-      <div style="font-size:26px;font-weight:900;color:#fff;">NxtWave</div>
-    </div>
-    <div style="font-size:12px;color:#93c5fd;margin-top:6px;letter-spacing:1px;">Office Entry Registration</div>
+    <div style="font-size:30px;font-weight:900;color:#fff;letter-spacing:1px;">NxtWave</div>
+    <div style="font-size:12px;color:#93c5fd;margin-top:8px;letter-spacing:1px;">Office Entry Registration</div>
   </div>
   <div style="padding:32px;">
     <p style="font-size:16px;color:#0f172a;font-weight:600;margin:0 0 10px;">Hello ${esc(name)},</p>
@@ -85,21 +81,31 @@ function gatePassWrapper(name: string, data: GatePassData, gatePassHtml: string,
   const validUntil = fmtDate(addDays(data.reportingDate, data.validityDays ?? 7));
   return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head>
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif;">
-<div style="max-width:620px;margin:24px auto;">
-  <div style="background:#fff;border-radius:12px;padding:24px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+<div style="max-width:620px;margin:24px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+  <div style="height:4px;background:linear-gradient(90deg,#1e3a8a,#2563eb,#60a5fa,#2563eb,#1e3a8a);"></div>
+  <div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);padding:28px 32px;text-align:center;">
+    <div style="font-size:28px;font-weight:900;color:#fff;letter-spacing:1px;">NxtWave</div>
+    <div style="font-size:12px;color:#93c5fd;margin-top:8px;letter-spacing:1px;">Office Entry Registration</div>
+  </div>
+  <div style="padding:24px 28px;">
     <p style="font-size:15px;color:#0f172a;margin:0 0 8px;font-weight:600;">Hello ${esc(name)},</p>
     <p style="font-size:13px;color:#475569;margin:0 0 20px;line-height:1.6;">Great news! Your entry has been approved by the Facilities Team. Your NxtWave Gate Pass is ready. Present it at the entrance on your reporting date.</p>
     <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px;">
       <tr><td style="padding:6px 0;color:#64748b;width:45%;">Pass ID</td><td style="padding:6px 0;color:#1e40af;font-weight:700;">${esc(data.passId)}</td></tr>
       <tr><td style="padding:6px 0;color:#64748b;">Reporting Date</td><td style="padding:6px 0;color:#0f172a;font-weight:600;">${esc(validFrom)}</td></tr>
+      ${data.employeeId ? `<tr><td style="padding:6px 0;color:#64748b;">Employee ID</td><td style="padding:6px 0;color:#0f172a;font-weight:600;">${esc(data.employeeId)}</td></tr>` : ''}
+      <tr><td style="padding:6px 0;color:#64748b;">POC Name</td><td style="padding:6px 0;color:#0f172a;font-weight:600;">${esc(data.pocName)}</td></tr>
+      ${data.contactNo ? `<tr><td style="padding:6px 0;color:#64748b;">Contact Number</td><td style="padding:6px 0;color:#0f172a;font-weight:600;">${esc(data.contactNo)}</td></tr>` : ''}
       <tr><td style="padding:6px 0;color:#64748b;">Building</td><td style="padding:6px 0;color:#0f172a;font-weight:600;">${esc(data.buildingName)}</td></tr>
       <tr><td style="padding:6px 0;color:#64748b;">Pass Validity</td><td style="padding:6px 0;color:#15803d;font-weight:700;">${esc(validFrom)} to ${esc(validUntil)}</td></tr>
     </table>
     <p style="font-size:12px;color:#64748b;margin:0 0 16px;">Please carry a valid government-issued ID along with this gate pass.</p>
     ${viewUrl ? `<div style="text-align:center;margin-top:16px;"><a href="${viewUrl}" style="display:inline-block;background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;font-size:13px;font-weight:700;padding:12px 28px;border-radius:8px;text-decoration:none;">View &amp; Download Gate Pass</a></div>` : ''}
   </div>
-  ${gatePassHtml}
-  <p style="font-size:11px;color:#94a3b8;text-align:center;margin:16px 0;">NxtWave &bull; nxtwave.co.in</p>
+  <div style="padding:0 28px 8px;">${gatePassHtml}</div>
+  <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:14px 28px;text-align:center;">
+    <p style="font-size:11px;color:#94a3b8;margin:0;">NxtWave &bull; nxtwave.co.in &bull; &copy; ${new Date().getFullYear()}</p>
+  </div>
 </div></body></html>`;
 }
 
@@ -109,10 +115,8 @@ function rejectionHtml(name: string, purpose: string) {
 <div style="max-width:560px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
   <div style="height:4px;background:linear-gradient(90deg,#1e3a8a,#2563eb,#60a5fa,#2563eb,#1e3a8a);"></div>
   <div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);padding:28px 32px;text-align:center;">
-    <div style="display:inline-flex;align-items:center;gap:12px;">
-      <div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,0.18);border:2px solid rgba(255,255,255,0.4);display:inline-flex;align-items:center;justify-content:center;"><span style="font-size:16px;font-weight:900;color:#fff;">NW</span></div>
-      <div style="font-size:24px;font-weight:900;color:#fff;">NxtWave</div>
-    </div>
+    <div style="font-size:28px;font-weight:900;color:#fff;letter-spacing:1px;">NxtWave</div>
+    <div style="font-size:12px;color:#93c5fd;margin-top:8px;letter-spacing:1px;">Office Entry Registration</div>
   </div>
   <div style="padding:32px;">
     <p style="font-size:16px;color:#0f172a;font-weight:600;margin:0 0 12px;">Hello ${esc(name)},</p>

@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { Upload, Download } from 'lucide-react';
 
-const HEADERS = ['name', 'email', 'mobile', 'purpose', 'reporting_date', 'building_name', 'poc_name', 'contact_no', 'role'];
+const HEADERS = ['name', 'email', 'mobile', 'purpose', 'reporting_date', 'building_name', 'poc_name', 'employee_id', 'contact_no', 'role'];
 
 type ParsedRow = Record<string, string>;
 type RowResult = { name: string; email: string; success: boolean; error?: string };
@@ -23,8 +23,8 @@ function parseCSV(text: string): ParsedRow[] {
 function downloadSampleCSV() {
   const sample = [
     HEADERS.join(','),
-    'John Doe,john@example.com,9876543210,Interview,2026-05-26,Brigade Towers,Jane Smith,9876543211,New Joiner',
-    'Alice Brown,alice@example.com,9876543212,Onboarding,2026-05-26,iSprout,Mike Ross,9876543213,Intern',
+    'John Doe,john@example.com,9876543210,Interview,2026-05-26,Brigade Towers,Jane Smith,EMP2847,9876543211,New Joiner',
+    'Alice Brown,alice@example.com,9876543212,Onboarding,2026-05-26,iSprout,Mike Ross,EMP1234,9876543213,Intern',
   ].join('\n');
   const blob = new Blob([sample], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
@@ -95,7 +95,7 @@ export default function BulkUploadPage() {
             <div className="overflow-x-auto max-h-48 border border-gray-200 rounded-lg">
               <table className="w-full text-xs">
                 <thead className="bg-gray-50 sticky top-0">
-                  <tr>{['Name','Email','Mobile','Purpose','Date','Building','Role'].map((h) => (
+                  <tr>{['Name','Email','Mobile','Purpose','Date','Building','POC Name','Emp ID','Contact','Role'].map((h) => (
                     <th key={h} className="text-left px-3 py-2 text-gray-500 font-semibold uppercase tracking-wider whitespace-nowrap">{h}</th>
                   ))}</tr>
                 </thead>
@@ -108,10 +108,13 @@ export default function BulkUploadPage() {
                       <td className="px-3 py-1.5 text-gray-700">{r.purpose}</td>
                       <td className="px-3 py-1.5 text-gray-700">{r.reporting_date}</td>
                       <td className="px-3 py-1.5 text-gray-700">{r.building_name}</td>
+                      <td className="px-3 py-1.5 text-gray-700">{r.poc_name}</td>
+                      <td className="px-3 py-1.5 text-gray-700 font-mono">{r.employee_id}</td>
+                      <td className="px-3 py-1.5 text-gray-700">{r.contact_no}</td>
                       <td className="px-3 py-1.5 text-gray-700">{r.role}</td>
                     </tr>
                   ))}
-                  {rows.length > 5 && <tr><td colSpan={7} className="px-3 py-1.5 text-gray-400 text-center">…and {rows.length - 5} more rows</td></tr>}
+                  {rows.length > 5 && <tr><td colSpan={10} className="px-3 py-1.5 text-gray-400 text-center">…and {rows.length - 5} more rows</td></tr>}
                 </tbody>
               </table>
             </div>
