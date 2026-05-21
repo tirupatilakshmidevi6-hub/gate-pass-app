@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CheckCircle, XCircle, Clock, ChevronRight } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, ChevronRight, Search } from 'lucide-react';
 import { getRoleStyle } from '@/lib/constants';
 
 type Entry = {
@@ -31,12 +31,19 @@ function RoleBadge({ role }: { role: string | null }) {
   );
 }
 
+function matchesSearch(e: Entry, q: string) {
+  const lower = q.toLowerCase();
+  return [e.name, e.email, e.employee_id, e.mobile_number, e.building_name, e.poc_name, e.purpose, e.role, e.status]
+    .some((v) => v?.toLowerCase().includes(lower));
+}
+
 export default function FacilitiesApprovals({ userRole }: { userRole: 'admin' | 'facilities' }) {
-  const [entries, setEntries] = useState<Entry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>('pending');
-  const [toast, setToast] = useState<{ type: 'approve' | 'reject'; email: string | null } | null>(null);
+  const [entries,     setEntries]     = useState<Entry[]>([]);
+  const [loading,     setLoading]     = useState(true);
+  const [processing,  setProcessing]  = useState<string | null>(null);
+  const [tab,         setTab]         = useState<Tab>('pending');
+  const [toast,       setToast]       = useState<{ type: 'approve' | 'reject'; email: string | null } | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => { fetchEntries(); }, []);
 
@@ -61,9 +68,13 @@ export default function FacilitiesApprovals({ userRole }: { userRole: 'admin' | 
     setTimeout(() => setToast(null), 6000);
   }
 
-  const pending  = entries.filter((e) => e.status === 'Pending Approval');
-  const approved = entries.filter((e) => e.status === 'Approved');
-  const rejected = entries.filter((e) => e.status === 'Rejected');
+  const sq = searchQuery.trim();
+  const pending  = entries.filter((e) => e.status === 'Pending Approval' && (!sq || matchesSearch(e, sq)));
+  const approved = entries.filter((e) => e.status === 'Approved'         && (!sq || matchesSearch(e, sq)));
+  const rejected = entries.filter((e) => e.status === 'Rejected'         && (!sq || matchesSearch(e, sq)));
+
+  // Unfiltered counts for badge display
+  const pendingTotal = entries.filter((e) => e.status === 'Pending Approval').length;
 
   const tabs = [
     { key: 'pending'  as Tab, label: 'Pending',  count: pending.length,  active: 'border-orange-500 text-orange-700 bg-orange-50' },
@@ -79,7 +90,19 @@ export default function FacilitiesApprovals({ userRole }: { userRole: 'admin' | 
         <h1 className="text-2xl font-bold text-gray-800">
           {userRole === 'facilities' ? 'Approvals' : 'Approvals (Read-only)'}
         </h1>
-        {pending.length > 0 && <span className="bg-orange-500 text-white text-xs font-bold px-2.5 py-0.5 rounded-full">{pending.length} pending</span>}
+        {pendingTotal > 0 && <span className="bg-orange-500 text-white text-xs font-bold px-2.5 py-0.5 rounded-full">{pendingTotal} pending</span>}
+      </div>
+
+      {/* Search */}
+      <div className="relative max-w-sm">
+        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search name, email, building, POC…"
+          className="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
       </div>
 
       {toast && (

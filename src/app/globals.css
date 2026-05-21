@@ -9,3 +9,103 @@ body {
     @apply w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white;
   }
 }
+
+/* ─── Dark Mode Overrides ───────────────────────────────────────────────────── */
+/* Applied when <html class="dark"> is set by ThemeProvider                     */
+
+/* Keep sidebar logo container white always */
+html.dark aside .bg-white { background-color: white !important; }
+
+/* Body */
+html.dark body { background-color: #0f172a; color: #e2e8f0; }
+
+/* Backgrounds */
+html.dark .bg-white  { background-color: #1e293b; }
+html.dark .bg-gray-50 { background-color: #0f172a; }
+html.dark .bg-gray-100 { background-color: #1e293b; }
+html.dark .bg-gray-200 { background-color: #334155; }
+
+/* Borders */
+html.dark .border-gray-100 { border-color: #263148; }
+html.dark .border-gray-200 { border-color: #334155; }
+html.dark .border-gray-300 { border-color: #475569; }
+
+/* Text */
+html.dark .text-gray-900 { color: #f1f5f9; }
+html.dark .text-gray-800 { color: #e2e8f0; }
+html.dark .text-gray-700 { color: #cbd5e1; }
+html.dark .text-gray-600 { color: #94a3b8; }
+html.dark .text-gray-500 { color: #64748b; }
+html.dark .text-gray-400 { color: #475569; }
+
+/* Hover backgrounds */
+html.dark .hover\:bg-gray-50:hover  { background-color: #263148; }
+html.dark .hover\:bg-gray-100:hover { background-color: #334155; }
+html.dark .hover\:bg-gray-200:hover { background-color: #3d4e68; }
+
+/* Sticky top nav */
+html.dark header { background-color: #1e293b !important; border-color: #334155 !important; }
+
+/* Table header rows */
+html.dark thead tr { background-color: #1e293b !important; }
+html.dark th { color: #94a3b8 !important; }
+
+/* Table dividers */
+html.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: #334155 !important; }
+html.dark .divide-y > :not([hidden]) ~ :not([hidden])        { border-color: #334155 !important; }
+
+/* All input, select, textarea */
+html.dark input:not([type="checkbox"]):not([type="radio"]),
+html.dark select,
+html.dark textarea {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+html.dark input::placeholder,
+html.dark textarea::placeholder { color: #475569 !important; }
+
+/* .input utility */
+html.dark .input {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+/* Modals / popups */
+html.dark .fixed.inset-0 > div { background-color: #1e293b !important; }
+
+/* Search dropdown */
+html.dark .search-dropdown { background-color: #1e293b !important; border-color: #334155 !important; }
+html.dark .search-dropdown button:hover { background-color: #263148 !important; }
+html.dark .search-dropdown .border-gray-100 { border-color: #334155 !important; }
+
+/* rounded-2xl cards (reports, etc.) */
+html.dark .rounded-2xl.bg-white,
+html.dark .rounded-2xl { background-color: #1e293b; border-color: #334155; }
+
+/* Shadows in dark mode — tone them down */
+html.dark .shadow-sm { box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+html.dark .shadow-md { box-shadow: 0 4px 8px rgba(0,0,0,0.4); }
+html.dark .shadow-xl { box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+
+/* KPI cards inner text */
+html.dark .text-gray-900 { color: #f1f5f9; }
+
+/* Table sticky header in dark mode */
+html.dark thead.sticky { background-color: #1e293b !important; }
+html.dark th.border-b   { border-color: #334155 !important; }
+
+/* Filter/export dropdown in dark */
+html.dark .z-30.bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
+
+/* Pagination buttons */
+html.dark .bg-blue-600 { background-color: #2563eb !important; }
+
+/* Smooth theme transition */
+*, *::before, *::after {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
+}
+/* Exclude transitions that would look jarring */
+input, select, textarea, button, a, img, svg { transition: none; }
+button { transition: background-color 0.15s ease, color 0.1s ease, border-color 0.1s ease, box-shadow 0.15s ease; }

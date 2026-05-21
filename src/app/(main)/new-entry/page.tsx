@@ -136,11 +136,11 @@ export default function NewEntryPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2">{error}</p>}
 
-          <Field label="Full Name *"><input name="name" value={form.name} onChange={handleChange} required placeholder="John Doe" className="input" /></Field>
+          <Field label="Full Name *"><input name="name" value={form.name} onChange={handleChange} required placeholder="Full Name" className="input" /></Field>
 
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Email *"><input name="email" type="email" value={form.email} onChange={handleChange} required placeholder="john@email.com" className="input" /></Field>
-            <Field label="Mobile *"><input name="mobile_number" type="tel" value={form.mobile_number} onChange={handleChange} onBlur={() => handleMobileBlur('mobile_number')} required placeholder="9876543210" className="input" /></Field>
+            <Field label="Email *"><input name="email" type="email" value={form.email} onChange={handleChange} required placeholder="candidate@example.com" className="input" /></Field>
+            <Field label="Mobile *"><input name="mobile_number" type="tel" value={form.mobile_number} onChange={handleChange} onBlur={() => handleMobileBlur('mobile_number')} required placeholder="+91 9876543210" className="input" /></Field>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -164,10 +164,10 @@ export default function NewEntryPage() {
           <div className="space-y-3">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Point of Contact</p>
             <div className="grid grid-cols-2 gap-4">
-              <Field label="POC Name *"><input name="poc_name" value={form.poc_name} onChange={handleChange} required placeholder="Syam Kumar" className="input" /></Field>
-              <Field label="Employee ID"><input name="employee_id" value={form.employee_id} onChange={handleChange} placeholder="EMP2847 (optional)" className="input" /></Field>
+              <Field label="POC Name *"><input name="poc_name" value={form.poc_name} onChange={handleChange} required placeholder="Point of Contact Name" className="input" /></Field>
+              <Field label="Employee ID"><input name="employee_id" value={form.employee_id} onChange={handleChange} placeholder="NW0000001" className="input" /></Field>
             </div>
-            <Field label="Contact No *"><input name="contact_no" type="tel" value={form.contact_no} onChange={handleChange} onBlur={() => handleMobileBlur('contact_no')} required placeholder="9876543210" className="input" /></Field>
+            <Field label="Contact No *"><input name="contact_no" type="tel" value={form.contact_no} onChange={handleChange} onBlur={() => handleMobileBlur('contact_no')} required placeholder="POC Contact Number" className="input" /></Field>
           </div>
 
           <Field label="Building *">

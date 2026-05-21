@@ -41,7 +41,7 @@ export default function Sidebar({
   }
 
   return (
-    <aside className="w-56 min-h-screen bg-gray-900 text-white flex flex-col flex-shrink-0">
+    <aside className="w-56 fixed top-0 left-0 h-screen bg-gray-900 text-white flex flex-col z-30 overflow-y-auto">
 
       {/* ── Logo ── */}
       <div className="px-5 py-4 border-b border-gray-700">
@@ -55,24 +55,6 @@ export default function Sidebar({
           </div>
         </Link>
         <div className="text-xs text-gray-400 leading-tight">Gate Pass System</div>
-      </div>
-
-      {/* ── Role badge ── */}
-      <div className="px-5 py-2 border-b border-gray-800">
-        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-          role === 'facilities'
-            ? 'bg-purple-900 text-purple-300'
-            : 'bg-blue-900 text-blue-300'
-        }`}>
-          {role === 'facilities' ? 'Facilities Team' : 'Admin'}
-        </span>
-      </div>
-
-      {/* ── MAIN MENU label ── */}
-      <div className="px-5 pt-5 pb-1">
-        <span className="text-[10px] font-bold text-gray-500 tracking-[2px] uppercase">
-          Main Menu
-        </span>
       </div>
 
       {/* ── Navigation ── */}

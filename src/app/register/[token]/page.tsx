@@ -308,7 +308,6 @@ export default function RegisterPage() {
             {/* Photo upload */}
             <div className="px-5 py-4 space-y-3">
               <SectionLabel>Photo Upload *</SectionLabel>
-              <p className="text-xs text-slate-500 -mt-1">Upload a clear frontal photo. Your photo will be automatically compressed before upload.</p>
 
               <div className="flex flex-col items-center gap-3 py-2">
                 <div className="relative">
@@ -325,12 +324,6 @@ export default function RegisterPage() {
                     </div>
                   )}
                 </div>
-
-                {photoPreview && (
-                  <p className="text-xs text-center text-slate-500 max-w-[220px]">
-                    Is your face clearly visible and centered in the circle? If not, re-upload a better photo.
-                  </p>
-                )}
 
                 <div className="flex flex-col items-center gap-1.5">
                   <input
@@ -350,10 +343,6 @@ export default function RegisterPage() {
                   </label>
                   {photoFile && <p className="text-xs text-slate-500 max-w-[220px] truncate text-center">{photoFile.name}</p>}
                 </div>
-              </div>
-
-              <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 text-xs text-blue-700">
-                <strong>Tips:</strong> Use a front-facing photo with good lighting. Avoid sunglasses or hats. Face should fill most of the circle.
               </div>
             </div>
 
