@@ -1,27 +1,49 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
-export default function LoginPage() {
+async function safePost(url: string, body: unknown): Promise<{ ok: boolean; status: number; data: Record<string, string> }> {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  let data: Record<string, string> = {};
+  try {
+    data = await res.json();
+  } catch {
+    data = { error: `Server error (${res.status}). Check terminal logs for details.` };
+  }
+  return { ok: res.ok, status: res.status, data };
+}
+
+function SuccessBanner() {
+  const searchParams = useSearchParams();
+  if (!searchParams.get('registered')) return null;
+  return (
+    <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-700">
+      Account created successfully. Please login with your credentials.
+    </div>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
+  const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [loading,  setLoading]  = useState(false);
+  const [error,    setError]    = useState('');
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
+      const { ok, data } = await safePost('/api/auth/login', { email, password });
+      if (!ok) {
         setError(data.error ?? 'Login failed');
         return;
       }
@@ -32,12 +54,83 @@ export default function LoginPage() {
       }
       router.refresh();
     } catch {
-      setError('Network error. Please try again.');
+      setError('Unable to reach the server. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
   }
 
+  return (
+    <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <div className="px-8 py-6 border-b border-gray-100">
+        <h2 className="text-lg font-bold text-gray-900">Sign in to your account</h2>
+        <p className="text-sm text-gray-500 mt-0.5">Enter your credentials to continue</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="px-8 py-6 space-y-4">
+        <Suspense>
+          <SuccessBanner />
+        </Suspense>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Email address</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            placeholder="you@example.com"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            placeholder="••••••••"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-2.5 bg-blue-700 hover:bg-blue-800 disabled:opacity-60 text-white font-semibold rounded-lg text-sm transition-colors mt-2"
+        >
+          {loading ? (
+            <span className="flex items-center justify-center gap-2">
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Signing in…
+            </span>
+          ) : (
+            'Sign In'
+          )}
+        </button>
+      </form>
+
+      <div className="px-8 pb-6 text-center border-t border-gray-100 pt-4">
+        <p className="text-sm text-gray-500">
+          Don&apos;t have an account?{' '}
+          <Link href="/signup" className="text-blue-700 font-semibold hover:underline">
+            Sign Up
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
@@ -56,76 +149,7 @@ export default function LoginPage() {
           <p className="text-blue-300 text-sm mt-1 tracking-wide">Gate Pass System</p>
         </div>
 
-        {/* Card */}
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-          <div className="px-8 py-6 border-b border-gray-100">
-            <h2 className="text-lg font-bold text-gray-900">Sign in to your account</h2>
-            <p className="text-sm text-gray-500 mt-0.5">Enter your credentials to continue</p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="px-8 py-6 space-y-4">
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">
-                {error}
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email address</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="admin@nxtwave.com"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="••••••••"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 bg-blue-700 hover:bg-blue-800 disabled:opacity-60 text-white font-semibold rounded-lg text-sm transition-colors mt-2"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Signing in…
-                </span>
-              ) : (
-                'Sign In'
-              )}
-            </button>
-          </form>
-
-          <div className="px-8 pb-6 space-y-2">
-            <div className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-2">Default credentials</div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="bg-gray-50 rounded-lg p-2.5 text-xs">
-                <div className="font-semibold text-gray-700 mb-1">Admin</div>
-                <div className="text-gray-500">admin@nxtwave.com</div>
-                <div className="text-gray-500">Admin@123</div>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-2.5 text-xs">
-                <div className="font-semibold text-gray-700 mb-1">Facilities</div>
-                <div className="text-gray-500">facilities@nxtwave.com</div>
-                <div className="text-gray-500">Facilities@123</div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <LoginForm />
 
         <p className="text-center text-blue-400 text-xs mt-6">
           NxtWave &copy; {new Date().getFullYear()} &bull; Internal Use Only

@@ -4,8 +4,20 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, UserPlus, Upload, List,
-  Building2, BarChart2, Settings, LogOut, Shield,
+  Building2, BarChart2, Settings, LogOut, Shield, Users,
 } from 'lucide-react';
+
+type Role = 'super_admin' | 'admin' | 'facilities';
+
+const SUPER_ADMIN_NAV = [
+  { label: 'Dashboard',   href: '/',            icon: LayoutDashboard },
+  { label: 'New Entry',   href: '/new-entry',   icon: UserPlus },
+  { label: 'Bulk Upload', href: '/bulk-upload',  icon: Upload },
+  { label: 'Entry List',  href: '/entry-list',  icon: List },
+  { label: 'Reports',     href: '/reports',     icon: BarChart2 },
+  { label: 'Users',       href: '/users',       icon: Users },
+  { label: 'Settings',    href: '/settings',    icon: Settings },
+];
 
 const ADMIN_NAV = [
   { label: 'Dashboard',   href: '/',            icon: LayoutDashboard },
@@ -23,16 +35,29 @@ const FACILITIES_NAV = [
   { label: 'Reports',    href: '/reports',    icon: BarChart2 },
 ];
 
+function navFor(role: Role) {
+  if (role === 'super_admin') return SUPER_ADMIN_NAV;
+  if (role === 'facilities')  return FACILITIES_NAV;
+  return ADMIN_NAV;
+}
+
+const ROLE_BADGE: Record<Role, { label: string; cls: string }> = {
+  super_admin: { label: 'Super Admin',    cls: 'bg-purple-900 text-purple-300' },
+  admin:       { label: 'Admin',          cls: 'bg-blue-900 text-blue-300'     },
+  facilities:  { label: 'Facilities Team', cls: 'bg-teal-900 text-teal-300'   },
+};
+
 export default function Sidebar({
   role, pendingCount, userName,
 }: {
-  role: 'admin' | 'facilities';
+  role: Role;
   pendingCount?: number;
   userName?: string;
 }) {
   const pathname = usePathname();
   const router   = useRouter();
-  const navItems = role === 'facilities' ? FACILITIES_NAV : ADMIN_NAV;
+  const navItems = navFor(role);
+  const badge    = ROLE_BADGE[role];
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -58,7 +83,7 @@ export default function Sidebar({
       </div>
 
       {/* ── Navigation ── */}
-      <nav className="flex-1 py-1">
+      <nav className="flex-1 py-3">
         {navItems.map(({ label, href, icon: Icon }) => {
           const active = pathname === href || (href !== '/' && pathname.startsWith(href));
           return (
@@ -86,23 +111,17 @@ export default function Sidebar({
       {/* ── Promotional banner ── */}
       <div className="px-3 pb-3">
         <div className="relative bg-gradient-to-b from-blue-700 to-blue-900 rounded-2xl p-4 text-center overflow-hidden">
-          {/* Decorative circles */}
           <div className="absolute -top-4 -right-4 w-16 h-16 bg-blue-500/20 rounded-full" />
           <div className="absolute -bottom-4 -left-4 w-12 h-12 bg-blue-500/20 rounded-full" />
-
-          {/* Shield illustration */}
           <div className="relative flex justify-center mb-3">
             <div className="w-16 h-16 bg-blue-600/50 rounded-full flex items-center justify-center border-2 border-blue-400/30">
               <Shield size={30} className="text-blue-200" />
             </div>
           </div>
-
           <p className="relative text-white text-xs font-semibold leading-snug mb-3">
             Secure Every Entry,{' '}
             <span className="text-blue-200">Simplify Your Management</span>
           </p>
-
-          {/* Carousel dots */}
           <div className="flex justify-center gap-1.5">
             <div className="w-4 h-1.5 bg-white rounded-full" />
             <div className="w-1.5 h-1.5 bg-white/40 rounded-full" />
@@ -111,14 +130,19 @@ export default function Sidebar({
         </div>
       </div>
 
-      {/* ── Logout ── */}
-      <div className="border-t border-gray-700 px-5 py-4">
+      {/* ── User + Logout ── */}
+      <div className="border-t border-gray-700 px-5 py-4 space-y-2">
         {userName && (
-          <p className="text-xs text-gray-400 mb-3 truncate">{userName}</p>
+          <div>
+            <p className="text-xs text-white font-medium truncate">{userName}</p>
+            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${badge.cls}`}>
+              {badge.label}
+            </span>
+          </div>
         )}
         <button
           onClick={handleLogout}
-          className="flex items-center gap-2 text-sm text-gray-400 hover:text-white w-full"
+          className="flex items-center gap-2 text-sm text-gray-400 hover:text-white w-full mt-1"
         >
           <LogOut size={15} />
           <span>Sign out</span>

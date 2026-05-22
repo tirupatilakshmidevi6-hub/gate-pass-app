@@ -33,7 +33,7 @@ export default function TopNav({
   userName, role, pendingCount,
 }: {
   userName: string;
-  role: 'admin' | 'facilities';
+  role: 'super_admin' | 'admin' | 'facilities';
   pendingCount: number;
 }) {
   const pathname  = usePathname();
@@ -185,7 +185,7 @@ export default function TopNav({
           <div className="text-left hidden sm:block">
             <div className="text-sm font-semibold text-gray-900 leading-tight">{userName}</div>
             <div className="text-xs text-gray-500 leading-tight">
-              {role === 'admin' ? 'Super Admin' : 'Facilities Team'}
+              {role === 'super_admin' ? 'Super Admin' : role === 'admin' ? 'Admin' : 'Facilities Team'}
             </div>
           </div>
           <ChevronDown size={14} className="text-gray-400 hidden sm:block" />

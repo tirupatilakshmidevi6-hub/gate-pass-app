@@ -24,6 +24,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         role: entry.role ?? undefined,
         purpose: entry.purpose,
         reportingDate: entry.reporting_date,
+        validUntil: entry.valid_until ?? undefined,
         employeeId: entry.employee_id ?? undefined,
         pocName: entry.poc_name,
         contactNo: entry.contact_no ?? undefined,

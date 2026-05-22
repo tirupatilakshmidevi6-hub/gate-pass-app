@@ -10,6 +10,7 @@ export type GatePassData = {
   buildingName: string;
   photoUrl?: string;
   validityDays?: number;
+  validUntil?: string;
 };
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -30,8 +31,8 @@ const NXTWAVE_LOGO = `<div style="background:#ffffff;border-radius:10px;padding:
 
 // ── Main generator ─────────────────────────────────────────────────────────────
 export function generateGatePassBodyHtml(data: GatePassData): string {
-  const days      = data.validityDays ?? 7;
-  const validUntil = fmtDate(addDays(data.reportingDate, days));
+  const days       = data.validityDays ?? 7;
+  const validUntil = data.validUntil ? fmtDate(data.validUntil) : fmtDate(addDays(data.reportingDate, days));
 
   // ── Photo block ──────────────────────────────────────────────────────────────
   const photoBlock = data.photoUrl
@@ -137,7 +138,7 @@ export function generateGatePassBodyHtml(data: GatePassData): string {
     <div style="display:flex;align-items:stretch;">
       ${pocCol(iconPerson18, 'EMPLOYEE NAME', data.pocName)}
       <div style="width:1px;background:#c7d7fb;margin:4px 0;flex-shrink:0;"></div>
-      ${pocCol(iconIdCard18, 'EMPLOYEE ID', data.employeeId ?? '—')}
+      ${pocCol(iconIdCard18, 'POC EMPLOYEE ID', data.employeeId ?? '—')}
       <div style="width:1px;background:#c7d7fb;margin:4px 0;flex-shrink:0;"></div>
       ${pocCol(iconPhone18, 'CONTACT NUMBER', data.contactNo ?? '—')}
     </div>

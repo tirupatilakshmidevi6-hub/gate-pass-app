@@ -24,6 +24,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
       role: data.entry.role ?? undefined,
       purpose: data.entry.purpose,
       reportingDate: data.entry.reporting_date,
+      validUntil: data.entry.valid_until ?? undefined,
       employeeId: data.entry.employee_id ?? undefined,
       pocName: data.entry.poc_name,
       contactNo: data.entry.contact_no ?? undefined,

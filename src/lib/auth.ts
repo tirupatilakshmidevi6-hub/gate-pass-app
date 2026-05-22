@@ -8,9 +8,13 @@ const secret = new TextEncoder().encode(
 export type SessionUser = {
   id: string;
   email: string;
-  role: 'admin' | 'facilities';
+  role: 'super_admin' | 'admin' | 'facilities';
   name: string;
 };
+
+export function isAdmin(role: SessionUser['role']): boolean {
+  return role === 'super_admin' || role === 'admin';
+}
 
 export const COOKIE_NAME = 'gp-session';
 
@@ -18,7 +22,7 @@ export async function signToken(user: SessionUser): Promise<string> {
   return new SignJWT({ ...user })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('8h')
+    .setExpirationTime('24h')
     .sign(secret);
 }
 

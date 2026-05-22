@@ -21,8 +21,11 @@ export default function NewEntryPage() {
   const router = useRouter();
   const [form, setForm] = useState({
     name: '', email: '', mobile_number: '', role: '', purpose: 'Interview',
-    reporting_date: '', employee_id: '', poc_name: '', contact_no: '', building_name: '',
+    reporting_date: '', valid_until: '', employee_id: '', poc_name: '', contact_no: '', building_name: '',
   });
+  const [duplicate, setDuplicate] = useState<{ entryId: string; registrationUrl: string; email: string; name: string } | null>(null);
+  const [resending, setResending] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState('');
   const [customBuilding, setCustomBuilding] = useState('');
   const [isOtherBuilding, setIsOtherBuilding] = useState(false);
   const [customRole, setCustomRole] = useState('');
@@ -40,8 +43,23 @@ export default function NewEntryPage() {
     }).catch(() => setBuildings(BUILDING_OPTIONS.map((n, i) => ({ id: String(i), name: n }))));
   }, []);
 
+  function addDays(dateStr: string, n: number): string {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const dt = new Date(y, m - 1, d + n);
+    return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+  }
+
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setDuplicate(null);
+    setResendSuccess('');
+    setForm((f) => {
+      const updated = { ...f, [name]: value };
+      if (name === 'reporting_date' && value) {
+        updated.valid_until = addDays(value, 7);
+      }
+      return updated;
+    });
   }
 
   function handleBuildingSelect(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -65,7 +83,7 @@ export default function NewEntryPage() {
     const finalBuilding = isOtherBuilding ? customBuilding.trim() : form.building_name;
     const finalRole = isOtherRole ? customRole.trim() : form.role;
     if (!finalBuilding) { setError('Building name is required'); return; }
-    setSubmitting(true); setError('');
+    setSubmitting(true); setError(''); setDuplicate(null); setResendSuccess('');
     try {
       const res = await fetch('/api/entries', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -77,14 +95,32 @@ export default function NewEntryPage() {
           role:          finalRole || undefined,
         }),
       });
-      if (!res.ok) { const d = await res.json(); setError(d.error ?? 'Failed'); return; }
-      setCreated(await res.json());
+      const d = await res.json();
+      if (res.status === 409 && d.duplicate) { setDuplicate(d); return; }
+      if (!res.ok) { setError(d.error ?? 'Failed'); return; }
+      setCreated(d);
     } finally { setSubmitting(false); }
+  }
+
+  async function handleResend() {
+    if (!duplicate) return;
+    setResending(true);
+    try {
+      const res = await fetch('/api/entries/resend', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entryId: duplicate.entryId }),
+      });
+      const d = await res.json();
+      if (!res.ok) { setError(d.error ?? 'Resend failed'); return; }
+      setResendSuccess(`Invitation email resent successfully to ${duplicate.email}`);
+      setDuplicate(null);
+    } finally { setResending(false); }
   }
 
   function reset() {
     setCreated(null);
-    setForm({ name: '', email: '', mobile_number: '', role: '', purpose: 'Interview', reporting_date: '', employee_id: '', poc_name: '', contact_no: '', building_name: '' });
+    setForm({ name: '', email: '', mobile_number: '', role: '', purpose: 'Interview', reporting_date: '', valid_until: '', employee_id: '', poc_name: '', contact_no: '', building_name: '' });
+    setDuplicate(null); setResendSuccess('');
     setCustomBuilding(''); setIsOtherBuilding(false); setCustomRole(''); setIsOtherRole(false);
   }
 
@@ -136,6 +172,27 @@ export default function NewEntryPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2">{error}</p>}
 
+          {resendSuccess && (
+            <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-700">
+              <span className="font-semibold">✓</span> {resendSuccess}
+            </div>
+          )}
+
+          {duplicate && (
+            <div className="bg-amber-50 border border-amber-300 rounded-lg px-4 py-3 text-sm space-y-2">
+              <p className="font-semibold text-amber-800">This candidate already has an entry for this date.</p>
+              <p className="text-amber-700 text-xs">Do you want to resend the invitation email to <strong>{duplicate.email}</strong> instead?</p>
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={resending}
+                className="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white text-xs font-semibold rounded-lg transition-colors"
+              >
+                {resending ? 'Resending…' : 'Resend Invite'}
+              </button>
+            </div>
+          )}
+
           <Field label="Full Name *"><input name="name" value={form.name} onChange={handleChange} required placeholder="Full Name" className="input" /></Field>
 
           <div className="grid grid-cols-2 gap-4">
@@ -159,7 +216,13 @@ export default function NewEntryPage() {
             </Field>
           </div>
 
-          <Field label="Reporting Date *"><input name="reporting_date" type="date" value={form.reporting_date} onChange={handleChange} required className="input" /></Field>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Reporting Date *"><input name="reporting_date" type="date" value={form.reporting_date} onChange={handleChange} required className="input" /></Field>
+            <Field label="Valid Until *">
+              <input name="valid_until" type="date" value={form.valid_until} onChange={handleChange} required className="input" />
+              <p className="text-xs text-gray-400 mt-1">Auto-set to +7 days</p>
+            </Field>
+          </div>
 
           <div className="space-y-3">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Point of Contact</p>

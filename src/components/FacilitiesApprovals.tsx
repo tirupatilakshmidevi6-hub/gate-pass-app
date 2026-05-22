@@ -37,7 +37,7 @@ function matchesSearch(e: Entry, q: string) {
     .some((v) => v?.toLowerCase().includes(lower));
 }
 
-export default function FacilitiesApprovals({ userRole }: { userRole: 'admin' | 'facilities' }) {
+export default function FacilitiesApprovals({ userRole }: { userRole: 'super_admin' | 'admin' | 'facilities' }) {
   const [entries,     setEntries]     = useState<Entry[]>([]);
   const [loading,     setLoading]     = useState(true);
   const [processing,  setProcessing]  = useState<string | null>(null);
@@ -88,7 +88,7 @@ export default function FacilitiesApprovals({ userRole }: { userRole: 'admin' | 
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <h1 className="text-2xl font-bold text-gray-800">
-          {userRole === 'facilities' ? 'Approvals' : 'Approvals (Read-only)'}
+          {userRole === 'facilities' ? 'Approvals' : 'Approvals (Read-only — Facilities Only)'}
         </h1>
         {pendingTotal > 0 && <span className="bg-orange-500 text-white text-xs font-bold px-2.5 py-0.5 rounded-full">{pendingTotal} pending</span>}
       </div>

@@ -6,7 +6,7 @@ import { CalendarDays, Search } from 'lucide-react';
 
 type EntryRow = {
   id: string; name: string; email: string | null; mobile_number: string | null;
-  role: string | null; purpose: string; reporting_date: string;
+  role: string | null; purpose: string; reporting_date: string; valid_until: string | null;
   employee_id: string | null; poc_name: string; contact_no: string; building_name: string;
   status: string; pass_id: string | null; photo_url: string | null;
   created_at: string; created_by: string;
@@ -62,7 +62,7 @@ export default function EntryListPage() {
 
   if (loading) return <div className="text-sm text-gray-400 p-6">Loading entries…</div>;
 
-  const COLS = ['#', 'Name', 'Role', 'Purpose', 'Phone Number', 'Building', 'POC Name', 'Reporting Date', 'Status', 'Actions'];
+  const COLS = ['#', 'Name', 'Role', 'Purpose', 'Phone Number', 'Building', 'POC Name', 'Reporting Date', 'Valid Until', 'Status', 'Actions'];
 
   return (
     <div className="space-y-4 p-6">
@@ -123,6 +123,7 @@ export default function EntryListPage() {
                     <td className="px-4 py-3 text-gray-600">{e.building_name}</td>
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{e.poc_name}</td>
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{e.reporting_date}</td>
+                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{e.valid_until ?? '—'}</td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[e.status] ?? 'bg-gray-100 text-gray-600'}`}>{e.status}</span>
                     </td>
@@ -162,6 +163,7 @@ export default function EntryListPage() {
                 <DR label="Role"           value={selected.role ?? '—'} />
                 <DR label="Purpose"        value={selected.purpose} />
                 <DR label="Reporting Date" value={selected.reporting_date} />
+                <DR label="Valid Until"    value={selected.valid_until ?? '—'} />
                 <DR label="Building"       value={selected.building_name} />
               </Sec>
               <Sec title="Point of Contact">

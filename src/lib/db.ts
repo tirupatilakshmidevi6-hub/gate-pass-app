@@ -11,6 +11,7 @@ export type EntryRow = {
   role: string | null;
   purpose: string;
   reporting_date: string;
+  valid_until: string | null;
   employee_id: string | null;
   poc_name: string;
   contact_no: string;
@@ -153,6 +154,12 @@ export async function getEntryById(id: string): Promise<EntryRow | null> {
   return data;
 }
 
+export async function checkDuplicateEntry(email: string, reporting_date: string): Promise<EntryRow | null> {
+  const { data, error } = await supabase.from('entries').select('*').eq('email', email).eq('reporting_date', reporting_date).limit(1).single();
+  if (error || !data) return null;
+  return data;
+}
+
 export async function createEntry(data: {
   name: string;
   email?: string;
@@ -160,6 +167,7 @@ export async function createEntry(data: {
   role?: string;
   purpose: string;
   reporting_date: string;
+  valid_until?: string;
   employee_id?: string;
   poc_name: string;
   contact_no: string;
@@ -173,6 +181,7 @@ export async function createEntry(data: {
     role: data.role ?? null,
     purpose: data.purpose,
     reporting_date: data.reporting_date,
+    valid_until: data.valid_until ?? null,
     employee_id: data.employee_id ?? null,
     poc_name: data.poc_name,
     contact_no: data.contact_no,
@@ -289,4 +298,114 @@ export async function bulkCreateEntries(rows: {
     results.push(entry);
   }
   return results;
+}
+
+// ─── AppUser (invite-based user management) ──────────────────────────────────
+
+export type AppUser = {
+  id: string;
+  name: string;
+  email: string;
+  password_hash: string | null;
+  role: 'super_admin' | 'admin' | 'facilities';
+  status: 'active' | 'invited' | 'inactive';
+  invite_token: string | null;
+  invite_token_expires_at: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
+export async function getAppUserByEmail(email: string): Promise<AppUser | null> {
+  const { data } = await supabase.from('app_users').select('*').eq('email', email).single();
+  return data ?? null;
+}
+
+export async function getAppUserById(id: string): Promise<AppUser | null> {
+  const { data } = await supabase.from('app_users').select('*').eq('id', id).single();
+  return data ?? null;
+}
+
+export async function getAppUserByInviteToken(token: string): Promise<AppUser | null> {
+  const { data } = await supabase.from('app_users').select('*').eq('invite_token', token).single();
+  return data ?? null;
+}
+
+export async function getAllAppUsers(): Promise<AppUser[]> {
+  const { data } = await supabase.from('app_users').select('*').order('created_at', { ascending: false });
+  return data ?? [];
+}
+
+export async function createAppUser(data: {
+  name: string;
+  email: string;
+  role: 'admin' | 'facilities';
+  invite_token: string;
+  invite_token_expires_at: string;
+  created_by: string;
+}): Promise<AppUser> {
+  const { data: user, error } = await supabase.from('app_users').insert({
+    name: data.name,
+    email: data.email,
+    role: data.role,
+    status: 'invited',
+    invite_token: data.invite_token,
+    invite_token_expires_at: data.invite_token_expires_at,
+    created_by: data.created_by,
+    password_hash: null,
+  }).select().single();
+  return throwOnError(user, error);
+}
+
+export async function updateAppUser(id: string, updates: Partial<Pick<AppUser,
+  'name' | 'password_hash' | 'status' | 'invite_token' | 'invite_token_expires_at'
+>>): Promise<AppUser> {
+  const { data, error } = await supabase.from('app_users').update(updates).eq('id', id).select().single();
+  return throwOnError(data, error);
+}
+
+export async function hasSuperAdmin(): Promise<boolean> {
+  const { data } = await supabase.from('app_users').select('id').eq('role', 'super_admin').limit(1);
+  return (data?.length ?? 0) > 0;
+}
+
+export async function createDirectUser(data: {
+  name: string;
+  email: string;
+  password: string;
+  role: 'super_admin' | 'admin' | 'facilities';
+}): Promise<{ ok: boolean; error?: string }> {
+  const hash = await bcrypt.hash(data.password, 10);
+  const { error } = await supabase.from('app_users').insert({
+    name: data.name.trim(),
+    email: data.email.toLowerCase().trim(),
+    password_hash: hash,
+    role: data.role,
+    status: 'active',
+  });
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+export async function ensureDefaultAppUsers(): Promise<{ ok: boolean; error?: string }> {
+  const defaults: { name: string; email: string; password: string; role: AppUser['role'] }[] = [
+    { name: 'Super Admin',     email: 'superadmin@nxtwave.com',  password: 'SuperAdmin@123',  role: 'super_admin' },
+    { name: 'Admin',           email: 'admin@nxtwave.com',       password: 'Admin@123',       role: 'admin'       },
+    { name: 'Facilities Team', email: 'facilities@nxtwave.com',  password: 'Facilities@123',  role: 'facilities'  },
+  ];
+  try {
+    for (const u of defaults) {
+      const existing = await getAppUserByEmail(u.email);
+      if (!existing) {
+        const hash = await bcrypt.hash(u.password, 10);
+        await supabase.from('app_users').insert({
+          name: u.name, email: u.email, password_hash: hash, role: u.role, status: 'active',
+        });
+      }
+    }
+    return { ok: true };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[DB] ensureDefaultAppUsers failed:', msg);
+    return { ok: false, error: 'Could not seed default users. Please run supabase-migration.sql first.' };
+  }
 }

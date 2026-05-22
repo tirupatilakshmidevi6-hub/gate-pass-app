@@ -6,7 +6,7 @@ import { getPendingEntries } from '@/lib/db';
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
   const h        = await headers();
-  const role     = h.get('x-user-role') as 'admin' | 'facilities' | null;
+  const role     = h.get('x-user-role') as 'super_admin' | 'admin' | 'facilities' | null;
   const userName = h.get('x-user-name') ?? 'User';
 
   if (!role) redirect('/login');
