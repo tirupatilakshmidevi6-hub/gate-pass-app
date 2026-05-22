@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, UserPlus, Upload, List,
-  Building2, BarChart2, Settings, LogOut, Shield, Users,
+  Building2, BarChart2, Settings, LogOut, Shield, Users, Activity,
 } from 'lucide-react';
 
 type Role = 'super_admin' | 'admin' | 'facilities';
@@ -14,18 +14,20 @@ const SUPER_ADMIN_NAV = [
   { label: 'New Entry',   href: '/new-entry',   icon: UserPlus },
   { label: 'Bulk Upload', href: '/bulk-upload',  icon: Upload },
   { label: 'Entry List',  href: '/entry-list',  icon: List },
-  { label: 'Reports',     href: '/reports',     icon: BarChart2 },
-  { label: 'Users',       href: '/users',       icon: Users },
-  { label: 'Settings',    href: '/settings',    icon: Settings },
+  { label: 'Reports',      href: '/reports',     icon: BarChart2 },
+  { label: 'Activity Log', href: '/activity',   icon: Activity },
+  { label: 'Users',        href: '/users',       icon: Users },
+  { label: 'Settings',     href: '/settings',    icon: Settings },
 ];
 
 const ADMIN_NAV = [
-  { label: 'Dashboard',   href: '/',            icon: LayoutDashboard },
-  { label: 'New Entry',   href: '/new-entry',   icon: UserPlus },
-  { label: 'Bulk Upload', href: '/bulk-upload',  icon: Upload },
-  { label: 'Entry List',  href: '/entry-list',  icon: List },
-  { label: 'Reports',     href: '/reports',     icon: BarChart2 },
-  { label: 'Settings',    href: '/settings',    icon: Settings },
+  { label: 'Dashboard',    href: '/',            icon: LayoutDashboard },
+  { label: 'New Entry',    href: '/new-entry',   icon: UserPlus },
+  { label: 'Bulk Upload',  href: '/bulk-upload', icon: Upload },
+  { label: 'Entry List',   href: '/entry-list',  icon: List },
+  { label: 'Reports',      href: '/reports',     icon: BarChart2 },
+  { label: 'Activity Log', href: '/activity',    icon: Activity },
+  { label: 'Settings',     href: '/settings',    icon: Settings },
 ];
 
 const FACILITIES_NAV = [

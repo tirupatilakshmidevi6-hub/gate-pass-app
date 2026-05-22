@@ -2,8 +2,12 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 
-const PUBLIC_PATHS = ['/login', '/register', '/signup', '/api/auth', '/api/register', '/api/signup'];
+const PUBLIC_PATHS = [
+  '/login', '/register', '/signup', '/forgot-password', '/reset-password',
+  '/api/auth', '/api/register', '/api/signup',
+];
 const SUPER_ADMIN_ONLY = ['/users', '/api/users'];
+const ADMIN_ONLY_PATHS = ['/activity', '/api/activity'];
 const FACILITIES_ALLOWED = ['/', '/approvals', '/entry-list', '/reports', '/api/'];
 
 function isPublic(p: string) {
@@ -11,6 +15,9 @@ function isPublic(p: string) {
 }
 function isSuperAdminOnly(p: string) {
   return SUPER_ADMIN_ONLY.some((r) => p === r || p.startsWith(r + '/'));
+}
+function isAdminOnly(p: string) {
+  return ADMIN_ONLY_PATHS.some((r) => p === r || p.startsWith(r + '/'));
 }
 function isFacilitiesAllowed(p: string) {
   if (p === '/') return true;
@@ -46,6 +53,11 @@ export async function proxy(request: NextRequest) {
   // Super-admin-only routes
   if (isSuperAdminOnly(pathname) && payload.role !== 'super_admin') {
     return NextResponse.redirect(new URL(payload.role === 'facilities' ? '/approvals' : '/', request.url));
+  }
+
+  // Admin-only routes (super_admin + admin, not facilities)
+  if (isAdminOnly(pathname) && payload.role === 'facilities') {
+    return NextResponse.redirect(new URL('/approvals', request.url));
   }
 
   // Facilities restrictions

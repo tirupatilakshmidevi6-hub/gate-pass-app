@@ -22,12 +22,17 @@ async function safePost(url: string, body: unknown): Promise<{ ok: boolean; stat
 
 function SuccessBanner() {
   const searchParams = useSearchParams();
-  if (!searchParams.get('registered')) return null;
-  return (
+  if (searchParams.get('registered')) return (
     <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-700">
       Account created successfully. Please login with your credentials.
     </div>
   );
+  if (searchParams.get('reset')) return (
+    <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-700">
+      Password reset successfully. Please login with your new password.
+    </div>
+  );
+  return null;
 }
 
 function LoginForm() {
@@ -100,6 +105,10 @@ function LoginForm() {
             placeholder="••••••••"
             className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
+        </div>
+
+        <div className="text-right -mt-1">
+          <Link href="/forgot-password" className="text-xs text-blue-600 hover:underline">Forgot password?</Link>
         </div>
 
         <button

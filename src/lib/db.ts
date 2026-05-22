@@ -311,6 +311,8 @@ export type AppUser = {
   status: 'active' | 'invited' | 'inactive';
   invite_token: string | null;
   invite_token_expires_at: string | null;
+  reset_token: string | null;
+  reset_token_expires_at: string | null;
   created_by: string | null;
   created_at: string;
 };
@@ -408,4 +410,177 @@ export async function ensureDefaultAppUsers(): Promise<{ ok: boolean; error?: st
     console.error('[DB] ensureDefaultAppUsers failed:', msg);
     return { ok: false, error: 'Could not seed default users. Please run supabase-migration.sql first.' };
   }
+}
+
+// ─── Admin helpers ────────────────────────────────────────────────────────────
+
+export async function getAdminEmails(): Promise<{ email: string; name: string }[]> {
+  const { data } = await supabase
+    .from('app_users')
+    .select('email, name')
+    .in('role', ['admin', 'super_admin'])
+    .eq('status', 'active');
+  return data ?? [];
+}
+
+export async function getAdminAndFacilitiesIds(): Promise<string[]> {
+  const { data } = await supabase
+    .from('app_users')
+    .select('id')
+    .in('role', ['admin', 'super_admin', 'facilities'])
+    .eq('status', 'active');
+  return (data ?? []).map((u) => u.id);
+}
+
+export async function getAdminIds(): Promise<string[]> {
+  const { data } = await supabase
+    .from('app_users')
+    .select('id')
+    .in('role', ['admin', 'super_admin'])
+    .eq('status', 'active');
+  return (data ?? []).map((u) => u.id);
+}
+
+// ─── Pass expiry ──────────────────────────────────────────────────────────────
+
+export async function updateExpiredPasses(): Promise<number> {
+  const today = new Date().toISOString().split('T')[0];
+  const { data, error } = await supabase
+    .from('entries')
+    .update({ status: 'Expired' })
+    .lt('valid_until', today)
+    .eq('status', 'Approved')
+    .select('id');
+  if (error) { console.error('[DB] updateExpiredPasses:', error.message); return 0; }
+  return data?.length ?? 0;
+}
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+export type Notification = {
+  id: string;
+  user_id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  is_read: boolean;
+  related_entry_id: string | null;
+  created_at: string;
+};
+
+export async function createNotificationsForUsers(userIds: string[], data: {
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  related_entry_id?: string;
+}): Promise<void> {
+  if (!userIds.length) return;
+  const rows = userIds.map((uid) => ({
+    user_id: uid,
+    title: data.title,
+    message: data.message,
+    type: data.type,
+    is_read: false,
+    related_entry_id: data.related_entry_id ?? null,
+  }));
+  await supabase.from('notifications').insert(rows);
+}
+
+export async function getNotifications(userId: string): Promise<Notification[]> {
+  const { data } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(50);
+  return data ?? [];
+}
+
+export async function markNotificationRead(id: string, userId: string): Promise<void> {
+  await supabase.from('notifications').update({ is_read: true }).eq('id', id).eq('user_id', userId);
+}
+
+export async function markAllNotificationsRead(userId: string): Promise<void> {
+  await supabase.from('notifications').update({ is_read: true }).eq('user_id', userId).eq('is_read', false);
+}
+
+// ─── Activity logs ────────────────────────────────────────────────────────────
+
+export type ActivityLog = {
+  id: string;
+  action: string;
+  performed_by: string | null;
+  performed_by_name: string;
+  entry_id: string | null;
+  candidate_name: string | null;
+  details: Record<string, unknown> | null;
+  created_at: string;
+};
+
+export async function logActivity(data: {
+  action: string;
+  performed_by?: string;
+  performed_by_name: string;
+  entry_id?: string;
+  candidate_name?: string;
+  details?: Record<string, unknown>;
+}): Promise<void> {
+  await supabase.from('activity_logs').insert({
+    action: data.action,
+    performed_by: data.performed_by ?? null,
+    performed_by_name: data.performed_by_name,
+    entry_id: data.entry_id ?? null,
+    candidate_name: data.candidate_name ?? null,
+    details: data.details ?? null,
+  }).then(({ error }) => { if (error) console.error('[Activity]', error.message); });
+}
+
+export async function getActivityLogs(filters?: {
+  entry_id?: string;
+  performed_by?: string;
+  action?: string;
+  from_date?: string;
+  to_date?: string;
+  search?: string;
+  limit?: number;
+}): Promise<ActivityLog[]> {
+  let query = supabase.from('activity_logs').select('*');
+  if (filters?.entry_id)    query = query.eq('entry_id', filters.entry_id);
+  if (filters?.performed_by) query = query.eq('performed_by', filters.performed_by);
+  if (filters?.action)      query = query.eq('action', filters.action);
+  if (filters?.from_date)   query = query.gte('created_at', filters.from_date);
+  if (filters?.to_date)     query = query.lte('created_at', filters.to_date + 'T23:59:59');
+  if (filters?.search)      query = query.ilike('candidate_name', `%${filters.search}%`);
+  query = query.order('created_at', { ascending: false }).limit(filters?.limit ?? 200);
+  const { data } = await query;
+  return data ?? [];
+}
+
+// ─── Password reset ───────────────────────────────────────────────────────────
+
+export async function saveResetToken(userId: string, token: string, expiresAt: Date): Promise<void> {
+  await supabase.from('app_users').update({
+    reset_token: token,
+    reset_token_expires_at: expiresAt.toISOString(),
+  }).eq('id', userId);
+}
+
+export async function getUserByResetToken(token: string): Promise<AppUser | null> {
+  const { data } = await supabase
+    .from('app_users')
+    .select('*')
+    .eq('reset_token', token)
+    .single();
+  return data ?? null;
+}
+
+export async function clearResetToken(userId: string): Promise<void> {
+  await supabase.from('app_users').update({
+    reset_token: null,
+    reset_token_expires_at: null,
+  }).eq('id', userId);
+}
+
+export async function updateUserPassword(userId: string, passwordHash: string): Promise<void> {
+  await supabase.from('app_users').update({ password_hash: passwordHash }).eq('id', userId);
 }

@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/update-expired-passes",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}
