@@ -5,6 +5,6 @@ export const dynamic = 'force-dynamic';
 
 export default async function ApprovalsPage() {
   const h = await headers();
-  const role = (h.get('x-user-role') ?? 'admin') as 'super_admin' | 'admin' | 'facilities';
+  const role = (h.get('x-user-role') ?? 'admin') as string;
   return <FacilitiesApprovals userRole={role} />;
 }

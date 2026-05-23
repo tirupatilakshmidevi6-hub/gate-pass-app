@@ -59,6 +59,50 @@ export async function sendPasswordResetEmail(to: string, name: string, resetUrl:
   });
 }
 
+// ─── User approval/rejection notification emails ─────────────────────────────
+
+export async function sendNewSignupRequestToAdmin(adminEmails: string[], user: { name: string; email: string; role: string }) {
+  if (!adminEmails.length) return;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const body = `
+    <p style="font-size:14px;color:#475569;margin:0 0 4px;">Hello Admin,</p>
+    <p style="font-size:14px;color:#475569;line-height:1.6;margin:0 0 20px;">A new user has signed up and is awaiting your approval.</p>
+    ${detailTable([['Name', user.name], ['Email', user.email], ['Role', user.role]])}
+    ${ctaButton(appUrl + '/users', 'Review Pending Users')}`;
+  return createTransporter().sendMail({
+    from: `"NxtWave Gate Pass System" <${process.env.GMAIL_USER}>`,
+    to: adminEmails,
+    subject: `New Account Pending Approval — ${user.name}`,
+    html: emailShell('New User Pending Approval', 'Admin Notification', body),
+  });
+}
+
+export async function sendUserApprovalEmail(to: string, name: string) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const body = `
+    <p style="font-size:15px;color:#0f172a;font-weight:600;margin:0 0 12px;">Hello ${esc(name)},</p>
+    <p style="font-size:14px;color:#475569;line-height:1.6;margin:0 0 20px;">Your account has been <strong style="color:#16a34a;">approved</strong> by the Admin. You can now log in to the NxtWave Gate Pass System.</p>
+    ${ctaButton(appUrl + '/login', 'Sign In Now')}`;
+  return createTransporter().sendMail({
+    from: `"NxtWave Gate Pass System" <${process.env.GMAIL_USER}>`,
+    to, subject: 'Your Account Has Been Approved — NxtWave Gate Pass',
+    html: emailShell('Account Approved', 'Gate Pass System', body),
+  });
+}
+
+export async function sendUserRejectionEmail(to: string, name: string, reason: string) {
+  const body = `
+    <p style="font-size:15px;color:#0f172a;font-weight:600;margin:0 0 12px;">Hello ${esc(name)},</p>
+    <p style="font-size:14px;color:#475569;line-height:1.6;margin:0 0 16px;">Your account request for the NxtWave Gate Pass System has been <strong style="color:#dc2626;">rejected</strong>.</p>
+    ${reason ? `<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:14px 18px;margin-bottom:16px;"><p style="font-size:13px;color:#991b1b;margin:0;"><strong>Reason:</strong> ${esc(reason)}</p></div>` : ''}
+    <p style="font-size:13px;color:#475569;margin:0;">Please contact your administrator if you believe this is a mistake.</p>`;
+  return createTransporter().sendMail({
+    from: `"NxtWave Gate Pass System" <${process.env.GMAIL_USER}>`,
+    to, subject: 'Account Request Update — NxtWave Gate Pass',
+    html: emailShell('Account Request Rejected', 'Gate Pass System', body),
+  });
+}
+
 // ─── Admin / facilities notification emails ───────────────────────────────────
 
 export async function sendFacilitiesNotificationEmail(entry: {

@@ -321,7 +321,7 @@ export default function EntryListPage() {
             className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           <button onClick={() => setDateFilter('')} className="px-3 py-1.5 text-xs font-semibold border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-600">All</button>
           <button onClick={() => setDateFilter(today)} className="px-3 py-1.5 text-xs font-semibold border border-blue-300 rounded-lg hover:bg-blue-50 text-blue-600">Today</button>
-          {(userRole === 'admin' || userRole === 'super_admin') && (
+          {(userRole === 'admin' || userRole === 'ta') && (
             <a href="/new-entry" className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">+ New Entry</a>
           )}
         </div>

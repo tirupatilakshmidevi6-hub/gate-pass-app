@@ -84,26 +84,7 @@ export async function createUser(data: {
   return user;
 }
 
-export async function ensureDefaultUsers(): Promise<{ ok: boolean; error?: string }> {
-  const defaults = [
-    { email: 'admin@nxtwave.com',        password: 'Admin@123',       role: 'admin' as const,      name: 'Admin' },
-    { email: 'facilities@nxtwave.com',   password: 'Facilities@123',  role: 'facilities' as const, name: 'Facilities Team' },
-  ];
-  try {
-    for (const u of defaults) {
-      const existing = await getUserByEmail(u.email);
-      if (!existing) {
-        const created = await createUser(u);
-        if (!created) return { ok: false, error: 'Could not create default users. Please run the SQL migration in Supabase first.' };
-      }
-    }
-    return { ok: true };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error('[DB] ensureDefaultUsers failed:', msg);
-    return { ok: false, error: 'Database not set up. Please run supabase-schema.sql in the Supabase SQL Editor.' };
-  }
-}
+// No default credentials. Users sign up via /signup — first Admin/TA/Facilities claims that role.
 
 // ─── Building functions ───────────────────────────────────────────────────────
 
@@ -300,20 +281,24 @@ export async function bulkCreateEntries(rows: {
   return results;
 }
 
-// ─── AppUser (invite-based user management) ──────────────────────────────────
+// ─── AppUser ──────────────────────────────────────────────────────────────────
+
+// role is any non-empty string; 'admin' | 'ta' | 'facilities' are the reserved system roles
+export type AppUserRole = string;
+export type AppUserStatus = 'active' | 'pending_approval' | 'rejected' | 'inactive';
 
 export type AppUser = {
   id: string;
   name: string;
   email: string;
   password_hash: string | null;
-  role: 'super_admin' | 'admin' | 'facilities';
-  status: 'active' | 'invited' | 'inactive';
-  invite_token: string | null;
-  invite_token_expires_at: string | null;
+  role: AppUserRole;
+  status: AppUserStatus;
+  approved_by: string | null;
+  approved_at: string | null;
+  rejection_reason: string | null;
   reset_token: string | null;
   reset_token_expires_at: string | null;
-  created_by: string | null;
   created_at: string;
 };
 
@@ -327,54 +312,66 @@ export async function getAppUserById(id: string): Promise<AppUser | null> {
   return data ?? null;
 }
 
-export async function getAppUserByInviteToken(token: string): Promise<AppUser | null> {
-  const { data } = await supabase.from('app_users').select('*').eq('invite_token', token).single();
-  return data ?? null;
-}
-
 export async function getAllAppUsers(): Promise<AppUser[]> {
   const { data } = await supabase.from('app_users').select('*').order('created_at', { ascending: false });
   return data ?? [];
 }
 
-export async function createAppUser(data: {
-  name: string;
-  email: string;
-  role: 'admin' | 'facilities';
-  invite_token: string;
-  invite_token_expires_at: string;
-  created_by: string;
-}): Promise<AppUser> {
-  const { data: user, error } = await supabase.from('app_users').insert({
-    name: data.name,
-    email: data.email,
-    role: data.role,
-    status: 'invited',
-    invite_token: data.invite_token,
-    invite_token_expires_at: data.invite_token_expires_at,
-    created_by: data.created_by,
-    password_hash: null,
-  }).select().single();
-  return throwOnError(user, error);
+export async function getPendingUsers(): Promise<AppUser[]> {
+  const { data } = await supabase
+    .from('app_users').select('*').eq('status', 'pending_approval')
+    .order('created_at', { ascending: true });
+  return data ?? [];
 }
 
 export async function updateAppUser(id: string, updates: Partial<Pick<AppUser,
-  'name' | 'password_hash' | 'status' | 'invite_token' | 'invite_token_expires_at'
+  'name' | 'password_hash' | 'status' | 'approved_by' | 'approved_at' | 'rejection_reason'
 >>): Promise<AppUser> {
   const { data, error } = await supabase.from('app_users').update(updates).eq('id', id).select().single();
   return throwOnError(data, error);
 }
 
-export async function hasSuperAdmin(): Promise<boolean> {
-  const { data } = await supabase.from('app_users').select('id').eq('role', 'super_admin').limit(1);
+// A reserved role is "taken" only if an ACTIVE user holds it.
+// Pending/rejected users do not count — the first person to be active wins the role.
+export async function isRoleTaken(role: string): Promise<boolean> {
+  const { data } = await supabase
+    .from('app_users').select('id').eq('role', role).eq('status', 'active').limit(1);
   return (data?.length ?? 0) > 0;
+}
+
+export async function getPendingApprovalCount(): Promise<number> {
+  const { count } = await supabase
+    .from('app_users').select('*', { count: 'exact', head: true })
+    .eq('status', 'pending_approval');
+  return count ?? 0;
+}
+
+export async function approveUser(id: string, adminId: string): Promise<AppUser> {
+  const { data, error } = await supabase.from('app_users').update({
+    status: 'active',
+    approved_by: adminId,
+    approved_at: new Date().toISOString(),
+    rejection_reason: null,
+  }).eq('id', id).select().single();
+  return throwOnError(data, error);
+}
+
+export async function rejectUser(id: string, reason: string, adminId: string): Promise<AppUser> {
+  const { data, error } = await supabase.from('app_users').update({
+    status: 'rejected',
+    rejection_reason: reason || 'No reason provided',
+    approved_by: adminId,
+    approved_at: new Date().toISOString(),
+  }).eq('id', id).select().single();
+  return throwOnError(data, error);
 }
 
 export async function createDirectUser(data: {
   name: string;
   email: string;
   password: string;
-  role: 'super_admin' | 'admin' | 'facilities';
+  role: AppUserRole;
+  status: AppUserStatus;
 }): Promise<{ ok: boolean; error?: string }> {
   const hash = await bcrypt.hash(data.password, 10);
   const { error } = await supabase.from('app_users').insert({
@@ -382,62 +379,31 @@ export async function createDirectUser(data: {
     email: data.email.toLowerCase().trim(),
     password_hash: hash,
     role: data.role,
-    status: 'active',
+    status: data.status,
   });
   if (error) return { ok: false, error: error.message };
   return { ok: true };
-}
-
-export async function ensureDefaultAppUsers(): Promise<{ ok: boolean; error?: string }> {
-  const defaults: { name: string; email: string; password: string; role: AppUser['role'] }[] = [
-    { name: 'Super Admin',     email: 'superadmin@nxtwave.com',  password: 'SuperAdmin@123',  role: 'super_admin' },
-    { name: 'Admin',           email: 'admin@nxtwave.com',       password: 'Admin@123',       role: 'admin'       },
-    { name: 'Facilities Team', email: 'facilities@nxtwave.com',  password: 'Facilities@123',  role: 'facilities'  },
-  ];
-  try {
-    for (const u of defaults) {
-      const existing = await getAppUserByEmail(u.email);
-      if (!existing) {
-        const hash = await bcrypt.hash(u.password, 10);
-        await supabase.from('app_users').insert({
-          name: u.name, email: u.email, password_hash: hash, role: u.role, status: 'active',
-        });
-      }
-    }
-    return { ok: true };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error('[DB] ensureDefaultAppUsers failed:', msg);
-    return { ok: false, error: 'Could not seed default users. Please run supabase-migration.sql first.' };
-  }
 }
 
 // ─── Admin helpers ────────────────────────────────────────────────────────────
 
 export async function getAdminEmails(): Promise<{ email: string; name: string }[]> {
   const { data } = await supabase
-    .from('app_users')
-    .select('email, name')
-    .in('role', ['admin', 'super_admin'])
-    .eq('status', 'active');
+    .from('app_users').select('email, name').eq('role', 'admin').eq('status', 'active');
   return data ?? [];
 }
 
 export async function getAdminAndFacilitiesIds(): Promise<string[]> {
   const { data } = await supabase
-    .from('app_users')
-    .select('id')
-    .in('role', ['admin', 'super_admin', 'facilities'])
-    .eq('status', 'active');
+    .from('app_users').select('id')
+    .in('role', ['admin', 'ta', 'facilities']).eq('status', 'active');
   return (data ?? []).map((u) => u.id);
 }
 
 export async function getAdminIds(): Promise<string[]> {
   const { data } = await supabase
-    .from('app_users')
-    .select('id')
-    .in('role', ['admin', 'super_admin'])
-    .eq('status', 'active');
+    .from('app_users').select('id')
+    .in('role', ['admin', 'ta']).eq('status', 'active');
   return (data ?? []).map((u) => u.id);
 }
 

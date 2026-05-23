@@ -52,10 +52,14 @@ function LoginForm() {
         setError(data.error ?? 'Login failed');
         return;
       }
+      // Role-based redirect after successful login
       if (data.role === 'facilities') {
         router.push('/approvals');
-      } else {
+      } else if (data.role === 'admin' || data.role === 'ta') {
         router.push('/');
+      } else {
+        // All other custom/Other roles → simple welcome page
+        router.push('/welcome');
       }
       router.refresh();
     } catch {

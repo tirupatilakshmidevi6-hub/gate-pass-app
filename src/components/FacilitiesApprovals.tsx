@@ -37,7 +37,7 @@ function matchesSearch(e: Entry, q: string) {
     .some((v) => v?.toLowerCase().includes(lower));
 }
 
-export default function FacilitiesApprovals({ userRole }: { userRole: 'super_admin' | 'admin' | 'facilities' }) {
+export default function FacilitiesApprovals({ userRole }: { userRole: string }) {
   const [entries,     setEntries]     = useState<Entry[]>([]);
   const [loading,     setLoading]     = useState(true);
   const [processing,  setProcessing]  = useState<string | null>(null);
