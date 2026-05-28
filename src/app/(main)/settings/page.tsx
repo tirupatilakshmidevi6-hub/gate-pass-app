@@ -1,9 +1,62 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Plus, Trash2, Save } from 'lucide-react';
+import { Plus, Trash2, Save, Wifi, WifiOff, Bell, BellOff, Download, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
 
 type Building = { id: string; name: string };
+
+type PWAStatus = {
+  swRegistered: boolean;
+  swScope: string | null;
+  swState: string | null;
+  notifPermission: NotificationPermission | null;
+  isInstalled: boolean;
+  isOnline: boolean;
+  cacheNames: string[];
+};
+
+function usePWAStatus(): PWAStatus {
+  const [status, setStatus] = useState<PWAStatus>({
+    swRegistered: false, swScope: null, swState: null,
+    notifPermission: null, isInstalled: false, isOnline: true, cacheNames: [],
+  });
+
+  useEffect(() => {
+    async function check() {
+      let swRegistered = false, swScope = null, swState = null;
+      let cacheNames: string[] = [];
+
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.getRegistration().catch(() => null);
+        if (reg) {
+          swRegistered = true;
+          swScope = reg.scope;
+          swState = reg.active?.state ?? reg.installing?.state ?? reg.waiting?.state ?? 'unknown';
+        }
+      }
+
+      if ('caches' in window) {
+        cacheNames = await caches.keys();
+      }
+
+      setStatus({
+        swRegistered,
+        swScope,
+        swState,
+        notifPermission: 'Notification' in window ? Notification.permission : null,
+        isInstalled: window.matchMedia('(display-mode: standalone)').matches,
+        isOnline: navigator.onLine,
+        cacheNames,
+      });
+    }
+    check();
+
+    window.addEventListener('online', () => setStatus((s) => ({ ...s, isOnline: true })));
+    window.addEventListener('offline', () => setStatus((s) => ({ ...s, isOnline: false })));
+  }, []);
+
+  return status;
+}
 
 export default function SettingsPage() {
   const [orgName, setOrgName] = useState('NxtWave Technologies');
@@ -15,6 +68,7 @@ export default function SettingsPage() {
   const [addingBuilding, setAddingBuilding] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
+  const pwa = usePWAStatus();
 
   useEffect(() => {
     Promise.all([
@@ -123,7 +177,76 @@ export default function SettingsPage() {
             <Plus size={14} />{addingBuilding ? '…' : 'Add'}
           </button>
         </div>
+        </div>
+
+      {/* PWA Status */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+        <h2 className="text-base font-semibold text-gray-800 flex items-center gap-2">
+          <Download size={16} className="text-blue-600" />
+          PWA Status
+        </h2>
+
+        <div className="grid grid-cols-2 gap-3">
+          <StatusCard
+            label="Service Worker"
+            icon={pwa.swRegistered ? <CheckCircle size={16} className="text-green-500" /> : <XCircle size={16} className="text-red-400" />}
+            value={pwa.swRegistered ? (pwa.swState ?? 'Active') : 'Not registered'}
+            sub={pwa.swScope ? `Scope: ${pwa.swScope.replace(location.origin, '')}` : undefined}
+            good={pwa.swRegistered}
+          />
+          <StatusCard
+            label="Notifications"
+            icon={pwa.notifPermission === 'granted' ? <Bell size={16} className="text-green-500" /> : <BellOff size={16} className="text-gray-400" />}
+            value={pwa.notifPermission ?? 'Not supported'}
+            good={pwa.notifPermission === 'granted'}
+          />
+          <StatusCard
+            label="Network"
+            icon={pwa.isOnline ? <Wifi size={16} className="text-green-500" /> : <WifiOff size={16} className="text-orange-500" />}
+            value={pwa.isOnline ? 'Online' : 'Offline'}
+            good={pwa.isOnline}
+          />
+          <StatusCard
+            label="Install Mode"
+            icon={pwa.isInstalled ? <CheckCircle size={16} className="text-blue-500" /> : <Download size={16} className="text-gray-400" />}
+            value={pwa.isInstalled ? 'Installed PWA' : 'Browser tab'}
+            good={pwa.isInstalled}
+          />
+        </div>
+
+        {pwa.cacheNames.length > 0 && (
+          <div>
+            <p className="text-xs font-medium text-gray-600 mb-1.5">Active Caches ({pwa.cacheNames.length})</p>
+            <div className="flex flex-wrap gap-1.5">
+              {pwa.cacheNames.map((c) => (
+                <span key={c} className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 rounded-full font-mono truncate max-w-[200px]">{c}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <button
+          onClick={() => window.location.reload()}
+          className="flex items-center gap-2 text-xs text-gray-500 hover:text-blue-600 transition-colors"
+        >
+          <RefreshCw size={13} /> Refresh status
+        </button>
       </div>
+    </div>
+  );
+}
+
+function StatusCard({ label, icon, value, sub, good }: {
+  label: string; icon: React.ReactNode; value: string; sub?: string; good: boolean;
+}) {
+  return (
+    <div className={`rounded-lg border p-3 ${good ? 'border-green-100 bg-green-50' : 'border-gray-100 bg-gray-50'}`}>
+      <div className="flex items-center gap-1.5 mb-1">
+        {icon}
+        <span className="text-xs font-medium text-gray-600">{label}</span>
+      </div>
+      <div className={`text-sm font-semibold capitalize ${good ? 'text-gray-900' : 'text-gray-500'}`}>{value}</div>
+      {sub && <div className="text-xs text-gray-400 mt-0.5 truncate">{sub}</div>}
     </div>
   );
 }
