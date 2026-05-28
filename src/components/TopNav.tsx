@@ -140,20 +140,18 @@ export default function TopNav({
   }
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 h-16 flex items-center gap-4 sticky top-0 z-20">
-      <button className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg flex-shrink-0"><Menu size={20} /></button>
-
+    <header className="bg-white border-b border-gray-200 pl-14 md:pl-6 pr-4 md:pr-6 h-16 flex items-center gap-4 sticky top-0 z-20">
       {/* Page title */}
       <div className="min-w-0 flex-shrink-0">
         <h1 className="text-base font-bold text-gray-900 leading-tight">{pageTitle}</h1>
-        <div className="text-xs text-gray-400 flex items-center gap-1">
+        <div className="text-xs text-gray-400 hidden sm:flex items-center gap-1">
           <span>Home</span><span className="text-gray-300">›</span><span>{pageTitle}</span>
         </div>
       </div>
 
-      {/* Search */}
+      {/* Search — hidden on mobile, icon only */}
       <div className="flex-1 flex justify-center">
-        <div className="relative w-72 xl:w-96" ref={searchRef}>
+        <div className="relative w-72 xl:w-96 hidden sm:block" ref={searchRef}>
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10" />
           <input type="text" value={query} onChange={(e) => { setQuery(e.target.value); setShowSearch(true); }}
             onFocus={handleFocus} placeholder="Search entries by name, phone, email…"
@@ -185,8 +183,17 @@ export default function TopNav({
         </div>
       </div>
 
+      {/* Mobile search icon (sm and below) */}
+      <button
+        className="sm:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors ml-auto"
+        onClick={() => { setShowSearch(true); setQuery(''); }}
+        aria-label="Search"
+      >
+        <Search size={20} />
+      </button>
+
       {/* Right actions */}
-      <div className="flex items-center gap-1 flex-shrink-0">
+      <div className="flex items-center gap-1 flex-shrink-0 sm:ml-0">
 
         {/* Notifications Bell */}
         <div className="relative" ref={notifRef}>
