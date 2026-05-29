@@ -13,7 +13,6 @@ const withPWA = withPWAInit({
   workboxOptions: {
     disableDevLogs: true,
     runtimeCaching: [
-      // Cache-first for static assets
       {
         urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
         handler: 'CacheFirst',
@@ -32,7 +31,6 @@ const withPWA = withPWAInit({
           cacheableResponse: { statuses: [0, 200] },
         },
       },
-      // Network-first for API calls
       {
         urlPattern: /^\/api\/.*/i,
         handler: 'NetworkFirst',
@@ -43,7 +41,6 @@ const withPWA = withPWAInit({
           cacheableResponse: { statuses: [0, 200] },
         },
       },
-      // Stale-while-revalidate for dashboard and list pages
       {
         urlPattern: /^\/(entry-list|approvals|reports|activity|users)\/?$/i,
         handler: 'StaleWhileRevalidate',
@@ -53,7 +50,6 @@ const withPWA = withPWAInit({
           cacheableResponse: { statuses: [0, 200] },
         },
       },
-      // Stale-while-revalidate for JS and CSS chunks
       {
         urlPattern: /\/_next\/static\/.*/i,
         handler: 'CacheFirst',
