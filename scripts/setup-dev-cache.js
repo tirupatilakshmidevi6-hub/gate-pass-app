@@ -69,24 +69,3 @@ if (process.platform === 'win32') {
   console.log(`[predev] ✓ Symlink created: .next → ${buildTarget}`);
 }
 
-// Node.js resolves require() based on the PHYSICAL path of the calling file.
-// Server bundles run from inside buildTarget, so Node walks up from there and
-// never reaches the project's node_modules. Fix: add a node_modules junction
-// inside buildTarget so the walk finds packages at step 4.
-const nodeModulesInCache   = path.join(buildTarget, 'node_modules');
-const nodeModulesInProject = path.join(projectRoot, 'node_modules');
-
-if (!fs.existsSync(nodeModulesInCache)) {
-  if (process.platform === 'win32') {
-    execSync(`mklink /J "${nodeModulesInCache}" "${nodeModulesInProject}"`, {
-      shell: 'cmd.exe',
-      stdio: 'pipe',
-    });
-    console.log(`[predev] ✓ node_modules junction created in cache`);
-  } else {
-    fs.symlinkSync(nodeModulesInProject, nodeModulesInCache, 'dir');
-    console.log(`[predev] ✓ node_modules symlink created in cache`);
-  }
-} else {
-  console.log(`[predev] node_modules junction already exists in cache`);
-}
