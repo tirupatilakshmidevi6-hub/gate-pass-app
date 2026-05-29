@@ -126,8 +126,8 @@ export default function NewEntryPage() {
 
   if (created) {
     return (
-      <div className="max-w-lg mx-auto">
-        <div className="bg-white rounded-xl border border-green-200 p-8 space-y-4">
+      <div className="max-w-lg mx-auto px-3 sm:px-0">
+        <div className="bg-white rounded-xl border border-green-200 p-5 sm:p-8 space-y-4">
           <div className="text-center space-y-2">
             <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto">
               <svg className="w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
@@ -166,9 +166,9 @@ export default function NewEntryPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Add New Entry</h1>
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
+    <div className="max-w-lg mx-auto px-3 sm:px-0">
+      <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Add New Entry</h1>
+      <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2">{error}</p>}
 
@@ -195,12 +195,12 @@ export default function NewEntryPage() {
 
           <Field label="Full Name *"><input name="name" value={form.name} onChange={handleChange} required placeholder="Full Name" className="input" /></Field>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Email *"><input name="email" type="email" value={form.email} onChange={handleChange} required placeholder="candidate@example.com" className="input" /></Field>
             <Field label="Mobile *"><input name="mobile_number" type="tel" value={form.mobile_number} onChange={handleChange} onBlur={() => handleMobileBlur('mobile_number')} required placeholder="+91 9876543210" className="input" /></Field>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Role *">
               <select value={isOtherRole ? '__other__' : form.role} onChange={handleRoleSelect} required={!isOtherRole} className="input">
                 <option value="">Select role</option>
@@ -216,7 +216,7 @@ export default function NewEntryPage() {
             </Field>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Reporting Date *"><input name="reporting_date" type="date" value={form.reporting_date} onChange={handleChange} required className="input" /></Field>
             <Field label="Valid Until *">
               <input name="valid_until" type="date" value={form.valid_until} onChange={handleChange} required className="input" />
@@ -226,7 +226,7 @@ export default function NewEntryPage() {
 
           <div className="space-y-3">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Point of Contact</p>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="POC Name *"><input name="poc_name" value={form.poc_name} onChange={handleChange} required placeholder="Point of Contact Name" className="input" /></Field>
               <Field label="Employee ID"><input name="employee_id" value={form.employee_id} onChange={handleChange} placeholder="NW0000001" className="input" /></Field>
             </div>
@@ -242,7 +242,7 @@ export default function NewEntryPage() {
             {isOtherBuilding && <input value={customBuilding} onChange={(e) => setCustomBuilding(e.target.value)} required placeholder="Enter building name" className="input mt-2" />}
           </Field>
 
-          <button type="submit" disabled={submitting} className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-lg font-medium transition-colors">
+          <button type="submit" disabled={submitting} className="w-full py-3 sm:py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-lg font-medium transition-colors text-sm sm:text-base">
             {submitting ? 'Creating…' : 'Create Entry & Send Invite'}
           </button>
         </form>

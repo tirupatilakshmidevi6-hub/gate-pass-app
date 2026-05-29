@@ -79,14 +79,15 @@ export default function ActivityPage() {
     setLoading(false);
   }, [search, actionFilter, fromDate, toDate]);
 
-  useEffect(() => { fetchLogs(); }, [fetchLogs]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { void fetchLogs(); }, [fetchLogs]);
 
   return (
-    <div className="space-y-5 p-6">
+    <div className="page-container space-y-4 sm:space-y-5">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Activity Log</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Full audit trail of all system actions</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Activity Log</h1>
+          <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Full audit trail of all system actions</p>
         </div>
         <button onClick={fetchLogs} className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
           <RefreshCw size={14} />Refresh
@@ -95,26 +96,26 @@ export default function ActivityPage() {
 
       {/* Filters */}
       <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 flex flex-wrap gap-3 items-end">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wide w-full sm:w-auto">
           <Filter size={12} />Filters
         </div>
-        <div className="relative flex-1 min-w-[180px]">
+        <div className="relative w-full sm:flex-1 sm:min-w-[180px]">
           <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
           <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
             placeholder="Search candidate name…"
-            className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
         <select value={actionFilter} onChange={(e) => setActionFilter(e.target.value)}
-          className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+          className="w-full sm:w-auto px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
           <option value="">All Actions</option>
           {ACTION_TYPES.map((a) => <option key={a.key} value={a.key}>{a.label}</option>)}
         </select>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)}
-            className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          <span className="text-gray-400 text-xs">to</span>
+            className="flex-1 sm:flex-none px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <span className="text-gray-400 text-xs flex-shrink-0">to</span>
           <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)}
-            className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            className="flex-1 sm:flex-none px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
         {(search || actionFilter || fromDate || toDate) && (
           <button onClick={() => { setSearch(''); setActionFilter(''); setFromDate(''); setToDate(''); }}
@@ -132,19 +133,19 @@ export default function ActivityPage() {
           {logs.map((log) => {
             const meta = ACTION_META[log.action] ?? DEFAULT_META;
             return (
-              <div key={log.id} className="flex items-start gap-4 px-5 py-4 hover:bg-gray-50 transition-colors">
-                <div className={`flex-shrink-0 w-8 h-8 rounded-full border flex items-center justify-center ${meta.color}`}>
+              <div key={log.id} className="flex items-start gap-3 sm:gap-4 px-4 sm:px-5 py-3.5 sm:py-4 hover:bg-gray-50 transition-colors">
+                <div className={`flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full border flex items-center justify-center [&_svg]:w-3 [&_svg]:h-3 sm:[&_svg]:w-3.5 sm:[&_svg]:h-3.5 ${meta.color}`}>
                   {meta.icon}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${meta.color}`}>{meta.label}</span>
-                    {log.candidate_name && <span className="text-xs text-gray-500">{log.candidate_name}</span>}
+                    {log.candidate_name && <span className="text-xs text-gray-500 hidden sm:inline">{log.candidate_name}</span>}
                   </div>
-                  <p className="text-sm text-gray-700 mt-0.5">{buildDescription(log)}</p>
-                  <div className="text-xs text-gray-400 mt-1 flex items-center gap-3">
-                    <span><Clock size={10} className="inline mr-1" />{timeAgo(log.created_at)}</span>
-                    <span>{new Date(log.created_at).toLocaleString()}</span>
+                  <p className="text-xs sm:text-sm text-gray-700 mt-0.5 leading-snug">{buildDescription(log)}</p>
+                  <div className="text-[11px] text-gray-400 mt-1 flex items-center gap-2 flex-wrap">
+                    <span><Clock size={10} className="inline mr-0.5" />{timeAgo(log.created_at)}</span>
+                    <span className="hidden sm:inline">{new Date(log.created_at).toLocaleString()}</span>
                   </div>
                 </div>
                 {log.entry_id && (
