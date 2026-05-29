@@ -3,6 +3,9 @@ import type { GatePassData } from './gate-pass';
 import { generateGatePassBodyHtml } from './gate-pass';
 
 function createTransporter() {
+  // NOTE: GMAIL_APP_PASSWORD must be the App Password generated from narayana.dubbala@nxtwave.co.in
+  // Google account (not any personal Gmail account). Generate at: myaccount.google.com → Security →
+  // 2-Step Verification → App Passwords.
   return nodemailer.createTransport({
     host: 'smtp.gmail.com', port: 587, secure: false,
     auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
@@ -37,6 +40,28 @@ async function send(label: string, opts: MailOpts) {
     console.error(`[Email] ${label} ✗ FAILED`, err);
     throw err;
   }
+}
+
+// ─── SMTP health check ───────────────────────────────────────────────────────
+
+export async function verifySmtp(): Promise<void> {
+  const transporter = createTransporter();
+  await transporter.verify();
+}
+
+export async function sendTestEmail(to: string, name: string) {
+  return send('sendTestEmail', {
+    from: fromAddress(),
+    to,
+    ...(ccAddress() ? { cc: ccAddress() } : {}),
+    subject: 'NxtWave Gate Pass — SMTP Test ✓',
+    html: emailShell('SMTP Test', 'Email Configuration', `
+      <p style="font-size:15px;color:#0f172a;font-weight:600;margin:0 0 12px;">Hello ${esc(name)},</p>
+      <p style="font-size:14px;color:#475569;line-height:1.6;margin:0 0 16px;">This is a test email confirming that your SMTP configuration is working correctly.</p>
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;">
+        <p style="font-size:13px;color:#15803d;margin:0;font-weight:600;">✓ Email delivery is working</p>
+      </div>`),
+  });
 }
 
 // ─── Candidate emails ─────────────────────────────────────────────────────────
