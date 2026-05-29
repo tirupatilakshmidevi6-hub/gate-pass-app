@@ -1,36 +1,154 @@
 @import "tailwindcss";
 
+/* ─── Base ─────────────────────────────────────────────────────────────────── */
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   font-family: Arial, Helvetica, sans-serif;
+  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
+  min-font-size: 14px;
 }
+
+/* Remove iOS tap highlight on interactive elements */
+a, button, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Prevent iOS Safari from zooming into focused inputs (requires font-size >= 16px) */
+@media (max-width: 768px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Minimum body text on mobile */
+@media (max-width: 640px) {
+  p, span, td, th, li { font-size: max(14px, 1em); }
+}
+
+/* ─── Component utilities ───────────────────────────────────────────────────── */
 
 @layer components {
   .input {
-    @apply w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white;
+    @apply w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white;
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  /* Safe-area helpers for iPhone notch & home bar */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .safe-area-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
+  }
+  .safe-area-left {
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+
+  /* Touch-optimised scrollable containers */
+  .touch-scroll {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .touch-scroll-x {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  /* Minimum 44px tap target for all buttons */
+  .btn-tap {
+    @apply flex items-center justify-center;
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Page wrapper — tight padding on mobile, comfortable on larger screens */
+  .page-container {
+    @apply px-3 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6;
+  }
+
+  /* Card — consistent rounded + shadow */
+  .card {
+    @apply bg-white rounded-2xl border border-gray-200 shadow-sm;
+  }
+
+  /* Full-width button on mobile */
+  .btn-mobile-full {
+    @apply w-full sm:w-auto;
+    min-height: 44px;
+  }
+
+  /* Scrollable table wrapper with fade indicator on right edge */
+  .table-container {
+    @apply w-full;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+  .table-container::-webkit-scrollbar { height: 4px; }
+  .table-container::-webkit-scrollbar-track { background: transparent; }
+  .table-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+  /* Mobile-only card list (replaces table rows on small screens) */
+  .mobile-card {
+    @apply bg-white rounded-xl border border-gray-200 p-4 shadow-sm;
+  }
+
+  /* Modal — full screen on mobile, centered on desktop */
+  .modal-wrapper {
+    @apply fixed inset-0 z-50 flex;
+  }
+  .modal-backdrop {
+    @apply fixed inset-0 bg-black/50 backdrop-blur-sm;
+  }
+  .modal-panel {
+    @apply relative w-full sm:max-w-lg sm:mx-auto sm:my-auto bg-white sm:rounded-2xl overflow-hidden flex flex-col;
+    height: 100%;
+  }
+  @media (min-width: 640px) {
+    .modal-panel { height: auto; max-height: 90vh; }
+  }
+  .modal-header {
+    @apply flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-100 flex-shrink-0;
+    padding-top: max(16px, env(safe-area-inset-top, 0px));
+  }
+  .modal-body {
+    @apply flex-1 px-4 sm:px-6 py-4;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .modal-footer {
+    @apply flex items-center gap-3 px-4 sm:px-6 py-4 border-t border-gray-100 flex-shrink-0;
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
   }
 }
 
 /* ─── Dark Mode Overrides ───────────────────────────────────────────────────── */
-/* Applied when <html class="dark"> is set by ThemeProvider                     */
 
-/* Keep sidebar logo container white always */
 html.dark aside .bg-white { background-color: white !important; }
 
-/* Body */
 html.dark body { background-color: #0f172a; color: #e2e8f0; }
 
-/* Backgrounds */
-html.dark .bg-white  { background-color: #1e293b; }
-html.dark .bg-gray-50 { background-color: #0f172a; }
+html.dark .bg-white    { background-color: #1e293b; }
+html.dark .bg-gray-50  { background-color: #0f172a; }
 html.dark .bg-gray-100 { background-color: #1e293b; }
 html.dark .bg-gray-200 { background-color: #334155; }
 
-/* Borders */
 html.dark .border-gray-100 { border-color: #263148; }
 html.dark .border-gray-200 { border-color: #334155; }
 html.dark .border-gray-300 { border-color: #475569; }
 
-/* Text */
 html.dark .text-gray-900 { color: #f1f5f9; }
 html.dark .text-gray-800 { color: #e2e8f0; }
 html.dark .text-gray-700 { color: #cbd5e1; }
@@ -38,23 +156,18 @@ html.dark .text-gray-600 { color: #94a3b8; }
 html.dark .text-gray-500 { color: #64748b; }
 html.dark .text-gray-400 { color: #475569; }
 
-/* Hover backgrounds */
 html.dark .hover\:bg-gray-50:hover  { background-color: #263148; }
 html.dark .hover\:bg-gray-100:hover { background-color: #334155; }
 html.dark .hover\:bg-gray-200:hover { background-color: #3d4e68; }
 
-/* Sticky top nav */
 html.dark header { background-color: #1e293b !important; border-color: #334155 !important; }
 
-/* Table header rows */
 html.dark thead tr { background-color: #1e293b !important; }
 html.dark th { color: #94a3b8 !important; }
 
-/* Table dividers */
 html.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: #334155 !important; }
 html.dark .divide-y > :not([hidden]) ~ :not([hidden])        { border-color: #334155 !important; }
 
-/* All input, select, textarea */
 html.dark input:not([type="checkbox"]):not([type="radio"]),
 html.dark select,
 html.dark textarea {
@@ -65,47 +178,177 @@ html.dark textarea {
 html.dark input::placeholder,
 html.dark textarea::placeholder { color: #475569 !important; }
 
-/* .input utility */
 html.dark .input {
   background-color: #1e293b !important;
   border-color: #334155 !important;
   color: #f1f5f9 !important;
 }
 
-/* Modals / popups */
 html.dark .fixed.inset-0 > div { background-color: #1e293b !important; }
 
-/* Search dropdown */
 html.dark .search-dropdown { background-color: #1e293b !important; border-color: #334155 !important; }
 html.dark .search-dropdown button:hover { background-color: #263148 !important; }
 html.dark .search-dropdown .border-gray-100 { border-color: #334155 !important; }
 
-/* rounded-2xl cards (reports, etc.) */
 html.dark .rounded-2xl.bg-white,
 html.dark .rounded-2xl { background-color: #1e293b; border-color: #334155; }
 
-/* Shadows in dark mode — tone them down */
 html.dark .shadow-sm { box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
 html.dark .shadow-md { box-shadow: 0 4px 8px rgba(0,0,0,0.4); }
 html.dark .shadow-xl { box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
 
-/* KPI cards inner text */
 html.dark .text-gray-900 { color: #f1f5f9; }
 
-/* Table sticky header in dark mode */
 html.dark thead.sticky { background-color: #1e293b !important; }
 html.dark th.border-b   { border-color: #334155 !important; }
 
-/* Filter/export dropdown in dark */
 html.dark .z-30.bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
 
-/* Pagination buttons */
 html.dark .bg-blue-600 { background-color: #2563eb !important; }
 
-/* Smooth theme transition */
+/* ─── Smooth theme transitions ───────────────────────────────────────────────── */
+
 *, *::before, *::after {
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
 }
-/* Exclude transitions that would look jarring */
 input, select, textarea, button, a, img, svg { transition: none; }
-button { transition: background-color 0.15s ease, color 0.1s ease, border-color 0.1s ease, box-shadow 0.15s ease; }
+button { transition: background-color 0.15s ease, color 0.1s ease, border-color 0.1s ease, box-shadow 0.15s ease, opacity 0.1s ease; }
+
+/* ─── Mobile Table Scroll ────────────────────────────────────────────────────── */
+
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+.table-wrapper table {
+  min-width: 600px;
+}
+
+/* Scroll hint shadow on tables when content overflows */
+.table-wrapper {
+  position: relative;
+}
+
+/* ─── PWA / iPhone Safe Area ─────────────────────────────────────────────────── */
+
+@media (display-mode: standalone) {
+  header.sticky {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+}
+
+/* iOS safe area on bottom navigation */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-area-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 8px);
+  }
+}
+
+/* ─── Mobile Modal ───────────────────────────────────────────────────────────── */
+
+/* On mobile, modals slide up from bottom like native sheets */
+@media (max-width: 639px) {
+  .modal-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: 20px 20px 0 0;
+    height: auto;
+    max-height: 95dvh;
+    animation: slideUp 0.3s ease-out;
+  }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ─── Pull-to-Refresh CSS indicator ─────────────────────────────────────────── */
+
+.ptr-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 0;
+  overflow: hidden;
+  transition: height 0.2s ease;
+  color: #6b7280;
+  font-size: 13px;
+  gap: 8px;
+}
+.ptr-indicator.ptr-active { height: 56px; }
+.ptr-indicator.ptr-refreshing { height: 56px; }
+.ptr-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e5e7eb;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Form mobile improvements ───────────────────────────────────────────────── */
+
+/* Registration form — large, easy to tap on mobile */
+@media (max-width: 640px) {
+  .form-section {
+    @apply space-y-4;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+  }
+}
+
+/* Sticky submit button on mobile for long forms */
+.sticky-submit {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding: 12px 16px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  border-top: 1px solid #e5e7eb;
+  z-index: 10;
+}
+
+/* ─── Images ─────────────────────────────────────────────────────────────────── */
+
+img {
+  max-width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+/* ─── Prevent horizontal overflow globally ───────────────────────────────────── */
+
+.overflow-guard {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* ─── Button minimum touch targets ───────────────────────────────────────────── */
+
+button, a[role="button"], [role="button"] {
+  min-height: 44px;
+}
+/* Override for icon-only buttons and badges */
+button.icon-btn, .badge-btn {
+  min-height: unset;
+}
+
+/* ─── Sidebar transition ─────────────────────────────────────────────────────── */
+
+/* Ensure the desktop sidebar wrapper transitions width smoothly */
+aside {
+  will-change: width;
+}

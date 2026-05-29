@@ -129,6 +129,7 @@ export default function ReportsPage() {
     return () => document.removeEventListener('mousedown', h);
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setPage(1); }, [date, statusFilter, roleFilter]);
 
   const byDate = useMemo(() => entries.filter((e) => e.reporting_date === date), [entries, date]);
@@ -172,7 +173,7 @@ export default function ReportsPage() {
   ];
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="page-container space-y-4 sm:space-y-5">
 
       {/* ── Date picker row ──────────────────────────────────────────────────── */}
       <div className="flex items-center justify-end gap-2">
@@ -212,16 +213,16 @@ export default function ReportsPage() {
           <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
             {kpiCards.map((card) => (
               <div key={card.label}
-                className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col gap-3">
+                className="bg-white rounded-2xl border border-gray-100 p-3 sm:p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col gap-2 sm:gap-3">
                 <div className="flex items-start justify-between">
-                  <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                  <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center flex-shrink-0 [&_svg]:w-5 [&_svg]:h-5 sm:[&_svg]:w-[22px] sm:[&_svg]:h-[22px]"
                     style={{ background: card.bgIcon }}>
                     {card.icon(card.iconColor)}
                   </div>
-                  <span className="text-3xl font-extrabold text-gray-900 leading-none">{card.value}</span>
+                  <span className="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-none">{card.value}</span>
                 </div>
-                <p className="text-xs font-medium text-gray-500 leading-tight">{card.label}</p>
-                <Sparkline variant={card.wave} color={card.waveColor} />
+                <p className="text-[11px] sm:text-xs font-medium text-gray-500 leading-tight">{card.label}</p>
+                <div className="hidden sm:block"><Sparkline variant={card.wave} color={card.waveColor} /></div>
               </div>
             ))}
           </div>
@@ -230,8 +231,8 @@ export default function ReportsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
             {/* By Role */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-              <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[2.5px] mb-5">By Role</h3>
+            <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 shadow-sm">
+              <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[2.5px] mb-4 sm:mb-5">By Role</h3>
               {byRole.length === 0 ? <EmptyChart /> : (
                 <div className="flex items-center gap-5">
                   <DonutChart
@@ -255,8 +256,8 @@ export default function ReportsPage() {
             </div>
 
             {/* By Building */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-              <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[2.5px] mb-5">By Building</h3>
+            <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 shadow-sm">
+              <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[2.5px] mb-4 sm:mb-5">By Building</h3>
               {byBuilding.length === 0 ? <EmptyChart /> : (
                 <div className="space-y-4">
                   {byBuilding.map(([bldg, cnt]) => (
@@ -281,8 +282,8 @@ export default function ReportsPage() {
             </div>
 
             {/* By Status */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-              <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[2.5px] mb-5">By Status</h3>
+            <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 shadow-sm">
+              <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[2.5px] mb-4 sm:mb-5">By Status</h3>
               {byStatus.length === 0 ? <EmptyChart /> : (
                 <div className="flex items-center gap-5">
                   <DonutChart
@@ -314,10 +315,10 @@ export default function ReportsPage() {
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
 
             {/* Table toolbar */}
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3">
-              <h3 className="text-base font-semibold text-gray-800">
-                Entries for Today
-                <span className="ml-2 text-sm font-normal text-gray-400">({filtered.length})</span>
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3">
+              <h3 className="text-sm sm:text-base font-semibold text-gray-800">
+                Entries for {date === today ? 'Today' : fmtDisplay(date)}
+                <span className="ml-2 text-xs sm:text-sm font-normal text-gray-400">({filtered.length})</span>
               </h3>
               <div className="flex items-center gap-2">
                 {/* Filter dropdown */}
@@ -386,7 +387,7 @@ export default function ReportsPage() {
 
             {/* Table */}
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm" style={{ minWidth: 550 }}>
                 <thead className="bg-gray-50 sticky top-0 z-10">
                   <tr>
                     {['#', 'NAME', 'ROLE', 'PURPOSE', 'BUILDING', 'STATUS', 'TIME'].map((h) => (
@@ -447,7 +448,7 @@ export default function ReportsPage() {
 
             {/* Pagination */}
             {filtered.length > 0 && (
-              <div className="px-6 py-3.5 border-t border-gray-100 flex items-center justify-between flex-wrap gap-3">
+              <div className="px-4 sm:px-6 py-3 sm:py-3.5 border-t border-gray-100 flex items-center justify-between flex-wrap gap-3">
                 <span className="text-xs text-gray-500">
                   Showing{' '}
                   <span className="font-semibold text-gray-700">

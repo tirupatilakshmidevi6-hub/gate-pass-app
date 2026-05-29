@@ -5,68 +5,69 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, UserPlus, Upload, List,
-  Building2, BarChart2, Settings, LogOut, Shield, Users, Activity, Menu, X,
+  Building2, BarChart2, Settings, LogOut, Shield, Users, Activity,
+  Menu, X, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 
 type Role = string;
+type NavItem = { label: string; href: string; icon: React.ElementType };
 
-const ADMIN_NAV = [
-  { label: 'Dashboard',    href: '/',           icon: LayoutDashboard },
-  { label: 'New Entry',    href: '/new-entry',  icon: UserPlus },
+const ADMIN_NAV: NavItem[] = [
+  { label: 'Dashboard',    href: '/',            icon: LayoutDashboard },
+  { label: 'New Entry',    href: '/new-entry',   icon: UserPlus },
   { label: 'Bulk Upload',  href: '/bulk-upload', icon: Upload },
-  { label: 'Entry List',   href: '/entry-list', icon: List },
-  { label: 'Reports',      href: '/reports',    icon: BarChart2 },
-  { label: 'Activity Log', href: '/activity',   icon: Activity },
-  { label: 'Users',        href: '/users',      icon: Users },
-  { label: 'Settings',     href: '/settings',   icon: Settings },
+  { label: 'Entry List',   href: '/entry-list',  icon: List },
+  { label: 'Reports',      href: '/reports',     icon: BarChart2 },
+  { label: 'Activity Log', href: '/activity',    icon: Activity },
+  { label: 'Users',        href: '/users',       icon: Users },
+  { label: 'Settings',     href: '/settings',    icon: Settings },
 ];
 
-const TA_NAV = [
-  { label: 'Dashboard',    href: '/',           icon: LayoutDashboard },
-  { label: 'New Entry',    href: '/new-entry',  icon: UserPlus },
+const TA_NAV: NavItem[] = [
+  { label: 'Dashboard',    href: '/',            icon: LayoutDashboard },
+  { label: 'New Entry',    href: '/new-entry',   icon: UserPlus },
   { label: 'Bulk Upload',  href: '/bulk-upload', icon: Upload },
-  { label: 'Entry List',   href: '/entry-list', icon: List },
-  { label: 'Reports',      href: '/reports',    icon: BarChart2 },
-  { label: 'Activity Log', href: '/activity',   icon: Activity },
+  { label: 'Entry List',   href: '/entry-list',  icon: List },
+  { label: 'Reports',      href: '/reports',     icon: BarChart2 },
+  { label: 'Activity Log', href: '/activity',    icon: Activity },
 ];
 
-const FACILITIES_NAV = [
-  { label: 'Dashboard',  href: '/',           icon: LayoutDashboard },
-  { label: 'Approvals',  href: '/approvals',  icon: Building2 },
-  { label: 'Entry List', href: '/entry-list', icon: List },
-  { label: 'Reports',    href: '/reports',    icon: BarChart2 },
+const FACILITIES_NAV: NavItem[] = [
+  { label: 'Dashboard',  href: '/',            icon: LayoutDashboard },
+  { label: 'Approvals',  href: '/approvals',   icon: Building2 },
+  { label: 'Entry List', href: '/entry-list',  icon: List },
+  { label: 'Reports',    href: '/reports',     icon: BarChart2 },
 ];
 
-// Bottom nav items shown on mobile
-const BOTTOM_NAV_ADMIN = [
-  { label: 'Dashboard', href: '/',           icon: LayoutDashboard },
-  { label: 'New Entry', href: '/new-entry',  icon: UserPlus },
-  { label: 'Approvals', href: '/approvals',  icon: Building2 },
-  { label: 'List',      href: '/entry-list', icon: List },
+const BOTTOM_NAV_ADMIN: NavItem[] = [
+  { label: 'Dashboard', href: '/',            icon: LayoutDashboard },
+  { label: 'New Entry', href: '/new-entry',   icon: UserPlus },
+  { label: 'Approvals', href: '/approvals',   icon: Building2 },
+  { label: 'List',      href: '/entry-list',  icon: List },
 ];
 
-const BOTTOM_NAV_TA = [
-  { label: 'Dashboard', href: '/',           icon: LayoutDashboard },
-  { label: 'New Entry', href: '/new-entry',  icon: UserPlus },
-  { label: 'List',      href: '/entry-list', icon: List },
-  { label: 'Reports',   href: '/reports',    icon: BarChart2 },
+const BOTTOM_NAV_TA: NavItem[] = [
+  { label: 'Dashboard', href: '/',            icon: LayoutDashboard },
+  { label: 'New Entry', href: '/new-entry',   icon: UserPlus },
+  { label: 'List',      href: '/entry-list',  icon: List },
+  { label: 'Reports',   href: '/reports',     icon: BarChart2 },
 ];
 
-const BOTTOM_NAV_FACILITIES = [
-  { label: 'Dashboard', href: '/',           icon: LayoutDashboard },
-  { label: 'Approvals', href: '/approvals',  icon: Building2 },
-  { label: 'List',      href: '/entry-list', icon: List },
-  { label: 'Reports',   href: '/reports',    icon: BarChart2 },
+const BOTTOM_NAV_FACILITIES: NavItem[] = [
+  { label: 'Dashboard', href: '/',            icon: LayoutDashboard },
+  { label: 'Approvals', href: '/approvals',   icon: Building2 },
+  { label: 'List',      href: '/entry-list',  icon: List },
+  { label: 'Reports',   href: '/reports',     icon: BarChart2 },
 ];
 
-function navFor(role: Role) {
+function navFor(role: Role): NavItem[] {
   if (role === 'admin')      return ADMIN_NAV;
   if (role === 'ta')         return TA_NAV;
   if (role === 'facilities') return FACILITIES_NAV;
   return [];
 }
 
-function bottomNavFor(role: Role) {
+function bottomNavFor(role: Role): NavItem[] {
   if (role === 'admin')      return BOTTOM_NAV_ADMIN;
   if (role === 'ta')         return BOTTOM_NAV_TA;
   if (role === 'facilities') return BOTTOM_NAV_FACILITIES;
@@ -74,41 +75,199 @@ function bottomNavFor(role: Role) {
 }
 
 const ROLE_BADGE: Record<string, { label: string; cls: string }> = {
-  admin:      { label: 'Admin',          cls: 'bg-purple-900 text-purple-300' },
-  ta:         { label: 'TA / HR Team',   cls: 'bg-blue-900   text-blue-300'   },
-  facilities: { label: 'Facilities Team', cls: 'bg-teal-900  text-teal-300'   },
-  staff:      { label: 'Staff',          cls: 'bg-green-900  text-green-300'  },
-  intern:     { label: 'Intern',         cls: 'bg-amber-900  text-amber-300'  },
-  other:      { label: 'Other',          cls: 'bg-gray-700   text-gray-300'   },
+  admin:      { label: 'Admin',           cls: 'bg-purple-900 text-purple-300' },
+  ta:         { label: 'TA / HR Team',    cls: 'bg-blue-900   text-blue-300'   },
+  facilities: { label: 'Facilities Team', cls: 'bg-teal-900   text-teal-300'   },
+  staff:      { label: 'Staff',           cls: 'bg-green-900  text-green-300'  },
+  intern:     { label: 'Intern',          cls: 'bg-amber-900  text-amber-300'  },
+  other:      { label: 'Other',           cls: 'bg-gray-700   text-gray-300'   },
 };
 
+// ─── Tooltip shown next to collapsed icons ────────────────────────────────────
+
+function NavTooltip({ label }: { label: string }) {
+  return (
+    <span className="absolute left-full ml-2.5 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-gray-800 text-white text-xs rounded-md whitespace-nowrap shadow-lg border border-gray-700 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[60]">
+      {label}
+    </span>
+  );
+}
+
+// ─── Sidebar panel (top-level component, not nested) ─────────────────────────
+
+interface PanelProps {
+  navItems: NavItem[];
+  pathname: string;
+  pendingCount?: number;
+  pendingUsersCount?: number;
+  userName?: string;
+  badge: { label: string; cls: string };
+  collapsed: boolean;
+  isMobile: boolean;
+  onToggle?: () => void;
+  onClose: () => void;
+  onLogout: () => void;
+}
+
+function SidebarPanel({
+  navItems, pathname, pendingCount, pendingUsersCount,
+  userName, badge, collapsed, isMobile, onToggle, onClose, onLogout,
+}: PanelProps) {
+  const isCollapsedMode = !isMobile && collapsed;
+
+  return (
+    <aside
+      className={`${isMobile ? 'w-64' : isCollapsedMode ? 'w-16' : 'w-56'} h-full bg-gray-900 text-white flex flex-col overflow-y-auto overflow-x-hidden transition-all duration-300 ease-in-out`}
+    >
+      {/* ── Header: logo + toggle ── */}
+      <div className={`border-b border-gray-700 flex items-center ${isCollapsedMode ? 'px-2 py-3 justify-center flex-col gap-2' : 'px-4 py-3 justify-between'}`}>
+        {isCollapsedMode ? (
+          <Link href="/" className="w-9 h-9 bg-white rounded-lg flex items-center justify-center hover:opacity-90 transition-opacity flex-shrink-0">
+            <Shield size={18} className="text-blue-700" />
+          </Link>
+        ) : (
+          <Link href="/" className="inline-block" onClick={isMobile ? onClose : undefined}>
+            <div className="bg-white rounded-lg px-3 py-1.5 hover:opacity-90 transition-opacity">
+              <img
+                src="https://www.image2url.com/r2/default/images/1779254824307-0fca63d9-e1eb-4ccf-bfb4-4c663ca4ae5e.jpeg"
+                alt="NxtWave"
+                className="h-7 w-auto object-contain"
+              />
+            </div>
+          </Link>
+        )}
+
+        {isMobile ? (
+          <button onClick={onClose} className="p-1.5 bg-gray-700 rounded-lg text-gray-300 hover:text-white transition-colors" aria-label="Close menu">
+            <X size={18} />
+          </button>
+        ) : onToggle && (
+          <button onClick={onToggle} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0" aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+            {collapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
+          </button>
+        )}
+      </div>
+
+      {/* ── Navigation ── */}
+      <nav className={`flex-1 py-2 ${isCollapsedMode ? 'px-1.5' : ''}`}>
+        {navItems.map(({ label, href, icon: Icon }) => {
+          const active          = pathname === href || (href !== '/' && pathname.startsWith(href));
+          const hasPendingBadge = label === 'Approvals' && pendingCount && pendingCount > 0;
+          const hasUsersBadge   = label === 'Users'     && pendingUsersCount && pendingUsersCount > 0;
+
+          if (isCollapsedMode) {
+            return (
+              <div key={href} className="relative group mb-0.5">
+                <Link href={href}
+                  className={`flex items-center justify-center p-2.5 rounded-lg transition-colors ${active ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
+                >
+                  <Icon size={18} />
+                  {hasPendingBadge && (
+                    <span className="absolute top-0.5 right-0.5 bg-orange-500 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center font-semibold">{pendingCount}</span>
+                  )}
+                  {hasUsersBadge && (
+                    <span className="absolute top-0.5 right-0.5 bg-amber-500 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center font-semibold">{pendingUsersCount}</span>
+                  )}
+                </Link>
+                <NavTooltip label={`${label}${hasPendingBadge ? ` (${pendingCount})` : ''}${hasUsersBadge ? ` (${pendingUsersCount})` : ''}`} />
+              </div>
+            );
+          }
+
+          return (
+            <Link key={href} href={href} onClick={isMobile ? onClose : undefined}
+              className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${active ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
+            >
+              <Icon size={16} className="flex-shrink-0" />
+              <span className="truncate">{label}</span>
+              {hasPendingBadge && (
+                <span className="ml-auto bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold flex-shrink-0">{pendingCount}</span>
+              )}
+              {hasUsersBadge && (
+                <span className="ml-auto bg-amber-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold flex-shrink-0">{pendingUsersCount}</span>
+              )}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* ── Promo banner (hidden when collapsed on desktop) ── */}
+      {!isCollapsedMode && (
+        <div className="px-3 pb-3">
+          <div className="relative bg-gradient-to-b from-blue-700 to-blue-900 rounded-2xl p-4 text-center overflow-hidden">
+            <div className="absolute -top-4 -right-4 w-16 h-16 bg-blue-500/20 rounded-full" />
+            <div className="absolute -bottom-4 -left-4 w-12 h-12 bg-blue-500/20 rounded-full" />
+            <div className="relative flex justify-center mb-2">
+              <div className="w-12 h-12 bg-blue-600/50 rounded-full flex items-center justify-center border-2 border-blue-400/30">
+                <Shield size={24} className="text-blue-200" />
+              </div>
+            </div>
+            <p className="relative text-white text-xs font-semibold leading-snug">
+              Secure Every Entry,{' '}
+              <span className="text-blue-200">Simplify Your Management</span>
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ── User + Logout ── */}
+      {isCollapsedMode ? (
+        <div className="border-t border-gray-700 py-3 flex flex-col items-center gap-1 px-1.5">
+          <div className="relative group">
+            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+              {userName ? userName.charAt(0).toUpperCase() : '?'}
+            </div>
+            <NavTooltip label={userName ?? ''} />
+          </div>
+          <div className="relative group mt-1">
+            <button onClick={onLogout} className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors" aria-label="Sign out">
+              <LogOut size={16} />
+            </button>
+            <NavTooltip label="Sign out" />
+          </div>
+        </div>
+      ) : (
+        <div className="border-t border-gray-700 px-4 py-4 space-y-2">
+          {userName && (
+            <div>
+              <p className="text-xs text-white font-medium truncate">{userName}</p>
+              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${badge.cls}`}>{badge.label}</span>
+            </div>
+          )}
+          <button onClick={onLogout} className="flex items-center gap-2 text-sm text-gray-400 hover:text-white w-full mt-1 transition-colors">
+            <LogOut size={15} /><span>Sign out</span>
+          </button>
+        </div>
+      )}
+    </aside>
+  );
+}
+
+// ─── Main Sidebar component ───────────────────────────────────────────────────
+
 export default function Sidebar({
-  role, pendingCount, pendingUsersCount, userName,
+  role, pendingCount, pendingUsersCount, userName, collapsed = false, onToggle,
 }: {
   role: Role;
   pendingCount?: number;
   pendingUsersCount?: number;
   userName?: string;
+  collapsed?: boolean;
+  onToggle?: () => void;
 }) {
-  const pathname = usePathname();
-  const router   = useRouter();
-  const navItems = navFor(role);
+  const pathname    = usePathname();
+  const router      = useRouter();
+  const navItems    = navFor(role);
   const bottomItems = bottomNavFor(role);
-  const badge    = ROLE_BADGE[role] ?? { label: role, cls: 'bg-gray-700 text-gray-300' };
+  const badge       = ROLE_BADGE[role] ?? { label: role, cls: 'bg-gray-700 text-gray-300' };
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Close sidebar on route change
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
-  // Prevent body scroll when mobile sidebar is open
   useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    document.body.style.overflow = mobileOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [mobileOpen]);
 
@@ -118,84 +277,22 @@ export default function Sidebar({
     router.refresh();
   }
 
-  const SidebarContent = () => (
-    <aside className="w-56 h-full bg-gray-900 text-white flex flex-col overflow-y-auto">
-      {/* Logo */}
-      <div className="px-5 py-4 border-b border-gray-700">
-        <Link href="/" className="inline-block mb-1" onClick={() => setMobileOpen(false)}>
-          <div className="bg-white rounded-lg px-3 py-2 hover:opacity-90 transition-opacity">
-            <img
-              src="https://www.image2url.com/r2/default/images/1779254824307-0fca63d9-e1eb-4ccf-bfb4-4c663ca4ae5e.jpeg"
-              alt="NxtWave"
-              className="h-7 w-auto object-contain"
-            />
-          </div>
-        </Link>
-        <div className="text-xs text-gray-400 leading-tight">Gate Pass System</div>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 py-3">
-        {navItems.map(({ label, href, icon: Icon }) => {
-          const active = pathname === href || (href !== '/' && pathname.startsWith(href));
-          return (
-            <Link key={href} href={href}
-              className={`flex items-center gap-3 px-5 py-2.5 text-sm transition-colors ${
-                active ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-              }`}>
-              <Icon size={16} />
-              <span>{label}</span>
-              {label === 'Approvals' && pendingCount && pendingCount > 0 && (
-                <span className="ml-auto bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">{pendingCount}</span>
-              )}
-              {label === 'Users' && pendingUsersCount && pendingUsersCount > 0 && (
-                <span className="ml-auto bg-amber-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">{pendingUsersCount}</span>
-              )}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* Promo banner */}
-      <div className="px-3 pb-3">
-        <div className="relative bg-gradient-to-b from-blue-700 to-blue-900 rounded-2xl p-4 text-center overflow-hidden">
-          <div className="absolute -top-4 -right-4 w-16 h-16 bg-blue-500/20 rounded-full" />
-          <div className="absolute -bottom-4 -left-4 w-12 h-12 bg-blue-500/20 rounded-full" />
-          <div className="relative flex justify-center mb-3">
-            <div className="w-16 h-16 bg-blue-600/50 rounded-full flex items-center justify-center border-2 border-blue-400/30">
-              <Shield size={30} className="text-blue-200" />
-            </div>
-          </div>
-          <p className="relative text-white text-xs font-semibold leading-snug mb-3">
-            Secure Every Entry,{' '}
-            <span className="text-blue-200">Simplify Your Management</span>
-          </p>
-        </div>
-      </div>
-
-      {/* User + Logout */}
-      <div className="border-t border-gray-700 px-5 py-4 space-y-2">
-        {userName && (
-          <div>
-            <p className="text-xs text-white font-medium truncate">{userName}</p>
-            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${badge.cls}`}>
-              {badge.label}
-            </span>
-          </div>
-        )}
-        <button onClick={handleLogout}
-          className="flex items-center gap-2 text-sm text-gray-400 hover:text-white w-full mt-1">
-          <LogOut size={15} /><span>Sign out</span>
-        </button>
-      </div>
-    </aside>
-  );
+  const panelProps = {
+    navItems,
+    pathname,
+    pendingCount,
+    pendingUsersCount,
+    userName,
+    badge,
+    onToggle,
+    onLogout: handleLogout,
+  };
 
   return (
     <>
       {/* ── Desktop sidebar (md+) ── */}
-      <div className="hidden md:flex w-56 fixed top-0 left-0 h-screen z-30">
-        <SidebarContent />
+      <div className={`hidden md:flex fixed top-0 left-0 h-screen z-30 transition-all duration-300 ease-in-out ${collapsed ? 'w-16' : 'w-56'}`}>
+        <SidebarPanel {...panelProps} collapsed={collapsed} isMobile={false} onClose={() => {}} />
       </div>
 
       {/* ── Mobile: hamburger button ── */}
@@ -207,57 +304,33 @@ export default function Sidebar({
         <Menu size={22} />
       </button>
 
-      {/* ── Mobile: backdrop ── */}
+      {/* ── Mobile: backdrop overlay ── */}
       {mobileOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"
-          onClick={() => setMobileOpen(false)}
-        />
+        <div className="md:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
       )}
 
       {/* ── Mobile: slide-in sidebar ── */}
-      <div
-        className={`md:hidden fixed top-0 left-0 h-full w-64 z-50 transform transition-transform duration-300 ease-in-out ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className="relative h-full">
-          <button
-            onClick={() => setMobileOpen(false)}
-            className="absolute top-3 right-3 z-10 p-1.5 bg-gray-700 rounded-lg text-gray-300 hover:text-white"
-            aria-label="Close menu"
-          >
-            <X size={18} />
-          </button>
-          <div className="h-full w-64">
-            <SidebarContent />
-          </div>
-        </div>
+      <div className={`md:hidden fixed top-0 left-0 h-full w-64 z-50 transform transition-transform duration-300 ease-in-out ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <SidebarPanel {...panelProps} collapsed={false} isMobile={true} onClose={() => setMobileOpen(false)} />
       </div>
 
       {/* ── Mobile: bottom navigation bar ── */}
       {bottomItems.length > 0 && (
         <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-gray-900 border-t border-gray-700 flex safe-area-bottom">
           {bottomItems.map(({ label, href, icon: Icon }) => {
-            const active = pathname === href || (href !== '/' && pathname.startsWith(href));
-            const hasBadge = (label === 'Approvals' && pendingCount && pendingCount > 0);
+            const active   = pathname === href || (href !== '/' && pathname.startsWith(href));
+            const hasBadge = label === 'Approvals' && pendingCount && pendingCount > 0;
             return (
-              <Link
-                key={href}
-                href={href}
-                className={`flex-1 flex flex-col items-center justify-center py-2 relative ${
-                  active ? 'text-blue-400' : 'text-gray-400'
-                }`}
+              <Link key={href} href={href}
+                className={`flex-1 flex flex-col items-center justify-center py-2 min-h-[56px] relative transition-colors ${active ? 'text-blue-400' : 'text-gray-400 hover:text-gray-200'}`}
               >
                 <div className="relative">
                   <Icon size={20} />
                   {hasBadge && (
-                    <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center font-semibold">
-                      {pendingCount}
-                    </span>
+                    <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center font-semibold">{pendingCount}</span>
                   )}
                 </div>
-                <span className="text-[10px] mt-0.5 font-medium">{label}</span>
+                <span className="text-[10px] mt-0.5 font-medium leading-tight">{label}</span>
               </Link>
             );
           })}

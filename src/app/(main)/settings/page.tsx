@@ -118,14 +118,14 @@ export default function SettingsPage() {
     setBuildings((prev) => prev.filter((b) => b.id !== id));
   }
 
-  if (loading) return <div className="text-sm text-gray-400">Loading…</div>;
+  if (loading) return <div className="page-container text-sm text-gray-400">Loading…</div>;
 
   return (
-    <div className="max-w-lg space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800">Settings</h1>
+    <div className="max-w-lg mx-auto px-3 sm:px-0 py-4 sm:py-5 space-y-5 sm:space-y-6">
+      <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Settings</h1>
 
       {/* General */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+      <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 space-y-4">
         <h2 className="text-base font-semibold text-gray-800">General</h2>
 
         <Field label="Organization Name">
@@ -148,7 +148,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Manage Buildings */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+      <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 space-y-4">
         <h2 className="text-base font-semibold text-gray-800">Manage Buildings</h2>
 
         <div className="space-y-2">
@@ -180,7 +180,7 @@ export default function SettingsPage() {
         </div>
 
       {/* PWA Status */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+      <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 space-y-4">
         <h2 className="text-base font-semibold text-gray-800 flex items-center gap-2">
           <Download size={16} className="text-blue-600" />
           PWA Status

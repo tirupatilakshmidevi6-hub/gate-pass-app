@@ -86,11 +86,13 @@ export default function TopNav({
     } catch { /* ignore */ }
   }, []);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000);
+    void fetchNotifications();
+    const interval = setInterval(() => { void fetchNotifications(); }, 30000);
     return () => clearInterval(interval);
   }, [fetchNotifications]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Close dropdowns on outside click
   useEffect(() => {

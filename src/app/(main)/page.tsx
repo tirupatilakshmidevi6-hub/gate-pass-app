@@ -173,6 +173,7 @@ export default function DashboardPage() {
     }).catch(() => setLoading(false));
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setPage(1); }, [date]);
 
   // ── Filtered entries for selected date
@@ -252,29 +253,29 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="page-container space-y-4 sm:space-y-6">
 
       {/* ── Greeting + Date picker ── */}
-      <div className="flex items-start justify-between flex-wrap gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
             {greeting}, {userName} 👋
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Here&apos;s what&apos;s happening with gate entries {isToday ? 'today' : `on ${date}`}.
+          <p className="text-sm text-gray-500 mt-0.5">
+            Gate entries {isToday ? 'today' : `on ${date}`}.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <CalendarDays size={16} className="text-gray-400" />
+        <div className="flex items-center gap-2 flex-wrap">
+          <CalendarDays size={15} className="text-gray-400 flex-shrink-0" />
           <input
             type="date"
             value={date}
             onChange={e => setDate(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 min-w-0"
           />
           <button
             onClick={() => setDate(today)}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors flex-shrink-0 ${
               isToday
                 ? 'bg-blue-600 text-white border-blue-600'
                 : 'border-gray-300 text-gray-600 hover:bg-gray-50'
@@ -285,14 +286,14 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Main two-column grid ── */}
-      <div className="flex gap-6 items-start">
+      {/* ── Main layout: stack on mobile, side-by-side on xl+ ── */}
+      <div className="flex flex-col xl:flex-row gap-5 items-start">
 
         {/* ── LEFT column ── */}
-        <div className="flex-1 min-w-0 space-y-6">
+        <div className="flex-1 min-w-0 space-y-5">
 
-          {/* Stat cards */}
-          <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+          {/* Stat cards — 2 col on mobile, 4 col on lg+ */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <StatCard
               label="Total Entries Today" value={total}
               change={pctChange(total, yTotal)}
@@ -317,25 +318,25 @@ export default function DashboardPage() {
 
           {/* Entries table */}
           <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <h2 className="text-base font-semibold text-gray-900">Entries for Today</h2>
-                <span className="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-0.5 rounded-full">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <h2 className="text-sm sm:text-base font-semibold text-gray-900 truncate">Entries for {isToday ? 'Today' : date}</h2>
+                <span className="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0">
                   {filtered.length}
                 </span>
               </div>
               <Link href="/entry-list"
-                className="flex items-center gap-1 text-sm text-blue-600 font-medium border border-blue-200 rounded-lg px-3 py-1.5 hover:bg-blue-50 transition-colors">
-                View All Entries <ChevronRight size={14} />
+                className="flex items-center gap-1 text-xs sm:text-sm text-blue-600 font-medium border border-blue-200 rounded-lg px-2.5 sm:px-3 py-1.5 hover:bg-blue-50 transition-colors flex-shrink-0">
+                View All <ChevronRight size={13} />
               </Link>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            <div className="overflow-x-auto touch-scroll-x">
+              <table className="w-full text-sm" style={{ minWidth: 640 }}>
                 <thead className="bg-gray-50">
                   <tr>
-                    {['#', 'VISITOR', 'ROLE', 'VISIT TYPE', 'BUILDING', 'POC', 'ENTRY TIME', 'STATUS', 'ACTIONS'].map(h => (
-                      <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    {['#', 'VISITOR', 'ROLE', 'PURPOSE', 'BUILDING', 'POC', 'TIME', 'STATUS', ''].map(h => (
+                      <th key={h} className="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         {h}
                       </th>
                     ))}
@@ -344,7 +345,7 @@ export default function DashboardPage() {
                 <tbody className="divide-y divide-gray-100">
                   {paginated.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="px-6 py-10 text-center text-gray-400">
+                      <td colSpan={9} className="px-4 py-10 text-center text-gray-400 text-sm">
                         No entries for this date.{' '}
                         {userRole === 'admin' && (
                           <Link href="/new-entry" className="text-blue-600 hover:underline">Add one</Link>
@@ -357,18 +358,18 @@ export default function DashboardPage() {
                     const col = avatarColor(e.name);
                     return (
                       <tr key={e.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 text-gray-400 text-xs font-medium">
+                        <td className="px-3 sm:px-4 py-3 text-gray-400 text-xs font-medium">
                           {(page - 1) * PAGE_SIZE + idx + 1}
                         </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2.5">
-                            <div className={`w-8 h-8 rounded-full ${col} flex items-center justify-center flex-shrink-0`}>
+                        <td className="px-3 sm:px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full ${col} flex items-center justify-center flex-shrink-0`}>
                               <span className="text-xs font-bold text-white">{getInitials(e.name)}</span>
                             </div>
-                            <span className="font-medium text-gray-900 whitespace-nowrap">{e.name}</span>
+                            <span className="font-medium text-gray-900 whitespace-nowrap text-xs sm:text-sm">{e.name}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 sm:px-4 py-3">
                           {e.role && (
                             <span style={{ background: rs.bg, color: rs.text, border: `1px solid ${rs.border}` }}
                               className="px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap">
@@ -376,21 +377,21 @@ export default function DashboardPage() {
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{e.purpose}</td>
-                        <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{e.building_name}</td>
-                        <td className="px-4 py-3 text-gray-600">{e.poc_name}</td>
-                        <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
-                          <div className="flex items-center gap-1.5">
-                            <Clock size={11} className="text-gray-400" />
+                        <td className="px-3 sm:px-4 py-3 text-gray-600 whitespace-nowrap text-xs">{e.purpose}</td>
+                        <td className="px-3 sm:px-4 py-3 text-gray-600 whitespace-nowrap text-xs">{e.building_name}</td>
+                        <td className="px-3 sm:px-4 py-3 text-gray-600 text-xs">{e.poc_name}</td>
+                        <td className="px-3 sm:px-4 py-3 text-gray-600 whitespace-nowrap text-xs">
+                          <div className="flex items-center gap-1">
+                            <Clock size={10} className="text-gray-400" />
                             {fmtTime(e.created_at)}
                           </div>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 sm:px-4 py-3">
                           <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${sc}`}>{e.status}</span>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 sm:px-4 py-3">
                           <button className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
-                            <MoreVertical size={15} />
+                            <MoreVertical size={14} />
                           </button>
                         </td>
                       </tr>
@@ -432,8 +433,8 @@ export default function DashboardPage() {
 
           {/* ── Entry Summary ── */}
           <div>
-            <h2 className="text-base font-semibold text-gray-900 mb-3">Entry Summary</h2>
-            <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+            <h2 className="text-sm sm:text-base font-semibold text-gray-900 mb-3">Entry Summary</h2>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <SummaryCard
                 icon={<CalendarDays size={20} className="text-blue-500" />}
                 label="Today" value={total} bg="bg-blue-50"
@@ -454,8 +455,8 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* ── RIGHT panel ── */}
-        <div className="w-72 xl:w-80 flex-shrink-0 space-y-4">
+        {/* ── RIGHT panel — full width on mobile, fixed on xl+ ── */}
+        <div className="w-full xl:w-72 xl:flex-shrink-0 space-y-4">
 
           {/* Today's Overview chart */}
           <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
@@ -537,17 +538,20 @@ function StatCard({
   const arrow       = up === true ? '↑' : up === false ? '↓' : '—';
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
-      <div className="flex items-center gap-4 mb-4">
-        {icon}
-        <div>
-          <div className="text-3xl font-bold text-gray-900 leading-tight">{value}</div>
-          <div className="text-xs text-gray-500 mt-0.5 leading-tight">{label}</div>
+    <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-3 sm:p-5 shadow-sm">
+      <div className="flex items-center gap-2 sm:gap-4 mb-2 sm:mb-4">
+        {/* Scale icon down on mobile */}
+        <div className="[&>div]:w-9 [&>div]:h-9 sm:[&>div]:w-12 sm:[&>div]:h-12 [&_svg]:!w-4 [&_svg]:!h-4 sm:[&_svg]:!w-[22px] sm:[&_svg]:!h-[22px]">
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <div className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">{value}</div>
+          <div className="text-[11px] sm:text-xs text-gray-500 mt-0.5 leading-tight">{label}</div>
         </div>
       </div>
-      <div className={`flex items-center gap-1 text-xs font-medium ${changeColor}`}>
+      <div className={`flex items-center gap-1 text-[11px] sm:text-xs font-medium ${changeColor}`}>
         <span>{arrow}</span>
-        <span>{pct}% from yesterday</span>
+        <span>{pct}% vs yesterday</span>
       </div>
     </div>
   );
@@ -562,14 +566,13 @@ function SummaryCard({
   bg: string;
 }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm flex items-center gap-3">
-      <div className={`w-10 h-10 ${bg} rounded-xl flex items-center justify-center flex-shrink-0`}>
+    <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 shadow-sm flex items-center gap-2.5 sm:gap-3">
+      <div className={`w-9 h-9 sm:w-10 sm:h-10 ${bg} rounded-xl flex items-center justify-center flex-shrink-0 [&_svg]:w-4 [&_svg]:h-4 sm:[&_svg]:w-5 sm:[&_svg]:h-5`}>
         {icon}
       </div>
-      <div>
-        <div className="text-xl font-bold text-gray-900">{value}</div>
-        <div className="text-xs text-gray-500 leading-tight">{label}</div>
-        <div className="text-[10px] text-gray-400">Total Entries</div>
+      <div className="min-w-0">
+        <div className="text-lg sm:text-xl font-bold text-gray-900">{value}</div>
+        <div className="text-[11px] sm:text-xs text-gray-500 leading-tight truncate">{label}</div>
       </div>
     </div>
   );

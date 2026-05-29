@@ -20,6 +20,7 @@ export default function InstallPrompt() {
   const [installed, setInstalled] = useState(false);
   const [successToast, setSuccessToast] = useState(false);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -41,7 +42,7 @@ export default function InstallPrompt() {
     }
 
     // Detect iOS
-    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !(window as any).MSStream;
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !(window as (Window & { MSStream?: unknown })).MSStream;
     setIsIOS(ios);
 
     if (ios && visits >= 2) {
@@ -66,6 +67,7 @@ export default function InstallPrompt() {
 
     return () => window.removeEventListener('beforeinstallprompt', handlePrompt);
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   function dismiss() {
     localStorage.setItem(DISMISSED_KEY, String(Date.now()));

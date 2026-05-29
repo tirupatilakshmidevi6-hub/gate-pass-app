@@ -8,12 +8,14 @@ const Ctx = createContext<ThemeCtx>({ dark: false, toggle: () => {} });
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [dark, setDark] = useState(false);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     const saved = localStorage.getItem('theme');
     const isDark = saved === 'dark';
     setDark(isDark);
     document.documentElement.classList.toggle('dark', isDark);
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   function toggle() {
     setDark((prev) => {

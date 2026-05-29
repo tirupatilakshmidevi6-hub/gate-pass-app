@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { CheckCircle, XCircle, Ban, Clock, X } from 'lucide-react';
 
 type AppUser = {
@@ -47,14 +47,16 @@ export default function UsersPage() {
   const [rejectModal, setRejectModal] = useState<{ id: string; name: string } | null>(null);
   const [rejectReason, setRejectReason] = useState('');
 
-  useEffect(() => { load(); }, []);
-
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     const data = await fetch('/api/users').then((r) => r.json()).catch(() => []);
     setUsers(Array.isArray(data) ? data : []);
     setLoading(false);
-  }
+  }, []);
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => { void load(); }, [load]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 4000); }
 
@@ -87,19 +89,19 @@ export default function UsersPage() {
   const active   = users.filter((u) => u.status === 'active');
   const others   = users.filter((u) => u.status === 'rejected' || u.status === 'inactive');
 
-  if (loading) return <div className="p-6 text-sm text-gray-400">Loading users…</div>;
+  if (loading) return <div className="page-container text-sm text-gray-400">Loading users…</div>;
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="page-container space-y-6 sm:space-y-8">
       {toast && (
-        <div className="fixed top-6 right-6 z-50 bg-gray-900 text-white text-sm px-4 py-3 rounded-xl shadow-xl flex items-center gap-2">
+        <div className="fixed top-4 right-4 left-4 sm:left-auto sm:right-6 sm:top-6 z-50 bg-gray-900 text-white text-sm px-4 py-3 rounded-xl shadow-xl flex items-center gap-2">
           <CheckCircle size={15} className="text-green-400" />{toast}
         </div>
       )}
 
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">Manage Users</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Approve, manage, and deactivate team accounts</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Manage Users</h1>
+        <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Approve, manage, and deactivate team accounts</p>
       </div>
 
       {/* ── Pending Approvals ── */}
@@ -111,7 +113,8 @@ export default function UsersPage() {
             <span className="bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{pending.length}</span>
           </div>
           <div className="bg-white rounded-2xl border border-amber-200 overflow-hidden shadow-sm">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full text-sm" style={{ minWidth: 560 }}>
               <thead className="bg-amber-50">
                 <tr>{['Name', 'Email', 'Role', 'Requested', 'Actions'].map((h) => (
                   <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
@@ -144,6 +147,7 @@ export default function UsersPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         </section>
       )}
@@ -157,7 +161,7 @@ export default function UsersPage() {
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm" style={{ minWidth: 640 }}>
               <thead className="bg-gray-50">
                 <tr>{['#','Name','Email','Role','Status','Joined','Actions'].map((h) => (
                   <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
@@ -206,7 +210,8 @@ export default function UsersPage() {
             <h2 className="text-base font-semibold text-gray-800">Rejected / Inactive</h2>
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full text-sm" style={{ minWidth: 500 }}>
               <thead className="bg-gray-50">
                 <tr>{['Name','Email','Role','Status','Actions'].map((h) => (
                   <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
@@ -237,6 +242,7 @@ export default function UsersPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         </section>
       )}

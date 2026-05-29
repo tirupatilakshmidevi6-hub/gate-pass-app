@@ -92,10 +92,10 @@ export default function BulkUploadPage() {
   const skippedCount = results?.skipped?.length ?? 0;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 p-6">
-      <h1 className="text-2xl font-bold text-gray-800">Bulk Upload via CSV</h1>
+    <div className="page-container max-w-3xl mx-auto space-y-5 sm:space-y-6">
+      <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Bulk Upload via CSV</h1>
 
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5 shadow-sm">
+      <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-sm">
         <div className="flex items-center gap-3 flex-wrap">
           <label className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 cursor-pointer hover:bg-gray-50 transition-colors">
             <Upload size={15} /> Choose CSV File

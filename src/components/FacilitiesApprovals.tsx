@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { CheckCircle, XCircle, Clock, ChevronRight, Search } from 'lucide-react';
 import { getRoleStyle } from '@/lib/constants';
 
@@ -45,14 +45,16 @@ export default function FacilitiesApprovals({ userRole }: { userRole: string }) 
   const [toast,       setToast]       = useState<{ type: 'approve' | 'reject'; email: string | null } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => { fetchEntries(); }, []);
-
-  async function fetchEntries() {
+  const fetchEntries = useCallback(async () => {
     setLoading(true);
     const data = await fetch('/api/entries').then((r) => r.json());
-    setEntries(data);
+    setEntries(Array.isArray(data) ? data : []);
     setLoading(false);
-  }
+  }, []);
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => { void fetchEntries(); }, [fetchEntries]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   async function handleAction(id: string, action: 'approve' | 'reject', email: string | null) {
     setProcessing(id);
@@ -82,26 +84,26 @@ export default function FacilitiesApprovals({ userRole }: { userRole: string }) 
     { key: 'rejected' as Tab, label: 'Rejected', count: rejected.length, active: 'border-red-500 text-red-700 bg-red-50' },
   ];
 
-  if (loading) return <div className="text-sm text-gray-400">Loading…</div>;
+  if (loading) return <div className="text-sm text-gray-400 p-4">Loading…</div>;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-bold text-gray-800">
-          {userRole === 'facilities' ? 'Approvals' : 'Approvals (Read-only — Facilities Only)'}
+    <div className="page-container space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+          {userRole === 'facilities' ? 'Approvals' : 'Approvals'}
         </h1>
-        {pendingTotal > 0 && <span className="bg-orange-500 text-white text-xs font-bold px-2.5 py-0.5 rounded-full">{pendingTotal} pending</span>}
+        {pendingTotal > 0 && <span className="bg-orange-500 text-white text-xs font-bold px-2.5 py-0.5 rounded-full w-fit">{pendingTotal} pending</span>}
       </div>
 
       {/* Search */}
-      <div className="relative max-w-sm">
+      <div className="relative w-full sm:max-w-sm">
         <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search name, email, building, POC…"
-          className="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full pl-9 pr-4 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
@@ -116,7 +118,7 @@ export default function FacilitiesApprovals({ userRole }: { userRole: string }) 
         </div>
       )}
 
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-full sm:w-fit overflow-x-auto">
         {tabs.map((t) => (
           <button key={t.key} onClick={() => setTab(t.key)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === t.key ? t.active + ' shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
@@ -129,9 +131,9 @@ export default function FacilitiesApprovals({ userRole }: { userRole: string }) 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         {tab === 'pending' && (
           <>
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 flex items-center gap-2">
               <Clock size={16} className="text-orange-500" />
-              <h2 className="text-base font-semibold text-gray-800">Pending Approval</h2>
+              <h2 className="text-sm sm:text-base font-semibold text-gray-800">Pending Approval</h2>
             </div>
             {pending.length === 0 ? (
               <div className="px-6 py-12 text-center text-gray-400">
@@ -140,53 +142,95 @@ export default function FacilitiesApprovals({ userRole }: { userRole: string }) 
                 <p className="text-sm mt-1">No entries waiting for approval.</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      {['Photo','Name','Employee ID','Email','Role','Purpose','Date','Building','POC','Status',
-                        ...(userRole === 'facilities' ? ['Actions'] : [])].map((h) => (
-                        <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {pending.map((e) => (
-                      <tr key={e.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3">
-                          {e.photo_url
-                            ? <img src={e.photo_url} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-blue-100" />
-                            : <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs font-bold">{e.name.charAt(0)}</div>
-                          }
-                        </td>
-                        <td className="px-4 py-3 font-semibold text-gray-900 whitespace-nowrap">{e.name}</td>
-                        <td className="px-4 py-3 text-gray-500 text-xs font-mono">{e.employee_id ?? '—'}</td>
-                        <td className="px-4 py-3 text-gray-500 text-xs">{e.email ?? '—'}</td>
-                        <td className="px-4 py-3"><RoleBadge role={e.role} /></td>
-                        <td className="px-4 py-3"><span className="bg-blue-100 text-blue-700 text-xs font-medium px-2 py-0.5 rounded-full">{e.purpose}</span></td>
-                        <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{e.reporting_date}</td>
-                        <td className="px-4 py-3 text-gray-600">{e.building_name}</td>
-                        <td className="px-4 py-3 text-gray-600">{e.poc_name}</td>
-                        <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[e.status] ?? 'bg-gray-100 text-gray-600'}`}>{e.status}</span></td>
-                        {userRole === 'facilities' && (
-                          <td className="px-4 py-3">
-                            <div className="flex gap-1.5">
-                              <button onClick={() => handleAction(e.id, 'approve', e.email)} disabled={processing === e.id}
-                                className="flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg">
-                                <CheckCircle size={12} />{processing === e.id ? '…' : 'Approve'}
-                              </button>
-                              <button onClick={() => handleAction(e.id, 'reject', e.email)} disabled={processing === e.id}
-                                className="flex items-center gap-1 px-3 py-1.5 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white text-xs font-semibold rounded-lg">
-                                <XCircle size={12} />Reject
-                              </button>
-                            </div>
-                          </td>
-                        )}
+              <>
+                {/* Mobile card view */}
+                <div className="sm:hidden divide-y divide-gray-100">
+                  {pending.map((e) => (
+                    <div key={e.id} className="p-4 space-y-3">
+                      <div className="flex items-center gap-3">
+                        {e.photo_url
+                          ? <img src={e.photo_url} alt="" className="w-12 h-12 rounded-full object-cover border-2 border-blue-100 flex-shrink-0" />
+                          : <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-sm font-bold flex-shrink-0">{e.name.charAt(0)}</div>
+                        }
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-gray-900 text-sm">{e.name}</div>
+                          <div className="text-xs text-gray-500 truncate">{e.email ?? '—'}</div>
+                          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                            <RoleBadge role={e.role} />
+                            <span className="bg-blue-100 text-blue-700 text-xs font-medium px-2 py-0.5 rounded-full">{e.purpose}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 bg-gray-50 rounded-lg p-3">
+                        <div><span className="text-gray-400">Date:</span> {e.reporting_date}</div>
+                        <div><span className="text-gray-400">Building:</span> {e.building_name}</div>
+                        <div><span className="text-gray-400">POC:</span> {e.poc_name}</div>
+                        <div><span className="text-gray-400">Emp ID:</span> {e.employee_id ?? '—'}</div>
+                      </div>
+                      {userRole === 'facilities' && (
+                        <div className="flex gap-2">
+                          <button onClick={() => handleAction(e.id, 'approve', e.email)} disabled={processing === e.id}
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl">
+                            <CheckCircle size={16} />{processing === e.id ? 'Approving…' : 'Approve'}
+                          </button>
+                          <button onClick={() => handleAction(e.id, 'reject', e.email)} disabled={processing === e.id}
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white text-sm font-semibold rounded-xl">
+                            <XCircle size={16} />Reject
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {/* Desktop table view */}
+                <div className="hidden sm:block overflow-x-auto touch-scroll-x">
+                  <table className="w-full text-sm" style={{ minWidth: 700 }}>
+                    <thead className="bg-gray-50">
+                      <tr>
+                        {['Photo','Name','Employee ID','Email','Role','Purpose','Date','Building','POC','Status',
+                          ...(userRole === 'facilities' ? ['Actions'] : [])].map((h) => (
+                          <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {pending.map((e) => (
+                        <tr key={e.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-3">
+                            {e.photo_url
+                              ? <img src={e.photo_url} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-blue-100" />
+                              : <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs font-bold">{e.name.charAt(0)}</div>
+                            }
+                          </td>
+                          <td className="px-4 py-3 font-semibold text-gray-900 whitespace-nowrap">{e.name}</td>
+                          <td className="px-4 py-3 text-gray-500 text-xs font-mono">{e.employee_id ?? '—'}</td>
+                          <td className="px-4 py-3 text-gray-500 text-xs">{e.email ?? '—'}</td>
+                          <td className="px-4 py-3"><RoleBadge role={e.role} /></td>
+                          <td className="px-4 py-3"><span className="bg-blue-100 text-blue-700 text-xs font-medium px-2 py-0.5 rounded-full">{e.purpose}</span></td>
+                          <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{e.reporting_date}</td>
+                          <td className="px-4 py-3 text-gray-600">{e.building_name}</td>
+                          <td className="px-4 py-3 text-gray-600">{e.poc_name}</td>
+                          <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[e.status] ?? 'bg-gray-100 text-gray-600'}`}>{e.status}</span></td>
+                          {userRole === 'facilities' && (
+                            <td className="px-4 py-3">
+                              <div className="flex gap-1.5">
+                                <button onClick={() => handleAction(e.id, 'approve', e.email)} disabled={processing === e.id}
+                                  className="flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg">
+                                  <CheckCircle size={12} />{processing === e.id ? '…' : 'Approve'}
+                                </button>
+                                <button onClick={() => handleAction(e.id, 'reject', e.email)} disabled={processing === e.id}
+                                  className="flex items-center gap-1 px-3 py-1.5 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white text-xs font-semibold rounded-lg">
+                                  <XCircle size={12} />Reject
+                                </button>
+                              </div>
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </>
         )}
