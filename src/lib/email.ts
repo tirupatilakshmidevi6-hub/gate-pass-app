@@ -4,8 +4,9 @@ import { generateGatePassBodyHtml } from './gate-pass';
 
 // ─── Transporter ─────────────────────────────────────────────────────────────
 // Brevo SMTP relay. Get credentials from: app.brevo.com → SMTP & API → SMTP
-// BREVO_SMTP_USER = your Brevo account email
-// BREVO_SMTP_KEY  = SMTP key from Brevo dashboard (not your account password)
+// BREVO_SMTP_USER = the Brevo-assigned SMTP login (format: xxxxxxxx@smtp-brevo.com)
+//                  NOT your Brevo account email — find it in Brevo → SMTP & API → SMTP
+// BREVO_SMTP_KEY  = the SMTP key generated in Brevo dashboard (not your account password)
 
 function createTransporter() {
   return nodemailer.createTransport({
@@ -13,8 +14,20 @@ function createTransporter() {
     port: 587,
     secure: false,
     auth: { user: process.env.BREVO_SMTP_USER, pass: process.env.BREVO_SMTP_KEY },
+    tls: { rejectUnauthorized: false },
   });
 }
+
+// Verify SMTP connection once at module load — logs result to server console
+createTransporter().verify()
+  .then(() => console.log('[Email] Brevo SMTP connection verified ✓'))
+  .catch((err: Error) => console.error('[Email] Brevo SMTP verification FAILED:', err.message));
+
+// Validate that all required email env vars are present
+(function validateEmailEnv() {
+  const missing = ['BREVO_SMTP_USER', 'BREVO_SMTP_KEY', 'FROM_EMAIL'].filter((k) => !process.env[k]);
+  if (missing.length) console.error('[Email] Missing env vars:', missing.join(', '));
+})();
 
 function fromAddress() {
   const addr = process.env.FROM_EMAIL ?? 'narayana.dubbala@nxtwave.co.in';
@@ -44,13 +57,25 @@ interface MailOpts {
 
 async function send(label: string, opts: MailOpts) {
   const to = Array.isArray(opts.to) ? opts.to.join(', ') : opts.to;
+  const fromAddr = process.env.FROM_EMAIL ?? 'narayana.dubbala@nxtwave.co.in';
+  const msgId = `<${Date.now()}.${Math.random().toString(36).slice(2)}@nxtwave.co.in>`;
   console.log(`[Email] ${label} → to: ${to} | from: ${opts.from} | cc: ${opts.cc ?? 'none'}`);
   try {
-    const result = await createTransporter().sendMail(opts);
-    console.log(`[Email] ${label} ✓ sent | messageId: ${result.messageId}`);
+    const result = await createTransporter().sendMail({
+      ...opts,
+      headers: {
+        'X-Mailer': 'NxtWave Gate Pass System',
+        'Message-ID': msgId,
+        'Reply-To': fromAddr,
+        'List-Unsubscribe': `<mailto:${fromAddr}?subject=unsubscribe>`,
+        'MIME-Version': '1.0',
+      },
+    });
+    console.log(`[Email] ${label} ✓ sent | messageId: ${result.messageId} | accepted: ${result.accepted?.join(', ')}`);
     return result;
-  } catch (err) {
-    console.error(`[Email] ${label} ✗ FAILED`, err);
+  } catch (err: unknown) {
+    const e = err as { message?: string; code?: string; response?: string; responseCode?: number };
+    console.error(`[Email] ${label} ✗ FAILED | message: ${e.message} | code: ${e.code} | response: ${e.response} | responseCode: ${e.responseCode}`);
     throw err;
   }
 }
@@ -83,7 +108,7 @@ export async function sendInviteEmail(to: string, name: string, registrationUrl:
     from: fromAddress(),
     to,
     ...(ccAddress() ? { cc: ccAddress() } : {}),
-    subject: 'Welcome to NxtWave — Fill Your Registration Form',
+    subject: 'Welcome to NxtWave - Complete Your Registration',
     html: inviteHtml(name, registrationUrl),
   });
 }
@@ -93,7 +118,7 @@ export async function sendGatePassEmail(to: string, name: string, data: GatePass
     from: fromAddress(),
     to,
     ...(ccAddress() ? { cc: ccAddress() } : {}),
-    subject: `Your NxtWave Gate Pass — ${data.passId}`,
+    subject: 'Your NxtWave Gate Pass is Ready',
     html: gatePassWrapper(name, data, generateGatePassBodyHtml(data), viewUrl),
   });
 }
@@ -198,7 +223,7 @@ export async function sendFacilitiesNotificationEmail(entry: {
     from: fromAddress(),
     to,
     ...(ccAddress() ? { cc: ccAddress() } : {}),
-    subject: `Action Required — New Candidate Registration: ${entry.name}`,
+    subject: `Action Required - New Registration Needs Approval: ${entry.name}`,
     html: facilitiesSubmissionHtml(entry, appUrl),
   });
 }

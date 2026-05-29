@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getEntryById, getNextPassNumber, approveEntry, rejectEntry, getAdminEmails, getAdminIds, createNotificationsForUsers, logActivity } from '@/lib/db';
+import { getEntryById, getNextPassNumber, approveEntry, rejectEntry, getAdminEmails, getAdminIds, createNotificationsForUsers, logActivity, markPassEmailSent } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { type GatePassData } from '@/lib/gate-pass';
 import { sendGatePassEmail, sendRejectionEmail, sendAdminApprovalNotification, sendAdminRejectionNotification } from '@/lib/email';
@@ -56,6 +56,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       try {
         await sendGatePassEmail(entry.email, entry.name, gatePassData, viewUrl);
         console.log(`[Approve] Step 4 ✓ — Gate pass email sent to ${entry.email}`);
+        await markPassEmailSent(id);
+        console.log(`[Approve] Step 4 ✓ — pass_sent_email marked true in database`);
       } catch (err) {
         console.error(`[Approve] Step 4 ✗ — Gate pass email FAILED for ${entry.email}:`, err);
       }
