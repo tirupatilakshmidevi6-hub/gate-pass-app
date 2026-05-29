@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Plus, Trash2, Save, Wifi, WifiOff, Bell, BellOff, Download, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Trash2, Save, Wifi, WifiOff, Bell, BellOff, Download, RefreshCw, CheckCircle, XCircle, Send } from 'lucide-react';
 
 type Building = { id: string; name: string };
 
@@ -68,6 +68,9 @@ export default function SettingsPage() {
   const [addingBuilding, setAddingBuilding] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [testEmailTo, setTestEmailTo] = useState('');
+  const [testEmailSending, setTestEmailSending] = useState(false);
+  const [testEmailResult, setTestEmailResult] = useState<{ ok: boolean; message: string } | null>(null);
   const pwa = usePWAStatus();
 
   useEffect(() => {
@@ -110,6 +113,28 @@ export default function SettingsPage() {
     setAddingBuilding(false);
   }
 
+  async function handleSendTestEmail() {
+    if (!testEmailTo.trim()) return;
+    setTestEmailSending(true);
+    setTestEmailResult(null);
+    try {
+      const res = await fetch('/api/email/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: testEmailTo.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setTestEmailResult({ ok: true, message: `Email delivered to Brevo successfully. Message ID: ${data.messageId}` });
+      } else {
+        setTestEmailResult({ ok: false, message: data.error ?? 'Unknown error' });
+      }
+    } catch {
+      setTestEmailResult({ ok: false, message: 'Network error — could not reach server' });
+    }
+    setTestEmailSending(false);
+  }
+
   async function handleDeleteBuilding(id: string) {
     await fetch('/api/buildings', {
       method: 'DELETE', headers: { 'Content-Type': 'application/json' },
@@ -145,6 +170,44 @@ export default function SettingsPage() {
           <Save size={14} />{saving ? 'Saving…' : 'Save Settings'}
         </button>
         {saved && <p className="text-sm text-green-600 font-medium">Settings saved successfully.</p>}
+      </div>
+
+      {/* Email Configuration Test */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 space-y-4">
+        <h2 className="text-base font-semibold text-gray-800 flex items-center gap-2">
+          <Send size={16} className="text-blue-600" />
+          Email Configuration
+        </h2>
+        <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-xs text-blue-700 space-y-1">
+          <p><strong>SMTP Provider:</strong> Brevo (smtp-relay.brevo.com:587)</p>
+          <p><strong>From:</strong> {process.env.NEXT_PUBLIC_APP_URL ? 'narayana.dubbala@nxtwave.co.in' : 'narayana.dubbala@nxtwave.co.in'}</p>
+          <p><strong>CC:</strong> moru.vidyapraveen@nxtwave.co.in</p>
+        </div>
+        <Field label="Send Test Email To">
+          <input
+            type="email"
+            value={testEmailTo}
+            onChange={(e) => setTestEmailTo(e.target.value)}
+            placeholder="Enter recipient email address"
+            className="input"
+          />
+          <p className="text-xs text-gray-400 mt-1">Sends a test email via Brevo SMTP to verify email delivery is working.</p>
+        </Field>
+        <button
+          onClick={handleSendTestEmail}
+          disabled={testEmailSending || !testEmailTo.trim()}
+          className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-60"
+        >
+          <Send size={14} />{testEmailSending ? 'Sending…' : 'Send Test Email'}
+        </button>
+        {testEmailResult && (
+          <div className={`flex items-start gap-2 rounded-lg p-3 text-sm ${testEmailResult.ok ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-red-50 border border-red-200 text-red-800'}`}>
+            {testEmailResult.ok
+              ? <CheckCircle size={16} className="mt-0.5 shrink-0 text-green-600" />
+              : <XCircle size={16} className="mt-0.5 shrink-0 text-red-500" />}
+            <span>{testEmailResult.message}</span>
+          </div>
+        )}
       </div>
 
       {/* Manage Buildings */}

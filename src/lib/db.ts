@@ -214,6 +214,11 @@ export async function approveEntry(id: string, passId: string, otp: string): Pro
   return entry;
 }
 
+export async function markPassEmailSent(id: string): Promise<void> {
+  const { error } = await supabase.from('entries').update({ pass_sent_email: true }).eq('id', id);
+  if (error) console.error('[DB] markPassEmailSent failed:', error.message);
+}
+
 export async function rejectEntry(id: string): Promise<EntryRow> {
   const { data, error } = await supabase.from('entries')
     .update({ status: 'Rejected', otp: null, form_status: 'rejected' })
