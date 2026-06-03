@@ -21,7 +21,14 @@ export async function POST(req: NextRequest) {
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
-    const rowIndex = i + 1;
+    // Use the original file row number if the client sent it, otherwise fall back to loop index
+    const rowIndex = row._row_num ? Number(row._row_num) : (i + 1);
+
+    // Skip completely blank rows (all data fields are empty)
+    const dataFields = REQUIRED_FIELDS.concat(['mobile_number', 'role', 'valid_until', 'employee_id']);
+    const hasAnyData = dataFields.some((f) => typeof row[f] === 'string' && row[f].trim() !== '');
+    if (!hasAnyData) continue;
+
     const name  = (row.name  ?? '').trim();
     const email = (row.email ?? '').trim();
 
