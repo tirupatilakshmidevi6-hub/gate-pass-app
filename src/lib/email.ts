@@ -12,24 +12,41 @@ import { generateGatePassBodyHtml } from './gate-pass';
 // policy blocks SMTP Auth / App Passwords for that domain.
 
 function createTransporter() {
+  const user = process.env.GMAIL_USER;
+  const pass = process.env.GMAIL_APP_PASSWORD;
+  // Fail loudly with a clear message rather than letting Nodemailer produce
+  // the cryptic "Missing credentials for PLAIN" error.
+  if (!user || !pass) {
+    const missing = [!user ? 'GMAIL_USER' : '', !pass ? 'GMAIL_APP_PASSWORD' : ''].filter(Boolean).join(' and ');
+    throw new Error(
+      `[Email] Cannot send — ${missing} not set. ` +
+      'Check .env.local and RESTART the dev server (env vars load at startup, not hot-reload).'
+    );
+  }
+  console.log(`[Email] createTransporter — user: ${user}`);
   return nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
     secure: false,
-    auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
+    auth: { user, pass },
     tls: { rejectUnauthorized: false },
   });
 }
 
-// Verify SMTP connection once at module load — logs result to server console
-createTransporter().verify()
-  .then(() => console.log('[Email] Gmail SMTP connection verified ✓'))
-  .catch((err: Error) => console.error('[Email] Gmail SMTP verification FAILED:', err.message));
+// Verify SMTP connection once at module load.
+// Wrapped in try/catch so a missing-creds error doesn't crash the module.
+try {
+  createTransporter().verify()
+    .then(() => console.log('[Email] Gmail SMTP connection verified ✓'))
+    .catch((err: Error) => console.error('[Email] Gmail SMTP verification FAILED:', err.message));
+} catch (err) {
+  console.error(err instanceof Error ? err.message : '[Email] createTransporter failed at module load');
+}
 
 // Validate that all required email env vars are present
 (function validateEmailEnv() {
   const missing = ['GMAIL_USER', 'GMAIL_APP_PASSWORD', 'FROM_EMAIL'].filter((k) => !process.env[k]);
-  if (missing.length) console.error('[Email] Missing env vars:', missing.join(', '));
+  if (missing.length) console.error('[Email] Missing env vars:', missing.join(', '), '← check .env.local and restart dev server');
 })();
 
 function fromAddress() {
