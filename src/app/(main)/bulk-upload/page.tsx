@@ -42,11 +42,16 @@ function parseCSV(text: string): { rows: ParsedRow[]; missingCols: string[] } {
   if (lines.length < 2) return { rows: [], missingCols: [] };
   const fileHeaders = lines[0].split(',').map((h) => stripQuotes(h).toLowerCase());
   const missingCols = REQUIRED.filter((r) => !fileHeaders.includes(r));
-  const rows = lines.slice(1).map((line) => {
+  const rows: ParsedRow[] = [];
+  lines.slice(1).forEach((line, i) => {
     const values = line.split(',').map((v) => stripQuotes(v));
     const row: ParsedRow = {};
-    fileHeaders.forEach((h, i) => { row[h] = values[i] ?? ''; });
-    return row;
+    fileHeaders.forEach((h, j) => { row[h] = values[j] ?? ''; });
+    // Skip rows where every field value is empty — blank rows in the file
+    if (Object.values(row).every((v) => v === '')) return;
+    // Preserve original file row number (1-based, after header) for error display
+    row._row_num = String(i + 1);
+    rows.push(row);
   });
   return { rows, missingCols };
 }
