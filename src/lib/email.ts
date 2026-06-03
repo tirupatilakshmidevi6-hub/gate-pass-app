@@ -3,34 +3,37 @@ import type { GatePassData } from './gate-pass';
 import { generateGatePassBodyHtml } from './gate-pass';
 
 // ─── Transporter ─────────────────────────────────────────────────────────────
-// Brevo SMTP relay. Get credentials from: app.brevo.com → SMTP & API → SMTP
-// BREVO_SMTP_USER = the Brevo-assigned SMTP login (format: xxxxxxxx@smtp-brevo.com)
-//                  NOT your Brevo account email — find it in Brevo → SMTP & API → SMTP
-// BREVO_SMTP_KEY  = the SMTP key generated in Brevo dashboard (not your account password)
+// Gmail SMTP via Nodemailer.
+// GMAIL_USER         = tirupatilakshmidevi6@gmail.com  (the account that owns the App Password)
+// GMAIL_APP_PASSWORD = 16-char App Password from Google Account → Security → App Passwords
+// FROM_EMAIL         = address shown to recipients (must match GMAIL_USER for Gmail SMTP)
+//
+// Note: @nxtwave.co.in Google Workspace accounts cannot be used — Workspace admin
+// policy blocks SMTP Auth / App Passwords for that domain.
 
 function createTransporter() {
   return nodemailer.createTransport({
-    host: 'smtp-relay.brevo.com',
+    host: 'smtp.gmail.com',
     port: 587,
     secure: false,
-    auth: { user: process.env.BREVO_SMTP_USER, pass: process.env.BREVO_SMTP_KEY },
+    auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
     tls: { rejectUnauthorized: false },
   });
 }
 
 // Verify SMTP connection once at module load — logs result to server console
 createTransporter().verify()
-  .then(() => console.log('[Email] Brevo SMTP connection verified ✓'))
-  .catch((err: Error) => console.error('[Email] Brevo SMTP verification FAILED:', err.message));
+  .then(() => console.log('[Email] Gmail SMTP connection verified ✓'))
+  .catch((err: Error) => console.error('[Email] Gmail SMTP verification FAILED:', err.message));
 
 // Validate that all required email env vars are present
 (function validateEmailEnv() {
-  const missing = ['BREVO_SMTP_USER', 'BREVO_SMTP_KEY', 'FROM_EMAIL'].filter((k) => !process.env[k]);
+  const missing = ['GMAIL_USER', 'GMAIL_APP_PASSWORD', 'FROM_EMAIL'].filter((k) => !process.env[k]);
   if (missing.length) console.error('[Email] Missing env vars:', missing.join(', '));
 })();
 
 function fromAddress() {
-  const addr = process.env.FROM_EMAIL ?? 'narayana.dubbala@nxtwave.co.in';
+  const addr = process.env.FROM_EMAIL ?? process.env.GMAIL_USER ?? 'tirupatilakshmidevi6@gmail.com';
   return `"NxtWave Gate Pass System" <${addr}>`;
 }
 
@@ -57,7 +60,7 @@ interface MailOpts {
 
 async function send(label: string, opts: MailOpts) {
   const to = Array.isArray(opts.to) ? opts.to.join(', ') : opts.to;
-  const fromAddr = process.env.FROM_EMAIL ?? 'narayana.dubbala@nxtwave.co.in';
+  const fromAddr = process.env.FROM_EMAIL ?? process.env.GMAIL_USER ?? 'tirupatilakshmidevi6@gmail.com';
   const msgId = `<${Date.now()}.${Math.random().toString(36).slice(2)}@nxtwave.co.in>`;
   console.log(`[Email] ${label} → to: ${to} | from: ${opts.from} | cc: ${opts.cc ?? 'none'}`);
   try {
