@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { createEntry, createRegistrationToken, checkDuplicateEntry } from '@/lib/db';
 import { sendInviteEmail } from '@/lib/email';
 
-type RowResult = { name: string; email: string; success: boolean; skipped?: boolean; error?: string };
+type RowResult = { name: string; email: string; success: boolean; skipped?: boolean; error?: string; rowIndex?: number };
 
 const REQUIRED_FIELDS = ['name', 'email', 'purpose', 'reporting_date', 'poc_name', 'contact_no', 'building_name'];
 
@@ -19,27 +19,31 @@ export async function POST(req: NextRequest) {
   const skipped: RowResult[]  = [];
   const failed:  RowResult[]  = [];
 
-  for (const row of rows) {
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const rowIndex = i + 1;
     const name  = (row.name  ?? '').trim();
     const email = (row.email ?? '').trim();
 
     // Validate required fields
     const missing = REQUIRED_FIELDS.filter((f) => !row[f]?.trim());
     if (missing.length > 0) {
-      failed.push({ name, email, success: false, error: `Missing fields: ${missing.join(', ')}` });
+      failed.push({ name, email, success: false, error: `Missing fields: ${missing.join(', ')}`, rowIndex });
       continue;
     }
 
     // Duplicate check — skip instead of error
+    let isDuplicate = false;
     try {
       const existing = await checkDuplicateEntry(email, row.reporting_date.trim());
       if (existing) {
-        skipped.push({ name, email, success: false, skipped: true, error: `Entry already exists for ${row.reporting_date}` });
-        continue;
+        isDuplicate = true;
+        skipped.push({ name, email, success: false, skipped: true, error: `Entry already exists for ${row.reporting_date}`, rowIndex });
       }
-    } catch {
-      // if check fails, continue with creation
+    } catch (dupErr) {
+      console.warn('[BulkUpload] Duplicate check failed for row', rowIndex, dupErr instanceof Error ? dupErr.message : dupErr);
     }
+    if (isDuplicate) continue;
 
     try {
       const entry = await createEntry({
@@ -64,8 +68,13 @@ export async function POST(req: NextRequest) {
       results.push({ name, email, success: true });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      console.error('[BulkUpload] Row failed:', name, msg);
-      failed.push({ name, email, success: false, error: msg });
+      // Unique constraint violation → treat as duplicate, not failure
+      if (msg.toLowerCase().includes('unique') || msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('already exists')) {
+        skipped.push({ name, email, success: false, skipped: true, error: `Entry already exists for ${row.reporting_date}`, rowIndex });
+      } else {
+        console.error('[BulkUpload] Row failed:', name, msg);
+        failed.push({ name, email, success: false, error: msg, rowIndex });
+      }
     }
   }
 

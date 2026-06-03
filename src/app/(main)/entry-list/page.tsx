@@ -112,24 +112,24 @@ function EntryModal({
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center sm:p-4" onClick={onClose}>
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl max-h-[92dvh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
 
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-900 to-blue-600 rounded-t-2xl px-6 py-5">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-4">
+        <div className="bg-gradient-to-r from-blue-900 to-blue-600 rounded-t-2xl px-4 sm:px-6 py-4 sm:py-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
               {entry.photo_url
-                ? <img src={entry.photo_url} alt="" className="w-16 h-16 rounded-full object-cover border-2 border-white/30" />
-                : <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-white text-2xl font-bold">{entry.name.charAt(0)}</div>
+                ? <img src={entry.photo_url} alt="" className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-white/30 flex-shrink-0" />
+                : <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white/20 flex items-center justify-center text-white text-xl sm:text-2xl font-bold flex-shrink-0">{entry.name.charAt(0)}</div>
               }
-              <div>
-                <div className="text-xs font-bold text-blue-200 uppercase tracking-widest mb-1">Entry Details</div>
-                <div className="text-xl font-bold text-white">{entry.name}</div>
-                <div className="text-blue-200 text-sm mt-0.5">{entry.email ?? '—'}</div>
+              <div className="min-w-0">
+                <div className="text-[10px] sm:text-xs font-bold text-blue-200 uppercase tracking-widest mb-0.5 sm:mb-1">Entry Details</div>
+                <div className="text-lg sm:text-xl font-bold text-white truncate">{entry.name}</div>
+                <div className="text-blue-200 text-xs sm:text-sm mt-0.5 truncate">{entry.email ?? '—'}</div>
               </div>
             </div>
-            <button onClick={onClose} className="text-blue-200 hover:text-white p-1 rounded-lg"><X size={20} /></button>
+            <button onClick={onClose} className="text-blue-200 hover:text-white p-1 rounded-lg flex-shrink-0"><X size={20} /></button>
           </div>
           <div className="mt-3 flex items-center gap-2 flex-wrap">
             <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${STATUS_COLORS[entry.status] ?? 'bg-gray-100 text-gray-600'}`}>{entry.status}</span>
@@ -139,7 +139,7 @@ function EntryModal({
           </div>
         </div>
 
-        <div className="px-6 py-5 space-y-5">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-4 sm:space-y-5">
           {/* Candidate Information */}
           <Sec title="Candidate Information">
             <DR label="Mobile Number" value={entry.mobile_number ?? '—'} />
@@ -206,7 +206,7 @@ function EntryModal({
             <CheckCircle size={13} className="text-green-400 flex-shrink-0" />{modalToast}
           </div>
         )}
-        <div className="px-6 pb-6 flex gap-3 flex-wrap">
+        <div className="px-4 sm:px-6 pb-5 sm:pb-6 flex gap-2 sm:gap-3 flex-wrap">
           {entry.status === 'Pending Approval' && userRole === 'facilities' && (
             <>
               <button onClick={() => handleAction('approve')} disabled={!!processing}
@@ -388,74 +388,113 @@ export default function EntryListPage() {
         <div className="px-4 sm:px-6 py-2.5 border-b border-gray-100 text-xs sm:text-sm text-gray-500 font-medium">
           {filtered.length} {filtered.length === 1 ? 'entry' : 'entries'}
         </div>
-        <div className="overflow-x-auto touch-scroll-x">
-          <table className="w-full text-sm" style={{ minWidth: 780 }}>
-            <thead className="bg-gray-50">
-              <tr>{COLS.map((h) => (
-                <th key={h} className="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
-              ))}</tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filtered.length === 0 ? (
-                <tr><td colSpan={COLS.length} className="px-4 py-10 text-center text-gray-400 text-sm">No entries found.</td></tr>
-              ) : filtered.map((e, idx) => {
+
+        {filtered.length === 0 ? (
+          <div className="px-4 py-10 text-center text-gray-400 text-sm">No entries found.</div>
+        ) : (
+          <>
+            {/* Mobile card list — hidden on sm+ */}
+            <div className="sm:hidden divide-y divide-gray-100">
+              {filtered.map((e) => {
                 const rs = getRoleStyle(e.role ?? '');
                 return (
-                  <tr key={e.id} className="hover:bg-gray-50">
-                    <td className="px-3 sm:px-4 py-3 text-gray-400 text-xs font-medium">{idx + 1}</td>
-                    <td className="px-3 sm:px-4 py-3 font-medium text-gray-900 whitespace-nowrap text-xs sm:text-sm">{e.name}</td>
-                    <td className="px-3 sm:px-4 py-3">
-                      {e.role && <span style={{ background: rs.bg, color: rs.text, border: `1px solid ${rs.border}` }}
-                        className="px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap">{e.role}</span>}
-                    </td>
-                    <td className="px-3 sm:px-4 py-3 text-gray-600 text-xs">{e.purpose}</td>
-                    <td className="px-3 sm:px-4 py-3 text-gray-600 whitespace-nowrap font-mono text-xs">{e.mobile_number ?? '—'}</td>
-                    <td className="px-3 sm:px-4 py-3 text-gray-600 text-xs">{e.building_name}</td>
-                    <td className="px-3 sm:px-4 py-3 text-gray-600 whitespace-nowrap text-xs">{e.poc_name}</td>
-                    <td className="px-3 sm:px-4 py-3 text-gray-600 whitespace-nowrap text-xs">{e.reporting_date}</td>
-                    <td className="px-3 sm:px-4 py-3 text-gray-600 whitespace-nowrap text-xs">{e.valid_until ?? '—'}</td>
-                    <td className="px-3 sm:px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[e.status] ?? 'bg-gray-100 text-gray-600'}`}>{e.status}</span>
-                    </td>
-                    <td className="px-3 sm:px-4 py-3">
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => setSelected(e)}
-                          className="px-2.5 py-1 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 whitespace-nowrap">
-                          View
-                        </button>
-                        {e.status === 'Pending Form' && e.email && (
-                          <button
-                            onClick={() => handleResendInvite(e.id, e.email!)}
-                            disabled={resending === e.id}
-                            className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-amber-600 border border-amber-200 rounded-lg hover:bg-amber-50 disabled:opacity-50 transition-colors whitespace-nowrap"
-                          >
-                            {resending === e.id
-                              ? <><RefreshCw size={10} className="animate-spin" />…</>
-                              : <><Send size={10} />Resend</>
-                            }
-                          </button>
-                        )}
-                        {e.status === 'Approved' && e.email && (userRole === 'admin' || userRole === 'ta') && (
-                          <button
-                            onClick={() => handleResendGatePass(e.id, e.email!)}
-                            disabled={resending === e.id}
-                            title="Resend gate pass email"
-                            className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-green-700 border border-green-200 rounded-lg hover:bg-green-50 disabled:opacity-50 transition-colors whitespace-nowrap"
-                          >
-                            {resending === e.id
-                              ? <><RefreshCw size={10} className="animate-spin" />…</>
-                              : <><Send size={10} />Pass</>
-                            }
-                          </button>
-                        )}
+                  <div key={e.id} className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-sm font-bold flex-shrink-0">{e.name.charAt(0)}</div>
+                        <div className="min-w-0">
+                          <div className="font-semibold text-gray-900 text-sm truncate">{e.name}</div>
+                          <div className="text-xs text-gray-500 truncate">{e.email ?? e.mobile_number ?? '—'}</div>
+                        </div>
                       </div>
-                    </td>
-                  </tr>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${STATUS_COLORS[e.status] ?? 'bg-gray-100 text-gray-600'}`}>{e.status}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs bg-gray-50 rounded-lg p-3">
+                      <div><span className="text-gray-400">Date: </span><span className="text-gray-700">{e.reporting_date}</span></div>
+                      <div><span className="text-gray-400">Building: </span><span className="text-gray-700">{e.building_name}</span></div>
+                      <div><span className="text-gray-400">POC: </span><span className="text-gray-700">{e.poc_name}</span></div>
+                      <div><span className="text-gray-400">Purpose: </span><span className="text-gray-700">{e.purpose}</span></div>
+                    </div>
+                    {e.role && (
+                      <span style={{ background: rs.bg, color: rs.text, border: `1px solid ${rs.border}` }} className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold">{e.role}</span>
+                    )}
+                    <div className="flex gap-2">
+                      <button onClick={() => setSelected(e)} className="flex-1 py-2.5 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50">View Details</button>
+                      {e.status === 'Pending Form' && e.email && (
+                        <button onClick={() => handleResendInvite(e.id, e.email!)} disabled={resending === e.id}
+                          className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium text-amber-600 border border-amber-200 rounded-lg hover:bg-amber-50 disabled:opacity-50">
+                          {resending === e.id ? <><RefreshCw size={10} className="animate-spin" />…</> : <><Send size={10} />Resend</>}
+                        </button>
+                      )}
+                      {e.status === 'Approved' && e.email && (userRole === 'admin' || userRole === 'ta') && (
+                        <button onClick={() => handleResendGatePass(e.id, e.email!)} disabled={resending === e.id}
+                          className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium text-green-700 border border-green-200 rounded-lg hover:bg-green-50 disabled:opacity-50">
+                          {resending === e.id ? <><RefreshCw size={10} className="animate-spin" />…</> : <><Send size={10} />Pass</>}
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
+            </div>
+
+            {/* Desktop table — hidden on mobile */}
+            <div className="hidden sm:block overflow-x-auto touch-scroll-x">
+              <table className="w-full text-sm" style={{ minWidth: 780 }}>
+                <thead className="bg-gray-50">
+                  <tr>{COLS.map((h) => (
+                    <th key={h} className="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                  ))}</tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {filtered.map((e, idx) => {
+                    const rs = getRoleStyle(e.role ?? '');
+                    return (
+                      <tr key={e.id} className="hover:bg-gray-50">
+                        <td className="px-3 sm:px-4 py-3 text-gray-400 text-xs font-medium">{idx + 1}</td>
+                        <td className="px-3 sm:px-4 py-3 font-medium text-gray-900 whitespace-nowrap text-xs sm:text-sm">{e.name}</td>
+                        <td className="px-3 sm:px-4 py-3">
+                          {e.role && <span style={{ background: rs.bg, color: rs.text, border: `1px solid ${rs.border}` }}
+                            className="px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap">{e.role}</span>}
+                        </td>
+                        <td className="px-3 sm:px-4 py-3 text-gray-600 text-xs">{e.purpose}</td>
+                        <td className="px-3 sm:px-4 py-3 text-gray-600 whitespace-nowrap font-mono text-xs">{e.mobile_number ?? '—'}</td>
+                        <td className="px-3 sm:px-4 py-3 text-gray-600 text-xs">{e.building_name}</td>
+                        <td className="px-3 sm:px-4 py-3 text-gray-600 whitespace-nowrap text-xs">{e.poc_name}</td>
+                        <td className="px-3 sm:px-4 py-3 text-gray-600 whitespace-nowrap text-xs">{e.reporting_date}</td>
+                        <td className="px-3 sm:px-4 py-3 text-gray-600 whitespace-nowrap text-xs">{e.valid_until ?? '—'}</td>
+                        <td className="px-3 sm:px-4 py-3">
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[e.status] ?? 'bg-gray-100 text-gray-600'}`}>{e.status}</span>
+                        </td>
+                        <td className="px-3 sm:px-4 py-3">
+                          <div className="flex items-center gap-1">
+                            <button onClick={() => setSelected(e)}
+                              className="px-2.5 py-1 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 whitespace-nowrap">
+                              View
+                            </button>
+                            {e.status === 'Pending Form' && e.email && (
+                              <button onClick={() => handleResendInvite(e.id, e.email!)} disabled={resending === e.id}
+                                className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-amber-600 border border-amber-200 rounded-lg hover:bg-amber-50 disabled:opacity-50 transition-colors whitespace-nowrap">
+                                {resending === e.id ? <><RefreshCw size={10} className="animate-spin" />…</> : <><Send size={10} />Resend</>}
+                              </button>
+                            )}
+                            {e.status === 'Approved' && e.email && (userRole === 'admin' || userRole === 'ta') && (
+                              <button onClick={() => handleResendGatePass(e.id, e.email!)} disabled={resending === e.id}
+                                title="Resend gate pass email"
+                                className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-green-700 border border-green-200 rounded-lg hover:bg-green-50 disabled:opacity-50 transition-colors whitespace-nowrap">
+                                {resending === e.id ? <><RefreshCw size={10} className="animate-spin" />…</> : <><Send size={10} />Pass</>}
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Entry Detail Modal */}
