@@ -125,7 +125,7 @@ export default function SettingsPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setTestEmailResult({ ok: true, message: `Email delivered to Brevo successfully. Message ID: ${data.messageId}` });
+        setTestEmailResult({ ok: true, message: `Test email sent successfully via Gmail. Message ID: ${data.messageId}` });
       } else {
         setTestEmailResult({ ok: false, message: data.error ?? 'Unknown error' });
       }
@@ -179,8 +179,8 @@ export default function SettingsPage() {
           Email Configuration
         </h2>
         <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-xs text-blue-700 space-y-1">
-          <p><strong>SMTP Provider:</strong> Brevo (smtp-relay.brevo.com:587)</p>
-          <p><strong>From:</strong> {process.env.NEXT_PUBLIC_APP_URL ? 'narayana.dubbala@nxtwave.co.in' : 'narayana.dubbala@nxtwave.co.in'}</p>
+          <p><strong>SMTP Provider:</strong> Gmail (smtp.gmail.com:587)</p>
+          <p><strong>From:</strong> tirupatilakshmidevi6@gmail.com</p>
           <p><strong>CC:</strong> moru.vidyapraveen@nxtwave.co.in</p>
         </div>
         <Field label="Send Test Email To">
@@ -191,7 +191,7 @@ export default function SettingsPage() {
             placeholder="Enter recipient email address"
             className="input"
           />
-          <p className="text-xs text-gray-400 mt-1">Sends a test email via Brevo SMTP to verify email delivery is working.</p>
+          <p className="text-xs text-gray-400 mt-1">Sends a test email via Gmail SMTP to verify email delivery is working.</p>
         </Field>
         <button
           onClick={handleSendTestEmail}

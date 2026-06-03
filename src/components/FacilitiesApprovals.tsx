@@ -237,57 +237,109 @@ export default function FacilitiesApprovals({ userRole }: { userRole: string }) 
 
         {tab === 'approved' && (
           <>
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 flex items-center gap-2">
               <CheckCircle size={16} className="text-green-500" />
-              <h2 className="text-base font-semibold text-gray-800">Approved Entries</h2>
+              <h2 className="text-sm sm:text-base font-semibold text-gray-800">Approved Entries</h2>
             </div>
             {approved.length === 0 ? <div className="px-6 py-12 text-center text-gray-400 text-sm">No approved entries yet.</div> : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50"><tr>{['#','Photo','Name','Role','Purpose','Date','Building','Pass ID'].map((h) => <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>)}</tr></thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {approved.map((e, i) => (
-                      <tr key={e.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 text-gray-400 text-xs">{i + 1}</td>
-                        <td className="px-4 py-3">{e.photo_url ? <img src={e.photo_url} alt="" className="w-9 h-9 rounded-full object-cover border border-gray-200" /> : <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs font-bold">{e.name.charAt(0)}</div>}</td>
-                        <td className="px-4 py-3 font-medium text-gray-900">{e.name}</td>
-                        <td className="px-4 py-3"><RoleBadge role={e.role} /></td>
-                        <td className="px-4 py-3 text-gray-600">{e.purpose}</td>
-                        <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{e.reporting_date}</td>
-                        <td className="px-4 py-3 text-gray-600">{e.building_name}</td>
-                        <td className="px-4 py-3">{e.pass_id ? <span className="font-mono text-xs text-blue-700 font-semibold">{e.pass_id}</span> : <span className="text-gray-400 text-xs">—</span>}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <>
+                {/* Mobile card view */}
+                <div className="sm:hidden divide-y divide-gray-100">
+                  {approved.map((e) => (
+                    <div key={e.id} className="p-4 space-y-2.5">
+                      <div className="flex items-center gap-3">
+                        {e.photo_url
+                          ? <img src={e.photo_url} alt="" className="w-11 h-11 rounded-full object-cover border border-gray-200 flex-shrink-0" />
+                          : <div className="w-11 h-11 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold flex-shrink-0">{e.name.charAt(0)}</div>
+                        }
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-gray-900 text-sm">{e.name}</div>
+                          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                            <RoleBadge role={e.role} />
+                            <span className="bg-blue-100 text-blue-700 text-xs font-medium px-2 py-0.5 rounded-full">{e.purpose}</span>
+                          </div>
+                        </div>
+                        {e.pass_id && (
+                          <span className="font-mono text-xs text-blue-700 font-semibold bg-blue-50 px-2 py-1 rounded-lg flex-shrink-0">{e.pass_id}</span>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 bg-gray-50 rounded-lg p-3">
+                        <div><span className="text-gray-400">Date: </span>{e.reporting_date}</div>
+                        <div><span className="text-gray-400">Building: </span>{e.building_name}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {/* Desktop table */}
+                <div className="hidden sm:block overflow-x-auto touch-scroll-x">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50"><tr>{['#','Photo','Name','Role','Purpose','Date','Building','Pass ID'].map((h) => <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>)}</tr></thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {approved.map((e, i) => (
+                        <tr key={e.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-3 text-gray-400 text-xs">{i + 1}</td>
+                          <td className="px-4 py-3">{e.photo_url ? <img src={e.photo_url} alt="" className="w-9 h-9 rounded-full object-cover border border-gray-200" /> : <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs font-bold">{e.name.charAt(0)}</div>}</td>
+                          <td className="px-4 py-3 font-medium text-gray-900">{e.name}</td>
+                          <td className="px-4 py-3"><RoleBadge role={e.role} /></td>
+                          <td className="px-4 py-3 text-gray-600">{e.purpose}</td>
+                          <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{e.reporting_date}</td>
+                          <td className="px-4 py-3 text-gray-600">{e.building_name}</td>
+                          <td className="px-4 py-3">{e.pass_id ? <span className="font-mono text-xs text-blue-700 font-semibold">{e.pass_id}</span> : <span className="text-gray-400 text-xs">—</span>}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </>
         )}
 
         {tab === 'rejected' && (
           <>
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-              <XCircle size={16} className="text-red-500" /><h2 className="text-base font-semibold text-gray-800">Rejected Entries</h2>
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 flex items-center gap-2">
+              <XCircle size={16} className="text-red-500" /><h2 className="text-sm sm:text-base font-semibold text-gray-800">Rejected Entries</h2>
             </div>
             {rejected.length === 0 ? <div className="px-6 py-12 text-center text-gray-400 text-sm">No rejected entries.</div> : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50"><tr>{['#','Name','Email','Role','Purpose','Date'].map((h) => <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>)}</tr></thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {rejected.map((e, i) => (
-                      <tr key={e.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 text-gray-400 text-xs">{i + 1}</td>
-                        <td className="px-4 py-3 font-medium text-gray-900">{e.name}</td>
-                        <td className="px-4 py-3 text-gray-500 text-xs">{e.email ?? '—'}</td>
-                        <td className="px-4 py-3"><RoleBadge role={e.role} /></td>
-                        <td className="px-4 py-3 text-gray-600">{e.purpose}</td>
-                        <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{e.reporting_date}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <>
+                {/* Mobile card view */}
+                <div className="sm:hidden divide-y divide-gray-100">
+                  {rejected.map((e) => (
+                    <div key={e.id} className="p-4 space-y-2.5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-full bg-red-100 flex items-center justify-center text-red-600 font-bold flex-shrink-0">{e.name.charAt(0)}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-gray-900 text-sm">{e.name}</div>
+                          <div className="text-xs text-gray-500 truncate">{e.email ?? '—'}</div>
+                        </div>
+                        <RoleBadge role={e.role} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 bg-gray-50 rounded-lg p-3">
+                        <div><span className="text-gray-400">Purpose: </span>{e.purpose}</div>
+                        <div><span className="text-gray-400">Date: </span>{e.reporting_date}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {/* Desktop table */}
+                <div className="hidden sm:block overflow-x-auto touch-scroll-x">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50"><tr>{['#','Name','Email','Role','Purpose','Date'].map((h) => <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>)}</tr></thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {rejected.map((e, i) => (
+                        <tr key={e.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-3 text-gray-400 text-xs">{i + 1}</td>
+                          <td className="px-4 py-3 font-medium text-gray-900">{e.name}</td>
+                          <td className="px-4 py-3 text-gray-500 text-xs">{e.email ?? '—'}</td>
+                          <td className="px-4 py-3"><RoleBadge role={e.role} /></td>
+                          <td className="px-4 py-3 text-gray-600">{e.purpose}</td>
+                          <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{e.reporting_date}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </>
         )}
