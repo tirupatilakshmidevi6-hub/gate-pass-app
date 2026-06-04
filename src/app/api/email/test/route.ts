@@ -14,9 +14,10 @@ export async function POST(req: NextRequest) {
     await verifySmtp();
     console.log('[TestEmail] SMTP verified ✓');
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    // verifySmtp() already sanitizes — just pass the clean message through
+    const msg = err instanceof Error ? err.message : 'Could not connect to email server.';
     console.error('[TestEmail] SMTP verification failed:', msg);
-    return NextResponse.json({ error: `SMTP connection failed: ${msg}` }, { status: 500 });
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 
   console.log(`[TestEmail] Sending test email to: ${to}`);
@@ -31,7 +32,9 @@ export async function POST(req: NextRequest) {
       cc: process.env.CC_EMAIL ?? null,
     });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    // send() already sanitizes — just pass the clean message through
+    const msg = err instanceof Error ? err.message : 'Could not send test email.';
+    console.error('[TestEmail] Send failed:', msg);
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

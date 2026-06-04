@@ -123,7 +123,16 @@ async function send(label: string, opts: MailOpts) {
 // ─── SMTP health check ────────────────────────────────────────────────────────
 
 export async function verifySmtp(): Promise<void> {
-  await createTransporter().verify();
+  try {
+    await createTransporter().verify();
+  } catch (err) {
+    const raw = (err instanceof Error ? err.message : String(err)).toLowerCase();
+    console.error('[Email] verifySmtp failed:', err instanceof Error ? err.message : err);
+    if (raw.includes('not set') || raw.includes('missing credentials') || raw.includes('cannot send') || raw.includes('invalid login') || raw.includes('535')) {
+      throw new Error('Email service is not configured on the server. Please contact the administrator.');
+    }
+    throw new Error('Could not connect to email server. Please check SMTP settings.');
+  }
 }
 
 export async function sendTestEmail(to: string, name: string) {
