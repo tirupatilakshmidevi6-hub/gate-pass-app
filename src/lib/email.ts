@@ -2,25 +2,32 @@ import nodemailer from 'nodemailer';
 import type { GatePassData } from './gate-pass';
 import { generateGatePassBodyHtml } from './gate-pass';
 
-// ─── Transporter ─────────────────────────────────────────────────────────────
-// Gmail SMTP via Nodemailer.
-// GMAIL_USER         = tirupatilakshmidevi6@gmail.com  (the account that owns the App Password)
-// GMAIL_APP_PASSWORD = 16-char App Password from Google Account → Security → App Passwords
-// FROM_EMAIL         = address shown to recipients (must match GMAIL_USER for Gmail SMTP)
+// ─── Required environment variables ──────────────────────────────────────────
+// Set ALL of these on your hosting platform (Railway / Render / VPS / cPanel).
+// They are NOT read from .env.local in production — configure them in the
+// platform's environment/settings UI and redeploy after changing them.
 //
-// Note: @nxtwave.co.in Google Workspace accounts cannot be used — Workspace admin
-// policy blocks SMTP Auth / App Passwords for that domain.
+//   GMAIL_USER            Gmail address that owns the App Password
+//   GMAIL_APP_PASSWORD    16-character App Password
+//                         (Google Account → Security → App Passwords)
+//   FROM_EMAIL            Sender address shown to recipients
+//                         (must match GMAIL_USER for Gmail SMTP)
+//   CC_EMAIL              (optional) CC address on all outgoing emails
+//   FACILITIES_EMAIL      Facilities team email for new entry notifications
+//   NEXT_PUBLIC_APP_URL   Public URL of the deployed app (used in email links)
+//
+// Note: @nxtwave.co.in Google Workspace accounts cannot be used for SMTP —
+// Workspace admin policy blocks SMTP Auth / App Passwords for that domain.
+// ─────────────────────────────────────────────────────────────────────────────
 
 function createTransporter() {
   const user = process.env.GMAIL_USER;
   const pass = process.env.GMAIL_APP_PASSWORD;
-  // Fail loudly with a clear message rather than letting Nodemailer produce
-  // the cryptic "Missing credentials for PLAIN" error.
   if (!user || !pass) {
     const missing = [!user ? 'GMAIL_USER' : '', !pass ? 'GMAIL_APP_PASSWORD' : ''].filter(Boolean).join(' and ');
     throw new Error(
       `[Email] Cannot send — ${missing} not set. ` +
-      'Check .env.local and RESTART the dev server (env vars load at startup, not hot-reload).'
+      'Set these environment variables on your hosting platform (Railway / Render / VPS) and redeploy.'
     );
   }
   console.log(`[Email] createTransporter — user: ${user}`);
@@ -43,10 +50,17 @@ try {
   console.error(err instanceof Error ? err.message : '[Email] createTransporter failed at module load');
 }
 
-// Validate that all required email env vars are present
+// Startup check — warn loudly if email env vars are missing so it is obvious
+// in the deployment logs before any email send is attempted.
 (function validateEmailEnv() {
-  const missing = ['GMAIL_USER', 'GMAIL_APP_PASSWORD', 'FROM_EMAIL'].filter((k) => !process.env[k]);
-  if (missing.length) console.error('[Email] Missing env vars:', missing.join(', '), '← check .env.local and restart dev server');
+  const missing = ['GMAIL_USER', 'GMAIL_APP_PASSWORD'].filter((k) => !process.env[k]);
+  if (missing.length) {
+    console.warn(
+      '[Email] WARNING: SMTP credentials missing — emails will not be sent.',
+      'Please set', missing.join(' and '),
+      'in your hosting platform environment variables.'
+    );
+  }
 })();
 
 function fromAddress() {
@@ -96,7 +110,13 @@ async function send(label: string, opts: MailOpts) {
   } catch (err: unknown) {
     const e = err as { message?: string; code?: string; response?: string; responseCode?: number };
     console.error(`[Email] ${label} ✗ FAILED | message: ${e.message} | code: ${e.code} | response: ${e.response} | responseCode: ${e.responseCode}`);
-    throw err;
+    // Translate SMTP / credential errors into user-friendly messages.
+    // Never expose raw nodemailer internals (e.g. "Missing credentials for PLAIN") to the client.
+    const raw = (e.message ?? '').toLowerCase();
+    if (raw.includes('not set') || raw.includes('missing credentials') || raw.includes('cannot send') || raw.includes('invalid login') || raw.includes('535')) {
+      throw new Error('Email service is not configured on the server. Please contact the administrator.');
+    }
+    throw new Error('Could not send email. Please check server email settings.');
   }
 }
 
