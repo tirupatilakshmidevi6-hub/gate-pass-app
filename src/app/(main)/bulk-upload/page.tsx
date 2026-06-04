@@ -38,21 +38,27 @@ function parseMissingFields(error: string): string {
 function stripQuotes(s: string) { return s.replace(/^["']+|["']+$/g, '').trim(); }
 
 function parseCSV(text: string): { rows: ParsedRow[]; missingCols: string[] } {
-  const lines = text.trim().split('\n').map((l) => l.trim()).filter(Boolean);
-  if (lines.length < 2) return { rows: [], missingCols: [] };
-  const fileHeaders = lines[0].split(',').map((h) => stripQuotes(h).toLowerCase());
+  const trimmedLines = text.split('\n').map((l) => l.trim());
+  // Find the header line (first non-blank line)
+  const headerIdx = trimmedLines.findIndex(Boolean);
+  if (headerIdx === -1 || trimmedLines.filter(Boolean).length < 2) return { rows: [], missingCols: [] };
+  const fileHeaders = trimmedLines[headerIdx].split(',').map((h) => stripQuotes(h).toLowerCase());
   const missingCols = REQUIRED.filter((r) => !fileHeaders.includes(r));
   const rows: ParsedRow[] = [];
-  lines.slice(1).forEach((line, i) => {
+  // Iterate every line after the header, preserving original file row numbers
+  // so that row numbers shown to users match the actual CSV line numbers.
+  for (let i = headerIdx + 1; i < trimmedLines.length; i++) {
+    const line = trimmedLines[i];
+    if (!line) continue; // skip blank lines silently
     const values = line.split(',').map((v) => stripQuotes(v));
     const row: ParsedRow = {};
     fileHeaders.forEach((h, j) => { row[h] = values[j] ?? ''; });
-    // Skip rows where every field value is empty — blank rows in the file
-    if (Object.values(row).every((v) => v === '')) return;
-    // Preserve original file row number (1-based, after header) for error display
-    row._row_num = String(i + 1);
+    // Skip rows where every field is empty or whitespace-only
+    if (Object.values(row).every((v) => v === '')) continue;
+    // _row_num = position in file relative to header (1 = first data row)
+    row._row_num = String(i - headerIdx);
     rows.push(row);
-  });
+  }
   return { rows, missingCols };
 }
 
@@ -242,14 +248,21 @@ export default function BulkUploadPage() {
                   <XCircle size={13} /> Could Not Send
                 </div>
                 <p className="text-xs text-red-700 mb-2">
-                  {results.failed.length} invitation{results.failed.length !== 1 ? 's' : ''} could not be sent due to missing information.
+                  {results.failed.length} invitation{results.failed.length !== 1 ? 's' : ''} could not be sent.
                 </p>
                 <div className="space-y-1">
-                  {results.failed.map((f, i) => (
-                    <div key={i} className="text-xs text-red-700">
-                      <span className="font-medium">{rowLabel(f)}</span> — missing: {parseMissingFields(f.error ?? '')}
-                    </div>
-                  ))}
+                  {results.failed.map((f, i) => {
+                    const isMissingFields = /^missing fields?:/i.test(f.error ?? '');
+                    return (
+                      <div key={i} className="text-xs text-red-700">
+                        <span className="font-medium">{rowLabel(f)}</span>
+                        {isMissingFields
+                          ? <> — missing: {parseMissingFields(f.error ?? '')}</>
+                          : <> — {f.error ?? 'Unknown error'}</>
+                        }
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
