@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { verifyToken, COOKIE_NAME } from '@/lib/auth';
+import { verifyTokenEdge as verifyToken, COOKIE_NAME } from '@/lib/auth-edge';
 
 const PUBLIC_PATHS = [
   '/login', '/register', '/signup', '/forgot-password', '/reset-password',
