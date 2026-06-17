@@ -1,6 +1,5 @@
 import nodemailer from 'nodemailer';
 import type { GatePassData } from './gate-pass';
-import { generateGatePassBodyHtml } from './gate-pass';
 
 // ─── Required environment variables ──────────────────────────────────────────
 // Set ALL of these on your hosting platform (Railway / Render / VPS / cPanel).
@@ -168,7 +167,7 @@ export async function sendGatePassEmail(to: string, name: string, data: GatePass
     to,
     ...(ccAddress() ? { cc: ccAddress() } : {}),
     subject: 'Your NxtWave Gate Pass is Ready',
-    html: gatePassWrapper(name, data, generateGatePassBodyHtml(data), viewUrl),
+    html: gatePassWrapper(name, data, viewUrl),
   });
 }
 
@@ -389,7 +388,7 @@ function inviteHtml(name: string, url: string) {
   return emailShell('', 'Office Entry Registration', body);
 }
 
-function gatePassWrapper(name: string, data: GatePassData, gatePassBodyHtml: string, viewUrl?: string) {
+function gatePassWrapper(name: string, data: GatePassData, viewUrl?: string) {
   const year = new Date().getFullYear();
 
   const detailRows: [string, string][] = [
@@ -453,11 +452,6 @@ function gatePassWrapper(name: string, data: GatePassData, gatePassBodyHtml: str
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- Visual Gate Pass Card -->
-  <div style="background:#f0f4ff;padding:0 16px 16px;border-left:1px solid #dde8fb;border-right:1px solid #dde8fb;">
-    ${gatePassBodyHtml}
   </div>
 
   <!-- Download Button -->
