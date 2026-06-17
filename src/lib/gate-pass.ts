@@ -27,7 +27,7 @@ function addDays(dateStr: string, n: number): string {
 }
 
 // ── NxtWave Logo block ────────────────────────────────────────────────────────
-const NXTWAVE_LOGO = `<div style="background:#ffffff;border-radius:10px;padding:6px 10px;display:inline-flex;align-items:center;justify-content:center;"><img src="https://www.image2url.com/r2/default/images/1779254824307-0fca63d9-e1eb-4ccf-bfb4-4c663ca4ae5e.jpeg" alt="NxtWave" style="height:34px;width:auto;display:block;object-fit:contain;" /></div>`;
+const NXTWAVE_LOGO = `<div style="background:#ffffff;border-radius:10px;padding:4px 8px;display:inline-flex;align-items:center;justify-content:center;"><img src="https://www.image2url.com/r2/default/images/1779254824307-0fca63d9-e1eb-4ccf-bfb4-4c663ca4ae5e.jpeg" alt="NxtWave" style="height:32px;max-width:120px;width:auto;display:block;object-fit:contain;" /></div>`;
 
 // ── Main generator ─────────────────────────────────────────────────────────────
 export function generateGatePassBodyHtml(data: GatePassData): string {
@@ -83,7 +83,7 @@ export function generateGatePassBodyHtml(data: GatePassData): string {
 <div style="max-width:500px;margin:0 auto;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 8px 40px rgba(13,43,126,0.20);font-family:Arial,Helvetica,sans-serif;">
 
   <!-- ── HEADER ──────────────────────────────────────────────────────────────── -->
-  <div style="background:#0d1b6e;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;">
+  <div style="background:#0d1b6e;padding:13px 24px;display:flex;align-items:center;justify-content:space-between;">
     ${NXTWAVE_LOGO}
     <div style="display:flex;align-items:center;gap:10px;">
       <span style="font-size:18px;font-weight:800;color:#ffffff;letter-spacing:2.5px;">GATE PASS</span>
@@ -144,29 +144,25 @@ export function generateGatePassBodyHtml(data: GatePassData): string {
     </div>
   </div>
 
-  <!-- ── VALID TILL CARD ─────────────────────────────────────────────────────── -->
-  <div style="margin:0 16px 16px;background:#ffffff;border-radius:14px;padding:16px 20px;border:1.5px solid #e2e8f0;box-shadow:0 1px 4px rgba(30,64,175,0.06);display:flex;align-items:center;justify-content:space-between;">
-    <div style="display:flex;align-items:center;gap:16px;">
-      <div style="width:44px;height:44px;background:#1e40af;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        ${iconCalW22}
+  <!-- ── PASS VALIDITY SECTION ─────────────────────────────────────────────── -->
+  <div style="margin:0 16px 16px;background:#eef2ff;border-radius:14px;padding:14px 18px;border:1.5px solid #c7d7fb;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      <div style="width:28px;height:28px;background:#1e40af;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        ${iconCalW22.replace('width="22" height="22"', 'width="14" height="14"')}
       </div>
-      <div>
-        <div style="font-size:10px;font-weight:700;color:#6b7280;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px;">VALID TILL</div>
-        <div style="font-size:24px;font-weight:800;color:#1e40af;line-height:1;">${validUntil}</div>
-        <div style="font-size:11px;color:#9ca3af;margin-top:6px;">Please carry a valid government-issued ID.</div>
+      <span style="font-size:10px;font-weight:800;color:#1e40af;letter-spacing:1.8px;">PASS VALIDITY</span>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <div style="flex:1;background:#ffffff;border-radius:10px;padding:12px;text-align:center;border:1px solid #dde8fb;">
+        <div style="font-size:9px;font-weight:700;color:#6b7280;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:5px;">VALID FROM</div>
+        <div style="font-size:17px;font-weight:800;color:#1e40af;line-height:1;">${fmtDate(data.reportingDate)}</div>
+      </div>
+      <div style="flex:1;background:#ffffff;border-radius:10px;padding:12px;text-align:center;border:1px solid #dde8fb;">
+        <div style="font-size:9px;font-weight:700;color:#6b7280;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:5px;">VALID UNTIL</div>
+        <div style="font-size:17px;font-weight:800;color:#1e40af;line-height:1;">${validUntil}</div>
       </div>
     </div>
-    <!-- Ghosted ID card illustration -->
-    <div style="flex-shrink:0;opacity:0.13;">
-      <svg width="68" height="52" viewBox="0 0 80 58" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="2" y="2" width="76" height="54" rx="8" fill="#1e40af"/>
-        <rect x="2" y="2" width="76" height="12" rx="5" fill="#1535a0"/>
-        <circle cx="20" cy="34" r="11" fill="#dbeafe"/>
-        <rect x="36" y="24" width="30" height="5" rx="2.5" fill="#dbeafe"/>
-        <rect x="36" y="34" width="22" height="5" rx="2.5" fill="#dbeafe"/>
-        <rect x="36" y="44" width="16" height="5" rx="2.5" fill="#dbeafe"/>
-      </svg>
-    </div>
+    <div style="font-size:10px;color:#9ca3af;margin-top:10px;text-align:center;">Please carry a valid government-issued ID along with this gate pass.</div>
   </div>
 
   <!-- ── FOOTER ──────────────────────────────────────────────────────────────── -->

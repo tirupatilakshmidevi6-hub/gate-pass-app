@@ -84,9 +84,10 @@ export async function POST(req: NextRequest) {
           },
           notification
         );
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Remove expired subscriptions (410 Gone)
-        if (err.statusCode === 410 || err.statusCode === 404) {
+        const statusCode = (err as { statusCode?: number }).statusCode;
+        if (statusCode === 410 || statusCode === 404) {
           await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
         }
         throw err;

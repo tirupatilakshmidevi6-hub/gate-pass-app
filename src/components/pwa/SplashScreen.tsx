@@ -6,11 +6,12 @@ export default function SplashScreen() {
   const [visible, setVisible] = useState(true);
   const [fading, setFading] = useState(false);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     // Only show splash in standalone PWA mode
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true;
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
 
     if (!isStandalone) {
       setVisible(false);
@@ -24,6 +25,7 @@ export default function SplashScreen() {
 
     return () => clearTimeout(timer);
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   if (!visible) return null;
 

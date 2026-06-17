@@ -18,9 +18,8 @@ export async function POST(req: NextRequest) {
   try {
     await sendInviteEmail(entry.email, entry.name, registrationUrl);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error('[Email] Resend invite failed:', msg);
-    return NextResponse.json({ error: `Email failed: ${msg}` }, { status: 500 });
+    console.error('[Email] Resend invite failed:', err instanceof Error ? err.message : err);
+    return NextResponse.json({ error: 'Could not send email. Please check server email settings.' }, { status: 500 });
   }
 
   return NextResponse.json({ success: true, email: entry.email });

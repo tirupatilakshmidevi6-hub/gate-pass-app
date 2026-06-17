@@ -86,11 +86,13 @@ export default function TopNav({
     } catch { /* ignore */ }
   }, []);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000);
+    void fetchNotifications();
+    const interval = setInterval(() => { void fetchNotifications(); }, 30000);
     return () => clearInterval(interval);
   }, [fetchNotifications]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -208,7 +210,7 @@ export default function TopNav({
           </button>
 
           {showNotifDrop && (
-            <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden">
+            <div className="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-1rem)] bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                 <div>
                   <span className="font-semibold text-gray-900 text-sm">Notifications</span>

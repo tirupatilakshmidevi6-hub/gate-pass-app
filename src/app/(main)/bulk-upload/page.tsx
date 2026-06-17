@@ -11,19 +11,54 @@ const CSV_HEADERS = [
 const REQUIRED = ['name', 'email', 'purpose', 'reporting_date', 'poc_name', 'contact_no', 'building_name'];
 
 type ParsedRow = Record<string, string>;
-type RowResult = { name: string; email: string; success: boolean; skipped?: boolean; error?: string };
+type RowResult = { name: string; email: string; success: boolean; skipped?: boolean; error?: string; rowIndex?: number };
+
+const FIELD_LABELS: Record<string, string> = {
+  name: 'Name', email: 'Email', purpose: 'Purpose',
+  reporting_date: 'Reporting Date', poc_name: 'Point of Contact',
+  contact_no: 'Contact Number', building_name: 'Building',
+};
+
+function formatDisplayDate(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00');
+  return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+function rowLabel(r: RowResult): string {
+  const clean = (s: string | null | undefined) => (s ?? '').replace(/^["']+|["']+$/g, '').trim();
+  return clean(r.name) || clean(r.email) || `Row ${r.rowIndex ?? '?'}`;
+}
+
+function parseMissingFields(error: string): string {
+  const match = error.match(/Missing fields?: (.+)/i);
+  if (!match) return error;
+  return match[1].split(',').map((f) => FIELD_LABELS[f.trim()] ?? f.trim()).join(', ');
+}
+
+function stripQuotes(s: string) { return s.replace(/^["']+|["']+$/g, '').trim(); }
 
 function parseCSV(text: string): { rows: ParsedRow[]; missingCols: string[] } {
-  const lines = text.trim().split('\n').map((l) => l.trim()).filter(Boolean);
-  if (lines.length < 2) return { rows: [], missingCols: [] };
-  const fileHeaders = lines[0].split(',').map((h) => h.trim().toLowerCase());
+  const trimmedLines = text.split('\n').map((l) => l.trim());
+  // Find the header line (first non-blank line)
+  const headerIdx = trimmedLines.findIndex(Boolean);
+  if (headerIdx === -1 || trimmedLines.filter(Boolean).length < 2) return { rows: [], missingCols: [] };
+  const fileHeaders = trimmedLines[headerIdx].split(',').map((h) => stripQuotes(h).toLowerCase());
   const missingCols = REQUIRED.filter((r) => !fileHeaders.includes(r));
-  const rows = lines.slice(1).map((line) => {
-    const values = line.split(',').map((v) => v.trim());
+  const rows: ParsedRow[] = [];
+  // Iterate every line after the header, preserving original file row numbers
+  // so that row numbers shown to users match the actual CSV line numbers.
+  for (let i = headerIdx + 1; i < trimmedLines.length; i++) {
+    const line = trimmedLines[i];
+    if (!line) continue; // skip blank lines silently
+    const values = line.split(',').map((v) => stripQuotes(v));
     const row: ParsedRow = {};
-    fileHeaders.forEach((h, i) => { row[h] = values[i] ?? ''; });
-    return row;
-  });
+    fileHeaders.forEach((h, j) => { row[h] = values[j] ?? ''; });
+    // Skip rows where every field is empty or whitespace-only
+    if (Object.values(row).every((v) => v === '')) continue;
+    // _row_num = position in file relative to header (1 = first data row)
+    row._row_num = String(i - headerIdx);
+    rows.push(row);
+  }
   return { rows, missingCols };
 }
 
@@ -92,10 +127,10 @@ export default function BulkUploadPage() {
   const skippedCount = results?.skipped?.length ?? 0;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 p-6">
-      <h1 className="text-2xl font-bold text-gray-800">Bulk Upload via CSV</h1>
+    <div className="page-container max-w-3xl mx-auto space-y-5 sm:space-y-6">
+      <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Bulk Upload via CSV</h1>
 
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5 shadow-sm">
+      <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-sm">
         <div className="flex items-center gap-3 flex-wrap">
           <label className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 cursor-pointer hover:bg-gray-50 transition-colors">
             <Upload size={15} /> Choose CSV File
@@ -131,8 +166,9 @@ export default function BulkUploadPage() {
         {rows.length > 0 && (
           <div>
             <p className="text-sm text-gray-600 mb-2 font-medium">{rows.length} row(s) found — Preview (first 3):</p>
-            <div className="overflow-x-auto max-h-52 border border-gray-200 rounded-xl">
-              <table className="w-full text-xs">
+            <p className="text-xs text-gray-400 mb-1.5 sm:hidden">← Scroll left/right to see all columns</p>
+            <div className="overflow-x-auto max-h-52 border border-gray-200 rounded-xl touch-scroll-x">
+              <table className="w-full text-xs" style={{ minWidth: 640 }}>
                 <thead className="bg-gray-50 sticky top-0">
                   <tr>{['Name','Email','Mobile','Role','Purpose','Date','Valid Until','POC','Emp ID','Contact','Building'].map((h) => (
                     <th key={h} className="text-left px-3 py-2 text-gray-500 font-semibold uppercase tracking-wider whitespace-nowrap">{h}</th>
@@ -168,43 +204,65 @@ export default function BulkUploadPage() {
         {results && (
           <div className="space-y-3">
             {/* Summary bar */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-center">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              <div className="bg-green-50 border border-green-200 rounded-xl p-2.5 sm:p-3 text-center">
                 <div className="text-xl font-bold text-green-700">{sentCount}</div>
-                <div className="text-xs text-green-600 font-medium">Sent Successfully</div>
+                <div className="text-[11px] sm:text-xs text-green-600 font-medium leading-tight">Sent</div>
               </div>
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-center">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-2.5 sm:p-3 text-center">
                 <div className="text-xl font-bold text-amber-700">{skippedCount}</div>
-                <div className="text-xs text-amber-600 font-medium">Skipped (Duplicate)</div>
+                <div className="text-[11px] sm:text-xs text-amber-600 font-medium leading-tight">Skipped</div>
               </div>
-              <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-center">
+              <div className="bg-red-50 border border-red-200 rounded-xl p-2.5 sm:p-3 text-center">
                 <div className="text-xl font-bold text-red-700">{failedCount}</div>
-                <div className="text-xs text-red-600 font-medium">Failed</div>
+                <div className="text-[11px] sm:text-xs text-red-600 font-medium leading-tight">Failed</div>
               </div>
             </div>
 
-            {results.skipped.length > 0 && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-                <div className="flex items-center gap-2 mb-2 text-xs font-bold text-amber-700 uppercase tracking-wider">
-                  <AlertTriangle size={13} /> Skipped (duplicate entries)
+            {results.skipped.length > 0 && (() => {
+              const byDate = results.skipped.reduce<Record<string, number>>((acc, s) => {
+                const m = s.error?.match(/for (\d{4}-\d{2}-\d{2})/);
+                const key = m ? m[1] : 'unknown date';
+                acc[key] = (acc[key] ?? 0) + 1;
+                return acc;
+              }, {});
+              return (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                  <div className="flex items-center gap-2 mb-2 text-xs font-bold text-amber-700 uppercase tracking-wider">
+                    <AlertTriangle size={13} /> Already Sent — Skipped
+                  </div>
+                  <div className="space-y-1">
+                    {Object.entries(byDate).map(([date, count]) => (
+                      <div key={date} className="text-xs text-amber-800">
+                        <span className="font-medium">{count} invitation{count !== 1 ? 's' : ''} skipped</span> — already sent for {formatDisplayDate(date)}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  {results.skipped.map((s, i) => (
-                    <div key={i} className="text-xs text-amber-800">{s.name} ({s.email}) — {s.error}</div>
-                  ))}
-                </div>
-              </div>
-            )}
+              );
+            })()}
 
             {results.failed.length > 0 && (
               <div className="bg-red-50 border border-red-200 rounded-xl p-3">
                 <div className="flex items-center gap-2 mb-2 text-xs font-bold text-red-700 uppercase tracking-wider">
-                  <XCircle size={13} /> Failed rows
+                  <XCircle size={13} /> Could Not Send
                 </div>
+                <p className="text-xs text-red-700 mb-2">
+                  {results.failed.length} invitation{results.failed.length !== 1 ? 's' : ''} could not be sent.
+                </p>
                 <div className="space-y-1">
-                  {results.failed.map((f, i) => (
-                    <div key={i} className="text-xs text-red-700">{f.name} ({f.email}): {f.error}</div>
-                  ))}
+                  {results.failed.map((f, i) => {
+                    const isMissingFields = /^missing fields?:/i.test(f.error ?? '');
+                    return (
+                      <div key={i} className="text-xs text-red-700">
+                        <span className="font-medium">{rowLabel(f)}</span>
+                        {isMissingFields
+                          ? <> — missing: {parseMissingFields(f.error ?? '')}</>
+                          : <> — {f.error ?? 'Unknown error'}</>
+                        }
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -218,7 +276,7 @@ export default function BulkUploadPage() {
         )}
 
         <button onClick={handleUpload} disabled={rows.length === 0 || uploading || !!parseError}
-          className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm">
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 sm:py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm">
           <Upload size={15} />
           {uploading ? 'Processing…' : `Upload & Send Invites${rows.length > 0 ? ` (${rows.length} rows)` : ''}`}
         </button>
