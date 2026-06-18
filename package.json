@@ -5,7 +5,7 @@
   "scripts": {
     "predev": "node scripts/setup-dev-cache.js",
     "dev": "node scripts/run-dev.js",
-    "build": "next build --webpack",
+    "build": "node scripts/run-build.js",
     "start": "next start",
     "lint": "eslint",
     "generate-icons": "node scripts/generate-icons.js"
