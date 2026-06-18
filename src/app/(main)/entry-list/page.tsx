@@ -271,6 +271,7 @@ export default function EntryListPage() {
   const [userRole,    setUserRole]    = useState<string>('');
   const [toast,       setToast]       = useState('');
   const [resending,   setResending]   = useState<string | null>(null);
+  const [page,        setPage]        = useState(1);
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 4000); };
 
@@ -347,6 +348,13 @@ export default function EntryListPage() {
     return true;
   });
 
+  const PAGE_SIZE  = 10;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage   = Math.min(page, totalPages);
+  const paginated  = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  useEffect(() => { setPage(1); }, [dateFilter, searchQuery]);
+
   if (loading) return <div className="text-sm text-gray-400 p-4 sm:p-6">Loading entries…</div>;
 
   const COLS = ['#', 'Name', 'Role', 'Purpose', 'Phone', 'Building', 'POC Name', 'Date', 'Valid Until', 'Status', 'Actions'];
@@ -387,6 +395,7 @@ export default function EntryListPage() {
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="px-4 sm:px-6 py-2.5 border-b border-gray-100 text-xs sm:text-sm text-gray-500 font-medium">
           {filtered.length} {filtered.length === 1 ? 'entry' : 'entries'}
+          {totalPages > 1 && <span className="ml-2 text-gray-400">(page {safePage} of {totalPages})</span>}
         </div>
 
         {filtered.length === 0 ? (
@@ -395,7 +404,7 @@ export default function EntryListPage() {
           <>
             {/* Mobile card list — hidden on sm+ */}
             <div className="sm:hidden divide-y divide-gray-100">
-              {filtered.map((e) => {
+              {paginated.map((e) => {
                 const rs = getRoleStyle(e.role ?? '');
                 return (
                   <div key={e.id} className="p-4 space-y-3">
@@ -447,11 +456,11 @@ export default function EntryListPage() {
                   ))}</tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {filtered.map((e, idx) => {
+                  {paginated.map((e, idx) => {
                     const rs = getRoleStyle(e.role ?? '');
                     return (
                       <tr key={e.id} className="hover:bg-gray-50">
-                        <td className="px-3 sm:px-4 py-3 text-gray-400 text-xs font-medium">{idx + 1}</td>
+                        <td className="px-3 sm:px-4 py-3 text-gray-400 text-xs font-medium">{(safePage - 1) * PAGE_SIZE + idx + 1}</td>
                         <td className="px-3 sm:px-4 py-3 font-medium text-gray-900 whitespace-nowrap text-xs sm:text-sm">{e.name}</td>
                         <td className="px-3 sm:px-4 py-3">
                           {e.role && <span style={{ background: rs.bg, color: rs.text, border: `1px solid ${rs.border}` }}
@@ -496,6 +505,35 @@ export default function EntryListPage() {
           </>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-1.5 py-2">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={safePage === 1}
+            className="px-3 py-1.5 text-xs font-medium border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600"
+          >
+            ← Prev
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPage(p)}
+              className={`w-8 h-8 text-xs font-semibold rounded-lg transition-colors ${p === safePage ? 'bg-blue-600 text-white' : 'border border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+            >
+              {p}
+            </button>
+          ))}
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={safePage === totalPages}
+            className="px-3 py-1.5 text-xs font-medium border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600"
+          >
+            Next →
+          </button>
+        </div>
+      )}
 
       {/* Entry Detail Modal */}
       {selected && (

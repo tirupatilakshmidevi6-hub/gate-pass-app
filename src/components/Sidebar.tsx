@@ -117,21 +117,21 @@ function SidebarPanel({
 
   return (
     <aside
-      className={`${isMobile ? 'w-64' : isCollapsedMode ? 'w-16' : 'w-56'} h-full bg-gray-900 text-white flex flex-col overflow-y-auto overflow-x-hidden transition-all duration-300 ease-in-out`}
+      className={`${isMobile ? 'w-60' : isCollapsedMode ? 'w-14' : 'w-44'} h-full bg-gray-900 text-white flex flex-col overflow-y-auto overflow-x-hidden transition-all duration-300 ease-in-out`}
     >
       {/* ── Header: logo + toggle ── */}
-      <div className={`border-b border-gray-700 flex items-center ${isCollapsedMode ? 'px-2 py-3 justify-center flex-col gap-2' : 'px-4 py-3 justify-between'}`}>
+      <div className={`border-b border-gray-700 flex items-center ${isCollapsedMode ? 'px-2 py-2.5 justify-center flex-col gap-2' : 'px-3 py-2 justify-between'}`}>
         {isCollapsedMode ? (
-          <Link href="/" className="w-9 h-9 bg-white rounded-lg flex items-center justify-center hover:opacity-90 transition-opacity flex-shrink-0">
-            <Shield size={18} className="text-blue-700" />
+          <Link href="/" className="w-8 h-8 bg-white rounded-md flex items-center justify-center hover:opacity-90 transition-opacity flex-shrink-0">
+            <Shield size={16} className="text-blue-700" />
           </Link>
         ) : (
           <Link href="/" className="inline-block" onClick={isMobile ? onClose : undefined}>
-            <div className="bg-white rounded-lg px-3 py-1.5 hover:opacity-90 transition-opacity">
+            <div className="bg-white rounded-md px-2 py-1 hover:opacity-90 transition-opacity">
               <img
                 src="https://www.image2url.com/r2/default/images/1779254824307-0fca63d9-e1eb-4ccf-bfb4-4c663ca4ae5e.jpeg"
                 alt="NxtWave"
-                className="h-7 w-auto object-contain"
+                className="h-4 w-auto object-contain"
               />
             </div>
           </Link>
@@ -176,7 +176,7 @@ function SidebarPanel({
 
           return (
             <Link key={href} href={href} onClick={isMobile ? onClose : undefined}
-              className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${active ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
+              className={`flex items-center gap-2.5 px-3 py-2 text-sm transition-colors ${active ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
             >
               <Icon size={16} className="flex-shrink-0" />
               <span className="truncate">{label}</span>
@@ -193,19 +193,10 @@ function SidebarPanel({
 
       {/* ── Promo banner (hidden when collapsed on desktop) ── */}
       {!isCollapsedMode && (
-        <div className="px-3 pb-3">
-          <div className="relative bg-gradient-to-b from-blue-700 to-blue-900 rounded-2xl p-4 text-center overflow-hidden">
-            <div className="absolute -top-4 -right-4 w-16 h-16 bg-blue-500/20 rounded-full" />
-            <div className="absolute -bottom-4 -left-4 w-12 h-12 bg-blue-500/20 rounded-full" />
-            <div className="relative flex justify-center mb-2">
-              <div className="w-12 h-12 bg-blue-600/50 rounded-full flex items-center justify-center border-2 border-blue-400/30">
-                <Shield size={24} className="text-blue-200" />
-              </div>
-            </div>
-            <p className="relative text-white text-xs font-semibold leading-snug">
-              Secure Every Entry,{' '}
-              <span className="text-blue-200">Simplify Your Management</span>
-            </p>
+        <div className="px-3 pb-2">
+          <div className="flex items-center gap-2 bg-blue-900/40 rounded-lg px-3 py-2">
+            <Shield size={13} className="text-blue-400 flex-shrink-0" />
+            <p className="text-[10px] text-blue-300 leading-tight">Secure Every Entry</p>
           </div>
         </div>
       )}
@@ -291,7 +282,7 @@ export default function Sidebar({
   return (
     <>
       {/* ── Desktop sidebar (md+) ── */}
-      <div className={`hidden md:flex fixed top-0 left-0 h-screen z-30 transition-all duration-300 ease-in-out ${collapsed ? 'w-16' : 'w-56'}`}>
+      <div className={`hidden md:flex fixed top-0 left-0 h-screen z-30 transition-all duration-300 ease-in-out ${collapsed ? 'w-14' : 'w-44'}`}>
         <SidebarPanel {...panelProps} collapsed={collapsed} isMobile={false} onClose={() => {}} />
       </div>
 

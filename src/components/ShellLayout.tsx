@@ -52,7 +52,7 @@ export default function ShellLayout({ children, role, userName, pendingCount, pe
       />
       <div
         style={{ transition: 'margin-left 300ms ease-in-out' }}
-        className={`flex flex-col min-h-screen ${effectiveCollapsed ? 'md:ml-16' : 'md:ml-56'}`}
+        className={`flex flex-col min-h-screen ${effectiveCollapsed ? 'md:ml-14' : 'md:ml-44'}`}
       >
         <TopNav userName={userName} role={role as 'admin' | 'ta' | 'facilities'} pendingCount={pendingCount} />
         <main className="flex-1 overflow-auto pb-16 md:pb-0">{children}</main>
