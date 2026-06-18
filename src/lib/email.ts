@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import type { GatePassData } from './gate-pass';
+import { getAppUrl } from './app-url';
 
 // ─── Required environment variables ──────────────────────────────────────────
 // Set ALL of these on your hosting platform (Railway / Render / VPS / cPanel).
@@ -63,8 +64,21 @@ try {
 })();
 
 function fromAddress() {
-  const addr = process.env.FROM_EMAIL ?? process.env.GMAIL_USER ?? 'tirupatilakshmidevi6@gmail.com';
-  return `"NxtWave Gate Pass System" <${addr}>`;
+  // Gmail SMTP only delivers without "via gmail.com" warning when the From
+  // address matches the authenticated SMTP account (GMAIL_USER). Using a
+  // different domain (FROM_EMAIL) causes SPF mismatch → spam. Replies still
+  // go to FROM_EMAIL via the Reply-To header set in send().
+  const sender = process.env.GMAIL_USER ?? process.env.FROM_EMAIL ?? 'noreply@gmail.com';
+  return `"NxtWave Gate Pass" <${sender}>`;
+}
+
+function htmlToText(html: string): string {
+  return html
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ')
+    .replace(/\s{2,}/g, ' ').trim();
 }
 
 function ccAddress(): string | undefined {
@@ -90,18 +104,17 @@ interface MailOpts {
 
 async function send(label: string, opts: MailOpts) {
   const to = Array.isArray(opts.to) ? opts.to.join(', ') : opts.to;
-  const fromAddr = process.env.FROM_EMAIL ?? process.env.GMAIL_USER ?? 'tirupatilakshmidevi6@gmail.com';
-  const msgId = `<${Date.now()}.${Math.random().toString(36).slice(2)}@nxtwave.co.in>`;
+  const fromAddr = process.env.FROM_EMAIL ?? process.env.GMAIL_USER ?? 'noreply@gmail.com';
   console.log(`[Email] ${label} → to: ${to} | from: ${opts.from} | cc: ${opts.cc ?? 'none'}`);
   try {
     const result = await createTransporter().sendMail({
       ...opts,
+      text: htmlToText(opts.html),
       headers: {
         'X-Mailer': 'NxtWave Gate Pass System',
-        'Message-ID': msgId,
         'Reply-To': fromAddr,
         'List-Unsubscribe': `<mailto:${fromAddr}?subject=unsubscribe>`,
-        'MIME-Version': '1.0',
+        'Precedence': 'transactional',
       },
     });
     console.log(`[Email] ${label} ✓ sent | messageId: ${result.messageId} | accepted: ${result.accepted?.join(', ')}`);
@@ -214,7 +227,7 @@ export async function sendNewSignupRequestToAdmin(
   user: { name: string; email: string; role: string }
 ) {
   if (!adminEmails.length) return;
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const appUrl = getAppUrl();
   const body = `
     <p style="font-size:14px;color:#475569;margin:0 0 4px;">Hello Admin,</p>
     <p style="font-size:14px;color:#475569;line-height:1.6;margin:0 0 20px;">A new user has signed up and is awaiting your approval.</p>
@@ -230,7 +243,7 @@ export async function sendNewSignupRequestToAdmin(
 }
 
 export async function sendUserApprovalEmail(to: string, name: string) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const appUrl = getAppUrl();
   const body = `
     <p style="font-size:15px;color:#0f172a;font-weight:600;margin:0 0 12px;">Hello ${esc(name)},</p>
     <p style="font-size:14px;color:#475569;line-height:1.6;margin:0 0 20px;">Your account has been <strong style="color:#16a34a;">approved</strong> by the Admin. You can now log in to the NxtWave Gate Pass System.</p>
@@ -266,12 +279,12 @@ export async function sendFacilitiesNotificationEmail(entry: {
   role?: string | null; purpose: string; reporting_date: string; poc_name: string; building_name: string;
 }) {
   const to = process.env.FACILITIES_EMAIL ?? 'facilities@nxtwave.com';
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const appUrl = getAppUrl();
   return send('sendFacilitiesNotificationEmail', {
     from: fromAddress(),
     to,
     ...(ccAddress() ? { cc: ccAddress() } : {}),
-    subject: `Action Required - New Registration Needs Approval: ${entry.name}`,
+    subject: `New Registration Pending: ${entry.name}`,
     html: facilitiesSubmissionHtml(entry, appUrl),
   });
 }
@@ -284,7 +297,7 @@ export async function sendAdminRegistrationNotification(
   }
 ) {
   if (!adminEmails.length) return;
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const appUrl = getAppUrl();
   return send('sendAdminRegistrationNotification', {
     from: fromAddress(),
     to: adminEmails,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { createEntry, createRegistrationToken, checkDuplicateEntry } from '@/lib/db';
 import { sendInviteEmail } from '@/lib/email';
+import { getAppUrl } from '@/lib/app-url';
 
 type RowResult = { name: string; email: string; success: boolean; skipped?: boolean; error?: string; rowIndex?: number };
 
@@ -14,7 +15,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No rows provided' }, { status: 400 });
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const appUrl = getAppUrl();
   const results: RowResult[]  = [];
   const skipped: RowResult[]  = [];
   const failed:  RowResult[]  = [];

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { getAppUserByEmail, saveResetToken } from '@/lib/db';
 import { sendPasswordResetEmail } from '@/lib/email';
+import { getAppUrl } from '@/lib/app-url';
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
       await saveResetToken(user.id, token, expiresAt);
 
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+      const appUrl = getAppUrl();
       const resetUrl = `${appUrl}/reset-password/${token}`;
 
       try {

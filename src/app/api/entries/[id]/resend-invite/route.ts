@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getEntryById, logActivity } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { sendInviteEmail } from '@/lib/email';
+import { getAppUrl } from '@/lib/app-url';
 import { supabase } from '@/lib/supabase';
 
 type Params = { params: Promise<{ id: string }> };
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'Failed to generate new invite link' }, { status: 500 });
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const appUrl = getAppUrl();
   const registrationUrl = `${appUrl}/register/${newToken}`;
 
   try {

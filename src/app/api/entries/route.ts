@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { getAllEntries, createEntry, createRegistrationToken, checkDuplicateEntry } from '@/lib/db';
 import { sendInviteEmail } from '@/lib/email';
+import { getAppUrl } from '@/lib/app-url';
 
 export async function GET() {
   return NextResponse.json(await getAllEntries());
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
   const existing = await checkDuplicateEntry(email, reporting_date);
   if (existing) {
     console.log(`[NewEntry] Duplicate detected — existing entry id=${existing.id}`);
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+    const appUrl = getAppUrl();
     const registrationUrl = existing.invite_token ? `${appUrl}/register/${existing.invite_token}` : '';
     return NextResponse.json({
       duplicate: true,
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
   await createRegistrationToken(entry.id, token);
   console.log(`[NewEntry] Step 2 ✓ — Token created: ${token}`);
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const appUrl = getAppUrl();
   const registrationUrl = `${appUrl}/register/${token}`;
   console.log(`[NewEntry] Step 3 — Registration URL: ${registrationUrl}`);
 

@@ -3,6 +3,7 @@ import { getEntryById, logActivity } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { type GatePassData } from '@/lib/gate-pass';
 import { sendGatePassEmail } from '@/lib/email';
+import { getAppUrl } from '@/lib/app-url';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'No pass ID found for this entry' }, { status: 400 });
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const appUrl = getAppUrl();
   const viewUrl = entry.invite_token ? `${appUrl}/register/${entry.invite_token}/success` : undefined;
 
   const gatePassData: GatePassData = {

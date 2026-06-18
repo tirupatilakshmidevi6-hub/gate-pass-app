@@ -3,6 +3,7 @@ import { getEntryById, getNextPassNumber, approveEntry, rejectEntry, getAdminEma
 import { getSession } from '@/lib/auth';
 import { type GatePassData } from '@/lib/gate-pass';
 import { sendGatePassEmail, sendRejectionEmail, sendAdminApprovalNotification, sendAdminRejectionNotification } from '@/lib/email';
+import { getAppUrl } from '@/lib/app-url';
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -31,7 +32,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const updated = await approveEntry(id, passId, otp);
     console.log(`[Approve] Step 3 ✓ — Entry status set to Approved`);
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+    const appUrl = getAppUrl();
 
     // Send gate pass email to candidate
     if (entry.email) {

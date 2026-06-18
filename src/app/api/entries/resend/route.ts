@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getEntryById } from '@/lib/db';
 import { sendInviteEmail } from '@/lib/email';
+import { getAppUrl } from '@/lib/app-url';
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
@@ -12,7 +13,7 @@ export async function POST(req: NextRequest) {
   if (!entry.email)      return NextResponse.json({ error: 'Entry has no email address' }, { status: 400 });
   if (!entry.invite_token) return NextResponse.json({ error: 'Entry has no invite token' }, { status: 400 });
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const appUrl = getAppUrl();
   const registrationUrl = `${appUrl}/register/${entry.invite_token}`;
 
   try {
