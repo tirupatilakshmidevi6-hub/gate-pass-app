@@ -28,8 +28,7 @@ export async function POST(req: NextRequest) {
       ok: true,
       messageId: result.messageId,
       accepted: result.accepted,
-      from: process.env.FROM_EMAIL ?? 'narayana.dubbala@nxtwave.co.in',
-      cc: process.env.CC_EMAIL ?? null,
+      from: process.env.GMAIL_USER ?? 'noreply@gmail.com',
     });
   } catch (err: unknown) {
     // send() already sanitizes — just pass the clean message through

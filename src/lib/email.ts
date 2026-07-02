@@ -3,55 +3,19 @@ import type { GatePassData } from './gate-pass';
 import { getAppUrl } from './app-url';
 
 // ─── Required environment variables ──────────────────────────────────────────
-// Set ALL of these on your hosting platform (Railway / Render / VPS / cPanel).
-// They are NOT read from .env.local in production — configure them in the
-// platform's environment/settings UI and redeploy after changing them.
+// Configure ALL of these on Vercel (or your hosting platform):
 //
-//   GMAIL_USER            Gmail address that owns the App Password
+//   GMAIL_USER            Gmail address that owns the App Password (SMTP auth)
 //   GMAIL_APP_PASSWORD    16-character App Password
 //                         (Google Account → Security → App Passwords)
-//   FROM_EMAIL            Sender address shown to recipients
-//                         (must match GMAIL_USER for Gmail SMTP)
-//   CC_EMAIL              (optional) CC address on all outgoing emails
-//   FACILITIES_EMAIL      Facilities team email for new entry notifications
+//   FACILITIES_EMAIL      Facilities team email for new-entry notifications
 //   NEXT_PUBLIC_APP_URL   Public URL of the deployed app (used in email links)
 //
 // Note: @nxtwave.co.in Google Workspace accounts cannot be used for SMTP —
 // Workspace admin policy blocks SMTP Auth / App Passwords for that domain.
 // ─────────────────────────────────────────────────────────────────────────────
 
-function createTransporter() {
-  const user = process.env.GMAIL_USER;
-  const pass = process.env.GMAIL_APP_PASSWORD;
-  if (!user || !pass) {
-    const missing = [!user ? 'GMAIL_USER' : '', !pass ? 'GMAIL_APP_PASSWORD' : ''].filter(Boolean).join(' and ');
-    throw new Error(
-      `[Email] Cannot send — ${missing} not set. ` +
-      'Set these environment variables on your hosting platform (Railway / Render / VPS) and redeploy.'
-    );
-  }
-  console.log(`[Email] createTransporter — user: ${user}`);
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: { user, pass },
-    tls: { rejectUnauthorized: false },
-  });
-}
-
-// Verify SMTP connection once at module load.
-// Wrapped in try/catch so a missing-creds error doesn't crash the module.
-try {
-  createTransporter().verify()
-    .then(() => console.log('[Email] Gmail SMTP connection verified ✓'))
-    .catch((err: Error) => console.error('[Email] Gmail SMTP verification FAILED:', err.message));
-} catch (err) {
-  console.error(err instanceof Error ? err.message : '[Email] createTransporter failed at module load');
-}
-
-// Startup check — warn loudly if email env vars are missing so it is obvious
-// in the deployment logs before any email send is attempted.
+// Startup check — warn loudly if email env vars are missing.
 (function validateEmailEnv() {
   const missing = ['GMAIL_USER', 'GMAIL_APP_PASSWORD'].filter((k) => !process.env[k]);
   if (missing.length) {
@@ -63,13 +27,41 @@ try {
   }
 })();
 
+function createTransporter() {
+  const user = process.env.GMAIL_USER;
+  const pass = process.env.GMAIL_APP_PASSWORD;
+  if (!user || !pass) {
+    const missing = [!user ? 'GMAIL_USER' : '', !pass ? 'GMAIL_APP_PASSWORD' : ''].filter(Boolean).join(' and ');
+    throw new Error(
+      `[Email] Cannot send — ${missing} not set. ` +
+      'Set these environment variables on your hosting platform and redeploy.'
+    );
+  }
+  return nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
+    auth: { user, pass },
+    tls: { rejectUnauthorized: false, minVersion: 'TLSv1.2' },
+    pool: true,
+    maxConnections: 5,
+    rateDelta: 1000,
+    rateLimit: 5,
+  });
+}
+
+// Verify SMTP connection once at module load.
+try {
+  createTransporter().verify()
+    .then(() => console.log('[Email] Gmail SMTP connection verified ✓'))
+    .catch((err: Error) => console.error('[Email] Gmail SMTP verification FAILED:', err.message));
+} catch (err) {
+  console.error(err instanceof Error ? err.message : '[Email] createTransporter failed at module load');
+}
+
 function fromAddress() {
-  // Gmail SMTP only delivers without "via gmail.com" warning when the From
-  // address matches the authenticated SMTP account (GMAIL_USER). Using a
-  // different domain (FROM_EMAIL) causes SPF mismatch → spam. Replies still
-  // go to FROM_EMAIL via the Reply-To header set in send().
-  const sender = process.env.GMAIL_USER ?? process.env.FROM_EMAIL ?? 'noreply@gmail.com';
-  return `"NxtWave Gate Pass" <${sender}>`;
+  const user = process.env.GMAIL_USER ?? 'noreply@gmail.com';
+  return `"NxtWave Gate Pass System" <${user}>`;
 }
 
 function htmlToText(html: string): string {
@@ -79,10 +71,6 @@ function htmlToText(html: string): string {
     .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ')
     .replace(/\s{2,}/g, ' ').trim();
-}
-
-function ccAddress(): string | undefined {
-  return process.env.CC_EMAIL;
 }
 
 // Local date formatter (YYYY-MM-DD → DD-Mon-YYYY)
@@ -97,33 +85,42 @@ function fmtDate(dateStr: string): string {
 interface MailOpts {
   from: string;
   to: string | string[];
-  cc?: string;
   subject: string;
   html: string;
+  text?: string;
 }
 
-async function send(label: string, opts: MailOpts) {
+interface SendResult { messageId: string; accepted: string[] }
+
+async function send(label: string, opts: MailOpts, retries = 2): Promise<SendResult> {
   const to = Array.isArray(opts.to) ? opts.to.join(', ') : opts.to;
-  const fromAddr = process.env.FROM_EMAIL ?? process.env.GMAIL_USER ?? 'noreply@gmail.com';
-  console.log(`[Email] ${label} → to: ${to} | from: ${opts.from} | cc: ${opts.cc ?? 'none'}`);
+  const fromAddr = process.env.GMAIL_USER ?? 'noreply@gmail.com';
+  console.log(`[Email] ${label} → to: ${to}`);
   try {
     const result = await createTransporter().sendMail({
       ...opts,
-      text: htmlToText(opts.html),
+      text: opts.text ?? htmlToText(opts.html),
       headers: {
-        'X-Mailer': 'NxtWave Gate Pass System',
-        'Reply-To': fromAddr,
-        'List-Unsubscribe': `<mailto:${fromAddr}?subject=unsubscribe>`,
-        'Precedence': 'transactional',
+        'X-Mailer':                              'NxtWave Gate Pass System',
+        'X-Priority':                            '3',
+        'X-MS-Exchange-Organization-SCL':        '-1',
+        'Reply-To':                              fromAddr,
+        'List-Unsubscribe':                      `<mailto:${fromAddr}?subject=unsubscribe>`,
+        'Precedence':                            'bulk',
       },
     });
     console.log(`[Email] ${label} ✓ sent | messageId: ${result.messageId} | accepted: ${result.accepted?.join(', ')}`);
-    return result;
+    return { messageId: result.messageId, accepted: result.accepted ?? [] };
   } catch (err: unknown) {
     const e = err as { message?: string; code?: string; response?: string; responseCode?: number };
-    console.error(`[Email] ${label} ✗ FAILED | message: ${e.message} | code: ${e.code} | response: ${e.response} | responseCode: ${e.responseCode}`);
-    // Translate SMTP / credential errors into user-friendly messages.
-    // Never expose raw nodemailer internals (e.g. "Missing credentials for PLAIN") to the client.
+    console.error(`[Email] ${label} ✗ FAILED | message: ${e.message} | code: ${e.code} | responseCode: ${e.responseCode}`);
+
+    if (retries > 0) {
+      console.log(`[Email] ${label} retrying in 2s… (${retries} attempt(s) left)`);
+      await new Promise((r) => setTimeout(r, 2000));
+      return send(label, opts, retries - 1);
+    }
+
     const raw = (e.message ?? '').toLowerCase();
     if (raw.includes('not set') || raw.includes('missing credentials') || raw.includes('cannot send') || raw.includes('invalid login') || raw.includes('535')) {
       throw new Error('Email service is not configured on the server. Please contact the administrator.');
@@ -151,14 +148,14 @@ export async function sendTestEmail(to: string, name: string) {
   return send('sendTestEmail', {
     from: fromAddress(),
     to,
-    ...(ccAddress() ? { cc: ccAddress() } : {}),
-    subject: 'NxtWave Gate Pass — SMTP Test ✓',
+    subject: 'NxtWave Gate Pass — SMTP Test',
     html: emailShell('SMTP Test', 'Email Configuration', `
       <p style="font-size:15px;color:#0f172a;font-weight:600;margin:0 0 12px;">Hello ${esc(name)},</p>
-      <p style="font-size:14px;color:#475569;line-height:1.6;margin:0 0 16px;">This is a test email confirming that your Brevo SMTP configuration is working correctly.</p>
+      <p style="font-size:14px;color:#475569;line-height:1.6;margin:0 0 16px;">This is a test email confirming that your SMTP configuration is working correctly.</p>
       <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;">
-        <p style="font-size:13px;color:#15803d;margin:0;font-weight:600;">✓ Brevo email delivery is working</p>
+        <p style="font-size:13px;color:#15803d;margin:0;font-weight:600;">Email delivery is working correctly.</p>
       </div>`),
+    text: `Hello ${name},\n\nThis is a test email confirming your SMTP configuration is working correctly.\n\nNxtWave Gate Pass System`,
   });
 }
 
@@ -168,9 +165,9 @@ export async function sendInviteEmail(to: string, name: string, registrationUrl:
   return send('sendInviteEmail', {
     from: fromAddress(),
     to,
-    ...(ccAddress() ? { cc: ccAddress() } : {}),
-    subject: 'Welcome to NxtWave - Complete Your Registration',
+    subject: 'Your NxtWave Office Entry Registration',
     html: inviteHtml(name, registrationUrl),
+    text: `Dear ${name},\n\nYou have been invited to register for office entry at NxtWave.\n\nPlease fill your registration form here:\n${registrationUrl}\n\nThis link is unique to you. Do not share it with anyone.\n\nNxtWave Gate Pass System\nnxtwave.co.in`,
   });
 }
 
@@ -178,9 +175,9 @@ export async function sendGatePassEmail(to: string, name: string, data: GatePass
   return send('sendGatePassEmail', {
     from: fromAddress(),
     to,
-    ...(ccAddress() ? { cc: ccAddress() } : {}),
     subject: 'Your NxtWave Gate Pass is Ready',
     html: gatePassWrapper(name, data, viewUrl),
+    text: `Dear ${name},\n\nYour NxtWave Gate Pass is ready.\n\nPass ID: ${data.passId}\nValid from: ${fmtDate(data.reportingDate)}\nValid until: ${data.validUntil ? fmtDate(data.validUntil) : 'Single day'}\nBuilding: ${data.buildingName}\nPOC: ${data.pocName}\n\n${viewUrl ? `View and download your gate pass here:\n${viewUrl}\n\n` : ''}Please carry a valid government-issued photo ID along with this gate pass.\n\nNxtWave Gate Pass System\nnxtwave.co.in`,
   });
 }
 
@@ -188,9 +185,9 @@ export async function sendRejectionEmail(to: string, name: string, purpose: stri
   return send('sendRejectionEmail', {
     from: fromAddress(),
     to,
-    ...(ccAddress() ? { cc: ccAddress() } : {}),
-    subject: 'NxtWave Entry Request — Update',
+    subject: 'Your Entry Request Update',
     html: rejectionHtml(name, purpose),
+    text: `Dear ${name},\n\nWe have reviewed your entry request for ${purpose}. Unfortunately, your request has not been approved at this time.\n\nFor queries, please contact the HR team.\n\nNxtWave Gate Pass System\nnxtwave.co.in`,
   });
 }
 
@@ -202,9 +199,9 @@ export async function sendUserInviteEmail(
   return send('sendUserInviteEmail', {
     from: fromAddress(),
     to,
-    ...(ccAddress() ? { cc: ccAddress() } : {}),
-    subject: 'You have been invited to join NxtWave Gate Pass System',
+    subject: 'Invitation to Join NxtWave Gate Pass System',
     html: userInviteHtml(name, inviterName, roleName, signupUrl),
+    text: `Dear ${name},\n\nYou have been invited by ${inviterName} to join the NxtWave Gate Pass System.\n\nSet up your account here:\n${signupUrl}\n\nThis invitation link expires in 48 hours.\n\nNxtWave Gate Pass System\nnxtwave.co.in`,
   });
 }
 
@@ -214,9 +211,9 @@ export async function sendPasswordResetEmail(to: string, name: string, resetUrl:
   return send('sendPasswordResetEmail', {
     from: fromAddress(),
     to,
-    ...(ccAddress() ? { cc: ccAddress() } : {}),
-    subject: 'Reset Your NxtWave Gate Pass Password',
+    subject: 'Reset Your Password',
     html: passwordResetHtml(name, resetUrl),
+    text: `Dear ${name},\n\nYou requested to reset your password for the NxtWave Gate Pass System.\n\nReset your password here:\n${resetUrl}\n\nThis link expires in 1 hour. If you did not request this, please ignore this email.\n\nNxtWave Gate Pass System\nnxtwave.co.in`,
   });
 }
 
@@ -236,9 +233,9 @@ export async function sendNewSignupRequestToAdmin(
   return send('sendNewSignupRequestToAdmin', {
     from: fromAddress(),
     to: adminEmails,
-    ...(ccAddress() ? { cc: ccAddress() } : {}),
-    subject: `New Account Pending Approval — ${user.name}`,
+    subject: `New Account Pending Approval: ${user.name}`,
     html: emailShell('New User Pending Approval', 'Admin Notification', body),
+    text: `Hello Admin,\n\nA new user has signed up and is awaiting your approval.\n\nName: ${user.name}\nEmail: ${user.email}\nRole: ${user.role}\n\nReview here: ${appUrl}/users\n\nNxtWave Gate Pass System`,
   });
 }
 
@@ -251,9 +248,9 @@ export async function sendUserApprovalEmail(to: string, name: string) {
   return send('sendUserApprovalEmail', {
     from: fromAddress(),
     to,
-    ...(ccAddress() ? { cc: ccAddress() } : {}),
-    subject: 'Your Account Has Been Approved — NxtWave Gate Pass',
+    subject: 'Your Account Has Been Approved',
     html: emailShell('Account Approved', 'Gate Pass System', body),
+    text: `Dear ${name},\n\nYour account has been approved. You can now log in to the NxtWave Gate Pass System.\n\nSign in here: ${appUrl}/login\n\nNxtWave Gate Pass System`,
   });
 }
 
@@ -266,9 +263,9 @@ export async function sendUserRejectionEmail(to: string, name: string, reason: s
   return send('sendUserRejectionEmail', {
     from: fromAddress(),
     to,
-    ...(ccAddress() ? { cc: ccAddress() } : {}),
-    subject: 'Account Request Update — NxtWave Gate Pass',
-    html: emailShell('Account Request Rejected', 'Gate Pass System', body),
+    subject: 'Account Request Update',
+    html: emailShell('Account Request Update', 'Gate Pass System', body),
+    text: `Dear ${name},\n\nYour account request for the NxtWave Gate Pass System has been rejected.${reason ? `\n\nReason: ${reason}` : ''}\n\nPlease contact your administrator if you believe this is a mistake.\n\nNxtWave Gate Pass System`,
   });
 }
 
@@ -283,9 +280,9 @@ export async function sendFacilitiesNotificationEmail(entry: {
   return send('sendFacilitiesNotificationEmail', {
     from: fromAddress(),
     to,
-    ...(ccAddress() ? { cc: ccAddress() } : {}),
-    subject: `New Registration Pending: ${entry.name}`,
+    subject: `New Registration Pending Review: ${entry.name}`,
     html: facilitiesSubmissionHtml(entry, appUrl),
+    text: `Hello Facilities Team,\n\n${entry.name} has submitted their registration form and is waiting for your approval.\n\nName: ${entry.name}\nEmail: ${entry.email ?? '—'}\nMobile: ${entry.mobile_number ?? '—'}\nPurpose: ${entry.purpose}\nReporting Date: ${entry.reporting_date}\nBuilding: ${entry.building_name}\n\nReview here: ${appUrl}/approvals\n\nNxtWave Gate Pass System`,
   });
 }
 
@@ -301,9 +298,9 @@ export async function sendAdminRegistrationNotification(
   return send('sendAdminRegistrationNotification', {
     from: fromAddress(),
     to: adminEmails,
-    ...(ccAddress() ? { cc: ccAddress() } : {}),
-    subject: `New Candidate Registration Submitted — ${entry.name}`,
+    subject: `New Candidate Registration Submitted: ${entry.name}`,
     html: adminRegistrationHtml(entry, appUrl),
+    text: `Hello Admin,\n\n${entry.name} has submitted their registration form. The Facilities Team has been notified for approval.\n\nName: ${entry.name}\nEmail: ${entry.email ?? '—'}\nPurpose: ${entry.purpose}\nReporting Date: ${entry.reporting_date}\nBuilding: ${entry.building_name}\n\nNxtWave Gate Pass System`,
   });
 }
 
@@ -319,9 +316,9 @@ export async function sendAdminApprovalNotification(
   return send('sendAdminApprovalNotification', {
     from: fromAddress(),
     to: adminEmails,
-    ...(ccAddress() ? { cc: ccAddress() } : {}),
-    subject: `Gate Pass Approved — ${entry.name}`,
+    subject: `Gate Pass Approved: ${entry.name}`,
     html: adminApprovalHtml(entry),
+    text: `Hello Admin,\n\nThe entry for ${entry.name} has been approved. Pass ID: ${entry.pass_id ?? '—'}.\n\nNxtWave Gate Pass System`,
   });
 }
 
@@ -336,9 +333,9 @@ export async function sendAdminRejectionNotification(
   return send('sendAdminRejectionNotification', {
     from: fromAddress(),
     to: adminEmails,
-    ...(ccAddress() ? { cc: ccAddress() } : {}),
-    subject: `Gate Pass Rejected — ${entry.name}`,
+    subject: `Entry Rejected: ${entry.name}`,
     html: adminRejectionHtml(entry),
+    text: `Hello Admin,\n\nThe entry for ${entry.name} has been rejected by the Facilities Team.\n\nNxtWave Gate Pass System`,
   });
 }
 
@@ -348,29 +345,33 @@ function esc(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// headerTitle = section descriptor (e.g. "Gate Pass Approved")
-// headerSub   = audience hint (e.g. "Admin Notification")
-// Shows whichever is non-empty as the subtitle; always shows "NxtWave Gate Pass" as main logo text.
 function emailShell(headerTitle: string, headerSub: string, bodyHtml: string, footerNote?: string) {
   const subtitle = headerTitle || headerSub;
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head>
+  const year = new Date().getFullYear();
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+</head>
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif;">
-<div style="max-width:560px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+<div style="max-width:600px;margin:32px auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
   <div style="height:4px;background:linear-gradient(90deg,#1e3a8a,#2563eb,#60a5fa,#2563eb,#1e3a8a);"></div>
-  <div style="background:#1e40af;padding:6px 28px 8px;text-align:center;">
-    <div style="display:inline-block;max-width:160px;width:100%;">
-      <div style="font-size:22px;font-weight:700;color:#ffffff;letter-spacing:0.3px;line-height:1.15;">NxtWave Gate Pass</div>
-      <div style="font-size:12px;color:#bfdbfe;margin-top:2px;letter-spacing:0.2px;">Gate Pass System</div>
-    </div>
-    ${subtitle ? `<div style="font-size:11px;font-weight:600;color:#dbeafe;margin-top:5px;">${esc(subtitle)}</div>` : ''}
+  <div style="background:#1e40af;padding:20px 28px;text-align:center;">
+    <div style="font-size:20px;font-weight:700;color:#ffffff;letter-spacing:0.3px;">NxtWave Gate Pass</div>
+    ${subtitle ? `<div style="font-size:12px;color:#bfdbfe;margin-top:4px;">${esc(subtitle)}</div>` : ''}
   </div>
   <div style="padding:28px 32px;">
     ${bodyHtml}
   </div>
-  <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:14px 32px;text-align:center;">
-    <p style="font-size:11px;color:#94a3b8;margin:0;">${footerNote ?? 'NxtWave Gate Pass System &bull; nxtwave.co.in &bull; &copy; ' + new Date().getFullYear()}</p>
+  <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:16px 32px;text-align:center;">
+    <p style="font-size:11px;color:#94a3b8;margin:0 0 4px;">${footerNote ?? 'NxtWave Gate Pass System &bull; nxtwave.co.in'}</p>
+    <p style="font-size:11px;color:#94a3b8;margin:0 0 4px;">&copy; ${year} NxtWave. Hyderabad, Telangana, India.</p>
+    <p style="font-size:10px;color:#cbd5e1;margin:4px 0 0;">This email was sent because you were invited for office entry at NxtWave. <a href="mailto:${process.env.GMAIL_USER ?? 'noreply@gmail.com'}?subject=unsubscribe" style="color:#94a3b8;">Unsubscribe</a></p>
   </div>
-</div></body></html>`;
+</div>
+</body></html>`;
 }
 
 function detailTable(rows: [string, string][]) {
@@ -384,7 +385,7 @@ function detailTable(rows: [string, string][]) {
 
 function ctaButton(href: string, label: string) {
   return `<div style="text-align:center;margin-top:24px;">
-    <a href="${href}" style="display:inline-block;background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;font-size:14px;font-weight:700;padding:14px 36px;border-radius:8px;text-decoration:none;letter-spacing:0.3px;">${label}</a>
+    <a href="${href}" style="display:inline-block;background:#1e40af;color:#ffffff;font-size:14px;font-weight:700;padding:14px 36px;border-radius:8px;text-decoration:none;letter-spacing:0.3px;">${label}</a>
   </div>`;
 }
 
@@ -398,7 +399,7 @@ function inviteHtml(name: string, url: string) {
     ${ctaButton(url, 'Fill Registration Form')}
     <p style="font-size:12px;color:#94a3b8;text-align:center;margin:16px 0 4px;">Or copy this link:</p>
     <p style="font-size:11px;color:#3b82f6;text-align:center;word-break:break-all;margin:0;">${url}</p>`;
-  return emailShell('', 'Office Entry Registration', body);
+  return emailShell('', 'Office Entry Registration', body, 'This email was sent because you were invited for office entry at NxtWave.');
 }
 
 function gatePassWrapper(name: string, data: GatePassData, viewUrl?: string) {
@@ -424,35 +425,33 @@ function gatePassWrapper(name: string, data: GatePassData, viewUrl?: string) {
   const validUntil = data.validUntil ? fmtDate(data.validUntil) : '—';
 
   return `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+</head>
 <body style="margin:0;padding:0;background:#f0f4ff;font-family:Arial,Helvetica,sans-serif;">
-<div style="max-width:560px;margin:24px auto 32px;">
+<div style="max-width:600px;margin:24px auto 32px;">
 
-  <!-- Header -->
-  <div style="background:#1e40af;border-radius:12px 12px 0 0;padding:6px 28px 8px;text-align:center;">
-    <div style="display:inline-block;max-width:160px;width:100%;">
-      <div style="font-size:22px;font-weight:700;color:#ffffff;letter-spacing:0.3px;line-height:1.15;">NxtWave Gate Pass</div>
-      <div style="font-size:12px;color:#bfdbfe;margin-top:2px;">Gate Pass Approved</div>
-    </div>
+  <div style="background:#1e40af;border-radius:12px 12px 0 0;padding:20px 28px;text-align:center;">
+    <div style="font-size:20px;font-weight:700;color:#ffffff;letter-spacing:0.3px;">NxtWave Gate Pass</div>
+    <div style="font-size:12px;color:#bfdbfe;margin-top:4px;">Gate Pass Approved</div>
   </div>
 
-  <!-- Greeting -->
   <div style="background:#ffffff;padding:20px 28px 16px;border-left:1px solid #dde8fb;border-right:1px solid #dde8fb;">
     <p style="font-size:15px;color:#0f172a;margin:0 0 8px;font-weight:600;">Hello ${esc(name)},</p>
     <p style="font-size:13px;color:#475569;margin:0;line-height:1.7;">Your entry request has been <strong style="color:#16a34a;">approved</strong> by the Facilities Team. Please find your Gate Pass details below. Present it at the entrance on your reporting date.</p>
   </div>
 
-  <!-- Details Table -->
   <div style="background:#ffffff;padding:4px 28px 20px;border-left:1px solid #dde8fb;border-right:1px solid #dde8fb;">
     <table style="width:100%;border-collapse:collapse;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
       ${tableRows}
     </table>
   </div>
 
-  <!-- Pass Validity Highlight Box -->
   <div style="background:#ffffff;padding:0 28px 20px;border-left:1px solid #dde8fb;border-right:1px solid #dde8fb;">
-    <div style="background:#eef2ff;border-radius:12px;padding:14px 18px;border:1.5px solid #c7d7fb;">
+    <div style="background:#eef2ff;border-radius:12px;padding:14px 18px;border:1px solid #c7d7fb;">
       <div style="font-size:10px;font-weight:800;color:#1e40af;letter-spacing:1.6px;margin-bottom:10px;">PASS VALIDITY</div>
       <div style="display:flex;gap:10px;">
         <div style="flex:1;background:#ffffff;border-radius:8px;padding:10px;text-align:center;border:1px solid #dde8fb;">
@@ -467,19 +466,18 @@ function gatePassWrapper(name: string, data: GatePassData, viewUrl?: string) {
     </div>
   </div>
 
-  <!-- Download Button -->
   ${viewUrl ? `
   <div style="background:#ffffff;padding:16px 28px 24px;text-align:center;border-left:1px solid #dde8fb;border-right:1px solid #dde8fb;">
     <a href="${viewUrl}" style="display:inline-block;background:#1e40af;color:#ffffff;font-size:15px;font-weight:700;padding:16px 48px;border-radius:10px;text-decoration:none;letter-spacing:0.3px;">
-      View &amp; Download Gate Pass (PDF)
+      View &amp; Download Gate Pass
     </a>
-    <p style="font-size:11px;color:#94a3b8;margin:10px 0 0;">Click above to view and download your gate pass as a PDF.</p>
+    <p style="font-size:11px;color:#94a3b8;margin:10px 0 0;">Click above to view and download your gate pass.</p>
   </div>` : ''}
 
-  <!-- Footer -->
-  <div style="background:#f8fafc;border-top:1px solid #e2e8f0;border-radius:0 0 12px 12px;padding:12px 28px;text-align:center;border:1px solid #dde8fb;border-top:none;">
-    <p style="font-size:11px;color:#94a3b8;margin:0;">Please carry a valid government-issued photo ID along with this gate pass.</p>
-    <p style="font-size:10px;color:#cbd5e1;margin:4px 0 0;">NxtWave Gate Pass System &bull; nxtwave.co.in &bull; &copy; ${year}</p>
+  <div style="background:#f8fafc;border-top:1px solid #e2e8f0;border-radius:0 0 12px 12px;padding:14px 28px;text-align:center;border:1px solid #dde8fb;border-top:none;">
+    <p style="font-size:11px;color:#94a3b8;margin:0 0 4px;">Please carry a valid government-issued photo ID along with this gate pass.</p>
+    <p style="font-size:11px;color:#94a3b8;margin:0 0 4px;">NxtWave Gate Pass System &bull; nxtwave.co.in &bull; &copy; ${year}</p>
+    <p style="font-size:10px;color:#cbd5e1;margin:4px 0 0;">Hyderabad, Telangana, India</p>
   </div>
 
 </div>
@@ -514,8 +512,8 @@ function facilitiesSubmissionHtml(entry: {
       ['Building',       entry.building_name],
     ])}
     <p style="font-size:13px;color:#475569;margin:0 0 4px;">Please log in to the Gate Pass System to review and approve or reject this entry.</p>
-    ${ctaButton(appUrl + '/approvals', 'Review &amp; Approve')}`;
-  return emailShell('New Registration Pending Approval', 'Facilities Team', body);
+    ${ctaButton(appUrl + '/approvals', 'Review and Approve')}`;
+  return emailShell('New Registration Pending Review', 'Facilities Team', body);
 }
 
 function adminRegistrationHtml(entry: {
@@ -575,7 +573,7 @@ function adminRejectionHtml(entry: {
       ['Reporting Date', entry.reporting_date],
       ['Building',       entry.building_name],
     ])}`;
-  return emailShell('Gate Pass Rejected', 'Admin Notification', body);
+  return emailShell('Entry Rejected', 'Admin Notification', body);
 }
 
 function userInviteHtml(name: string, inviterName: string, roleName: string, signupUrl: string) {
@@ -603,5 +601,5 @@ function passwordResetHtml(name: string, resetUrl: string) {
     ${ctaButton(resetUrl, 'Reset Password')}
     <p style="font-size:12px;color:#94a3b8;text-align:center;margin:16px 0 4px;">Or copy this link:</p>
     <p style="font-size:11px;color:#3b82f6;text-align:center;word-break:break-all;margin:0;">${resetUrl}</p>`;
-  return emailShell('Password Reset', 'Gate Pass System', body);
+  return emailShell('Password Reset', 'Gate Pass System', body, 'You requested a password reset for your NxtWave Gate Pass account. If you did not request this, you can safely ignore this email.');
 }

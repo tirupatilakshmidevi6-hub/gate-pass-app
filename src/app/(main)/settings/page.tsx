@@ -180,8 +180,7 @@ export default function SettingsPage() {
         </h2>
         <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-xs text-blue-700 space-y-1">
           <p><strong>SMTP Provider:</strong> Gmail (smtp.gmail.com:587)</p>
-          <p><strong>From:</strong> tirupatilakshmidevi6@gmail.com</p>
-          <p><strong>CC:</strong> moru.vidyapraveen@nxtwave.co.in</p>
+          <p><strong>From:</strong> NxtWave Gate Pass System &lt;tirupatilakshmidevi6@gmail.com&gt;</p>
         </div>
         <Field label="Send Test Email To">
           <input
