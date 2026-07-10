@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getEntryByToken, submitRegistration, getAdminEmails, getAdminAndFacilitiesIds, createNotificationsForUsers, logActivity } from '@/lib/db';
 import { generateGatePassBodyHtml } from '@/lib/gate-pass';
-import { sendFacilitiesNotificationEmail, sendAdminRegistrationNotification } from '@/lib/email';
+import { sendFacilitiesNotificationEmail, sendAdminRegistrationNotification, sendRegistrationConfirmationEmail } from '@/lib/email';
 
 type Params = { params: Promise<{ token: string }> };
 
@@ -66,31 +66,51 @@ export async function POST(req: NextRequest, { params }: Params) {
   }
 
   const entry = data.entry;
-  await submitRegistration({ entryId: entry.id, photoPath: photoUrl });
+  console.log(`[Register] POST — entry id=${entry.id} | name=${entry.name} | email=${entry.email ?? 'MISSING'}`);
 
-  // Send facilities notification email
+  await submitRegistration({ entryId: entry.id, photoPath: photoUrl });
+  console.log(`[Register] DB updated — status=Pending Approval`);
+
+  // Step 1: Send confirmation email to candidate
+  if (entry.email) {
+    console.log(`[Register] Step 1 — Sending confirmation email to candidate: ${entry.email}`);
+    try {
+      await sendRegistrationConfirmationEmail(entry.email, entry.name);
+      console.log(`[Register] Step 1 ✓ — Confirmation email sent to ${entry.email}`);
+    } catch (err) {
+      console.error(`[Register] Step 1 ✗ — Confirmation email FAILED for ${entry.email}:`, err);
+    }
+  } else {
+    console.warn(`[Register] Step 1 — Skipped: no candidate email on entry id=${entry.id}`);
+  }
+
+  // Step 2: Send facilities notification email
+  console.log(`[Register] Step 2 — Sending facilities notification | FACILITIES_EMAIL=${process.env.FACILITIES_EMAIL ?? 'NOT SET'}`);
   try {
     await sendFacilitiesNotificationEmail({
       name: entry.name, email: entry.email, mobile_number: entry.mobile_number,
       role: entry.role, purpose: entry.purpose, reporting_date: entry.reporting_date,
       poc_name: entry.poc_name, building_name: entry.building_name,
     });
+    console.log('[Register] Step 2 ✓ — Facilities notification sent');
   } catch (err) {
-    console.error('[Email] Facilities notification failed:', err);
+    console.error('[Register] Step 2 ✗ — Facilities notification FAILED:', err);
   }
 
-  // Send admin notification emails
+  // Step 3: Send admin notification emails
   try {
     const adminEmails = await getAdminEmails();
+    console.log(`[Register] Step 3 — Admin emails: ${adminEmails.map((a) => a.email).join(', ') || 'none found'}`);
     if (adminEmails.length) {
       await sendAdminRegistrationNotification(adminEmails.map((a) => a.email), {
         name: entry.name, email: entry.email, role: entry.role,
         purpose: entry.purpose, reporting_date: entry.reporting_date,
         poc_name: entry.poc_name, building_name: entry.building_name,
       });
+      console.log(`[Register] Step 3 ✓ — Admin notification sent to ${adminEmails.length} admin(s)`);
     }
   } catch (err) {
-    console.error('[Email] Admin registration notification failed:', err);
+    console.error('[Register] Step 3 ✗ — Admin notification FAILED:', err);
   }
 
   // Create in-app notifications for all admins and facilities

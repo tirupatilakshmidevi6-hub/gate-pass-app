@@ -37,16 +37,14 @@ function createTransporter() {
       'Set these environment variables on your hosting platform and redeploy.'
     );
   }
+  // No pool: true in serverless (Vercel) — pooled connections don't survive
+  // between invocations and silently fail. Use a fresh connection per send.
   return nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
     secure: false,
     auth: { user, pass },
-    tls: { rejectUnauthorized: false, minVersion: 'TLSv1.2' },
-    pool: true,
-    maxConnections: 5,
-    rateDelta: 1000,
-    rateLimit: 5,
+    tls: { rejectUnauthorized: false },
   });
 }
 
@@ -162,6 +160,7 @@ export async function sendTestEmail(to: string, name: string) {
 // ─── Candidate emails ─────────────────────────────────────────────────────────
 
 export async function sendInviteEmail(to: string, name: string, registrationUrl: string) {
+  if (!to?.trim()) { console.error('[Email] sendInviteEmail — skipped: recipient email is empty'); return; }
   return send('sendInviteEmail', {
     from: fromAddress(),
     to,
@@ -172,6 +171,7 @@ export async function sendInviteEmail(to: string, name: string, registrationUrl:
 }
 
 export async function sendGatePassEmail(to: string, name: string, data: GatePassData, viewUrl?: string) {
+  if (!to?.trim()) { console.error('[Email] sendGatePassEmail — skipped: recipient email is empty'); return; }
   return send('sendGatePassEmail', {
     from: fromAddress(),
     to,
@@ -271,12 +271,32 @@ export async function sendUserRejectionEmail(to: string, name: string, reason: s
 
 // ─── Facilities / admin entry notification emails ─────────────────────────────
 
+export async function sendRegistrationConfirmationEmail(to: string, name: string) {
+  if (!to?.trim()) {
+    console.warn('[Email] sendRegistrationConfirmationEmail — skipped: no recipient email');
+    return;
+  }
+  return send('sendRegistrationConfirmationEmail', {
+    from: fromAddress(),
+    to,
+    subject: 'We Received Your Registration',
+    html: registrationConfirmationHtml(name),
+    text: `Dear ${name},\n\nThank you for completing your registration form.\n\nOur Facilities Team is reviewing your details and will send you a Gate Pass once approved. This usually takes 1 business day.\n\nNxtWave Gate Pass System\nnxtwave.co.in`,
+  });
+}
+
 export async function sendFacilitiesNotificationEmail(entry: {
   name: string; email: string | null; mobile_number?: string | null;
   role?: string | null; purpose: string; reporting_date: string; poc_name: string; building_name: string;
 }) {
-  const to = process.env.FACILITIES_EMAIL ?? 'facilities@nxtwave.com';
+  const facilitiesEmail = process.env.FACILITIES_EMAIL;
+  if (!facilitiesEmail?.trim()) {
+    console.error('[Email] sendFacilitiesNotificationEmail — FACILITIES_EMAIL env var is NOT SET. Facilities team will not receive notification. Set FACILITIES_EMAIL in Vercel environment variables.');
+    return;
+  }
+  const to = facilitiesEmail;
   const appUrl = getAppUrl();
+  console.log(`[Email] Facilities notification → to: ${to}`);
   return send('sendFacilitiesNotificationEmail', {
     from: fromAddress(),
     to,
@@ -589,6 +609,18 @@ function userInviteHtml(name: string, inviterName: string, roleName: string, sig
     <p style="font-size:12px;color:#94a3b8;text-align:center;margin:14px 0 4px;">Or copy this link:</p>
     <p style="font-size:11px;color:#3b82f6;text-align:center;word-break:break-all;margin:0;">${signupUrl}</p>`;
   return emailShell('', 'Gate Pass System', body);
+}
+
+function registrationConfirmationHtml(name: string) {
+  const body = `
+    <p style="font-size:15px;color:#0f172a;font-weight:600;margin:0 0 12px;">Hello ${esc(name)},</p>
+    <p style="font-size:14px;color:#475569;line-height:1.6;margin:0 0 16px;">Thank you for completing your registration form. We have received your details and your photo has been uploaded successfully.</p>
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:14px 18px;margin-bottom:20px;">
+      <p style="font-size:13px;color:#15803d;margin:0;font-weight:600;">Registration received — under review</p>
+      <p style="font-size:12px;color:#166534;margin:6px 0 0;">Our Facilities Team is reviewing your details. You will receive your Gate Pass once approved. This usually takes 1 business day.</p>
+    </div>
+    <p style="font-size:13px;color:#475569;margin:0;">If you have any questions, please contact the HR team.</p>`;
+  return emailShell('Registration Received', 'Office Entry Registration', body, 'This email was sent because you submitted a registration form for office entry at NxtWave.');
 }
 
 function passwordResetHtml(name: string, resetUrl: string) {
