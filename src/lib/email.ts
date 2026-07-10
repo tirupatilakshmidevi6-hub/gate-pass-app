@@ -90,6 +90,8 @@ interface MailOpts {
 
 interface SendResult { messageId: string; accepted: string[] }
 
+type NMAccepted = (string | { name: string; address: string })[];
+
 async function send(label: string, opts: MailOpts, retries = 2): Promise<SendResult> {
   const to = Array.isArray(opts.to) ? opts.to.join(', ') : opts.to;
   const fromAddr = process.env.GMAIL_USER ?? 'noreply@gmail.com';
@@ -107,8 +109,11 @@ async function send(label: string, opts: MailOpts, retries = 2): Promise<SendRes
         'Precedence':                            'bulk',
       },
     });
-    console.log(`[Email] ${label} ✓ sent | messageId: ${result.messageId} | accepted: ${result.accepted?.join(', ')}`);
-    return { messageId: result.messageId, accepted: result.accepted ?? [] };
+    const accepted = ((result.accepted ?? []) as NMAccepted).map((a) =>
+      typeof a === 'string' ? a : a.address
+    );
+    console.log(`[Email] ${label} ✓ sent | messageId: ${result.messageId} | accepted: ${accepted.join(', ')}`);
+    return { messageId: result.messageId, accepted };
   } catch (err: unknown) {
     const e = err as { message?: string; code?: string; response?: string; responseCode?: number };
     console.error(`[Email] ${label} ✗ FAILED | message: ${e.message} | code: ${e.code} | responseCode: ${e.responseCode}`);
