@@ -30,6 +30,9 @@ export default function NewEntryPage() {
   const [isOtherBuilding, setIsOtherBuilding] = useState(false);
   const [customRole, setCustomRole] = useState('');
   const [isOtherRole, setIsOtherRole] = useState(false);
+  const [isOtherPurpose, setIsOtherPurpose] = useState(false);
+  const [customPurpose, setCustomPurpose] = useState('');
+  const [confirmEmail, setConfirmEmail] = useState('');
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [created, setCreated] = useState<(typeof form & { registrationUrl: string; emailSent: boolean; emailError: string; status: string; id: string }) | null>(null);
@@ -74,6 +77,12 @@ export default function NewEntryPage() {
     else { setIsOtherRole(false); setCustomRole(''); setForm((f) => ({ ...f, role: val })); }
   }
 
+  function handlePurposeSelect(e: React.ChangeEvent<HTMLSelectElement>) {
+    const val = e.target.value;
+    if (val === '__other__') { setIsOtherPurpose(true); setForm((f) => ({ ...f, purpose: '' })); }
+    else { setIsOtherPurpose(false); setCustomPurpose(''); setForm((f) => ({ ...f, purpose: val })); }
+  }
+
   function handleMobileBlur(field: 'mobile_number' | 'contact_no') {
     setForm((f) => ({ ...f, [field]: normalizeMobile(f[field]) }));
   }
@@ -82,7 +91,13 @@ export default function NewEntryPage() {
     e.preventDefault();
     const finalBuilding = isOtherBuilding ? customBuilding.trim() : form.building_name;
     const finalRole = isOtherRole ? customRole.trim() : form.role;
+    const finalPurpose = isOtherPurpose ? customPurpose.trim() : form.purpose;
     if (!finalBuilding) { setError('Building name is required'); return; }
+    if (!finalPurpose) { setError('Purpose is required'); return; }
+    if (form.email.toLowerCase() !== confirmEmail.toLowerCase()) {
+      setError('Email addresses do not match. Please re-enter the Confirm Email field.');
+      return;
+    }
     setSubmitting(true); setError(''); setDuplicate(null); setResendSuccess('');
     try {
       const res = await fetch('/api/entries', {
@@ -93,6 +108,7 @@ export default function NewEntryPage() {
           contact_no:    normalizeMobile(form.contact_no),
           building_name: finalBuilding,
           role:          finalRole || undefined,
+          purpose:       finalPurpose,
         }),
       });
       const d = await res.json();
@@ -120,8 +136,10 @@ export default function NewEntryPage() {
   function reset() {
     setCreated(null);
     setForm({ name: '', email: '', mobile_number: '', role: '', purpose: 'Interview', reporting_date: '', valid_until: '', employee_id: '', poc_name: '', contact_no: '', building_name: '' });
+    setConfirmEmail('');
     setDuplicate(null); setResendSuccess('');
     setCustomBuilding(''); setIsOtherBuilding(false); setCustomRole(''); setIsOtherRole(false);
+    setIsOtherPurpose(false); setCustomPurpose('');
   }
 
   if (created) {
@@ -200,6 +218,25 @@ export default function NewEntryPage() {
             <Field label="Mobile *"><input name="mobile_number" type="tel" value={form.mobile_number} onChange={handleChange} onBlur={() => handleMobileBlur('mobile_number')} required placeholder="+91 9876543210" className="input" /></Field>
           </div>
 
+          <Field label="Confirm Email *">
+            <input
+              type="email"
+              value={confirmEmail}
+              onChange={(e) => setConfirmEmail(e.target.value)}
+              required
+              placeholder="Re-enter candidate email to confirm"
+              className={`input ${confirmEmail && form.email && confirmEmail.toLowerCase() !== form.email.toLowerCase() ? 'border-red-400 bg-red-50' : confirmEmail && form.email && confirmEmail.toLowerCase() === form.email.toLowerCase() ? 'border-green-400' : ''}`}
+              onPaste={(e) => e.preventDefault()}
+            />
+            {confirmEmail && form.email && confirmEmail.toLowerCase() !== form.email.toLowerCase() && (
+              <p className="text-xs text-red-500 mt-1">Email addresses do not match.</p>
+            )}
+            {confirmEmail && form.email && confirmEmail.toLowerCase() === form.email.toLowerCase() && (
+              <p className="text-xs text-green-600 mt-1">✓ Emails match</p>
+            )}
+            <p className="text-xs text-gray-400 mt-1">Typos in email = bounced invitations. Paste is disabled — type carefully.</p>
+          </Field>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Role *">
               <select value={isOtherRole ? '__other__' : form.role} onChange={handleRoleSelect} required={!isOtherRole} className="input">
@@ -210,9 +247,12 @@ export default function NewEntryPage() {
               {isOtherRole && <input value={customRole} onChange={(e) => setCustomRole(e.target.value)} required placeholder="Enter role" className="input mt-2" />}
             </Field>
             <Field label="Purpose *">
-              <select name="purpose" value={form.purpose} onChange={handleChange} required className="input">
-                {PURPOSES.map((p) => <option key={p}>{p}</option>)}
+              <select value={isOtherPurpose ? '__other__' : form.purpose} onChange={handlePurposeSelect} required={!isOtherPurpose} className="input">
+                <option value="">Select purpose</option>
+                {PURPOSES.map((p) => <option key={p} value={p}>{p}</option>)}
+                <option value="__other__">Other</option>
               </select>
+              {isOtherPurpose && <input value={customPurpose} onChange={(e) => setCustomPurpose(e.target.value)} required placeholder="Enter purpose" className="input mt-2" />}
             </Field>
           </div>
 

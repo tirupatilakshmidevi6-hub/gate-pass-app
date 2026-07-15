@@ -76,21 +76,24 @@ function downloadSampleCSV() {
 }
 
 export default function BulkUploadPage() {
-  const [rows,       setRows]       = useState<ParsedRow[]>([]);
-  const [fileName,   setFileName]   = useState('');
-  const [parseError, setParseError] = useState('');
-  const [uploading,  setUploading]  = useState(false);
-  const [results,    setResults]    = useState<{
+  const [rows,          setRows]          = useState<ParsedRow[]>([]);
+  const [fileName,      setFileName]      = useState('');
+  const [parseError,    setParseError]    = useState('');
+  const [uploading,     setUploading]     = useState(false);
+  const [results,       setResults]       = useState<{
     total: number; sent: number;
     failed: RowResult[]; skipped: RowResult[];
   } | null>(null);
-  const [error, setError] = useState('');
+  const [error,         setError]         = useState('');
+  const [emailWarnings, setEmailWarnings] = useState<{ row: string; email: string }[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setFileName(file.name); setResults(null); setError(''); setParseError('');
+    setFileName(file.name); setResults(null); setError(''); setParseError(''); setEmailWarnings([]);
     const reader = new FileReader();
     reader.onload = (ev) => {
       const { rows: parsed, missingCols } = parseCSV(ev.target?.result as string);
@@ -99,6 +102,11 @@ export default function BulkUploadPage() {
         setRows([]);
         return;
       }
+      // Flag rows where email format looks invalid so admin can review before uploading
+      const bad = parsed
+        .filter((r) => r.email && !EMAIL_RE.test(r.email.trim()))
+        .map((r) => ({ row: r._row_num ?? '?', email: r.email.trim() }));
+      setEmailWarnings(bad);
       setRows(parsed);
     };
     reader.readAsText(file);
@@ -116,7 +124,7 @@ export default function BulkUploadPage() {
       if (!res.ok) { setError(data.error ?? 'Upload failed'); return; }
       setResults(data);
       if (data.failed?.length === 0 && data.skipped?.length === 0) {
-        setRows([]); setFileName('');
+        setRows([]); setFileName(''); setEmailWarnings([]);
         if (fileRef.current) fileRef.current.value = '';
       }
     } finally { setUploading(false); }
@@ -275,7 +283,29 @@ export default function BulkUploadPage() {
           </div>
         )}
 
-        <button onClick={handleUpload} disabled={rows.length === 0 || uploading || !!parseError}
+        {/* Email review warning — shown whenever rows are loaded */}
+        {rows.length > 0 && (
+          <div className={`rounded-xl p-3 border text-xs space-y-1 ${emailWarnings.length > 0 ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'}`}>
+            <div className={`flex items-center gap-1.5 font-semibold ${emailWarnings.length > 0 ? 'text-red-700' : 'text-amber-700'}`}>
+              <AlertTriangle size={13} />
+              {emailWarnings.length > 0
+                ? `${emailWarnings.length} row${emailWarnings.length !== 1 ? 's' : ''} with invalid email format — fix before uploading`
+                : 'Review all email addresses before uploading'}
+            </div>
+            <p className={emailWarnings.length > 0 ? 'text-red-600' : 'text-amber-600'}>
+              Typos or wrong email addresses will bounce — the invitation will never reach the candidate.
+            </p>
+            {emailWarnings.length > 0 && (
+              <ul className="mt-1 space-y-0.5">
+                {emailWarnings.map((w, i) => (
+                  <li key={i} className="text-red-700">Row {w.row}: <span className="font-mono">{w.email}</span></li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        <button onClick={handleUpload} disabled={rows.length === 0 || uploading || !!parseError || emailWarnings.length > 0}
           className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 sm:py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm">
           <Upload size={15} />
           {uploading ? 'Processing…' : `Upload & Send Invites${rows.length > 0 ? ` (${rows.length} rows)` : ''}`}

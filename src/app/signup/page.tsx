@@ -3,15 +3,13 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Eye, EyeOff, UserPlus, LogIn } from 'lucide-react';
 
-// All four options are always visible in the dropdown.
-// Reserved roles (Admin / TA / Facilities Team): first signup = active, subsequent = pending_approval.
-// "Other": always pending_approval.
 const DROPDOWN_OPTIONS = [
-  { value: 'admin',      label: 'Admin',           reserved: true  },
-  { value: 'ta',         label: 'TA',              reserved: true  },
-  { value: 'facilities', label: 'Facilities Team',  reserved: true  },
-  { value: 'other',      label: 'Other',            reserved: false },
+  { value: 'admin',      label: 'Admin',          reserved: true  },
+  { value: 'ta',         label: 'TA',             reserved: true  },
+  { value: 'facilities', label: 'Facilities Team', reserved: true  },
+  { value: 'other',      label: 'Other',           reserved: false },
 ];
 
 const ROLE_DISPLAY: Record<string, string> = {
@@ -31,18 +29,45 @@ async function safePost(url: string, body: unknown) {
   return { ok: res.ok, data };
 }
 
+// ── Shared brand header (matches login page) ──────────────────────────────────
+function BrandHeader() {
+  return (
+    <>
+      <div className="flex items-center gap-4 px-8 py-6">
+        <img
+          src="https://www.image2url.com/r2/default/images/1779254824307-0fca63d9-e1eb-4ccf-bfb4-4c663ca4ae5e.jpeg"
+          alt="NxtWave"
+          className="h-14 w-auto object-contain"
+        />
+        <div className="w-px h-12 bg-gray-200 flex-shrink-0" />
+        <div>
+          <p className="text-lg font-bold text-gray-900 leading-tight">NxtWave</p>
+          <p className="text-[11px] font-semibold text-gray-400 tracking-[0.14em] uppercase mt-0.5">
+            Gate Pass System
+          </p>
+        </div>
+      </div>
+      <div className="h-px bg-gray-100" />
+    </>
+  );
+}
+
+// ── Shared input class ────────────────────────────────────────────────────────
+const INPUT = 'w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 placeholder:text-gray-300';
+const LABEL = 'block text-sm font-semibold text-gray-700 mb-1.5';
+
 export default function SignupPage() {
   const router = useRouter();
 
-  // availability[role] = true  → role is unclaimed (first signup will be active)
-  // availability[role] = false → role already has an active holder (will be pending)
   const [availability, setAvailability] = useState<Record<string, boolean>>({});
   const [checking,  setChecking]  = useState(true);
   const [form, setForm] = useState({
     name: '', email: '', password: '', confirmPassword: '',
-    roleSelect: '',   // selected dropdown value
-    customRole: '',   // free-text shown only when roleSelect === 'other'
+    roleSelect: '',
+    customRole: '',
   });
+  const [showPassword,        setShowPassword]        = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading,   setLoading]   = useState(false);
   const [error,     setError]     = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -59,19 +84,11 @@ export default function SignupPage() {
       setForm((f) => ({ ...f, [field]: e.target.value }));
   }
 
-  // The role value actually sent to the API:
-  //   - reserved selections → use the dropdown value (admin / ta / facilities)
-  //   - "other" → use the typed customRole
-  const actualRole = form.roleSelect === 'other'
-    ? form.customRole.trim()
-    : form.roleSelect;
+  const actualRole = form.roleSelect === 'other' ? form.customRole.trim() : form.roleSelect;
 
-  // Will this signup require Admin approval?
   const needsApproval =
-    form.roleSelect === 'other' ||
-    availability[form.roleSelect] === false;
+    form.roleSelect === 'other' || availability[form.roleSelect] === false;
 
-  // Info chip state
   const isFirstReserved =
     ['admin', 'ta', 'facilities'].includes(form.roleSelect) &&
     availability[form.roleSelect] === true;
@@ -83,7 +100,6 @@ export default function SignupPage() {
   async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
     setError('');
-
     if (!form.name.trim())        { setError('Full name is required'); return; }
     if (!form.email.trim())       { setError('Email address is required'); return; }
     if (!form.roleSelect)         { setError('Please select a role'); return; }
@@ -102,16 +118,10 @@ export default function SignupPage() {
         confirmPassword: form.confirmPassword,
         role:            actualRole,
       });
-
-      if (!ok) {
-        setError(data.error ?? 'Sign up failed');
-        return;
-      }
-
+      if (!ok) { setError(data.error ?? 'Sign up failed'); return; }
       if (data.status === 'pending_approval') {
         setSubmitted(true);
       } else {
-        // Active immediately → redirect to login with success message
         router.push('/login?registered=1');
       }
     } catch {
@@ -121,88 +131,103 @@ export default function SignupPage() {
     }
   }
 
+  // ── Loading ───────────────────────────────────────────────────────────────────
   if (checking) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-[#edf2fb] flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
-  // ── Pending confirmation screen ──────────────────────────────────────────────
+  // ── Pending approval screen ───────────────────────────────────────────────────
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 flex items-center justify-center px-4">
-        <div className="w-full max-w-sm">
-          <Logo />
-          <div className="bg-white rounded-2xl shadow-2xl p-8 text-center space-y-5">
-            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
-              <svg className="w-8 h-8 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+      <div className="min-h-screen bg-[#edf2fb] flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-sm space-y-4">
+          <div className="bg-white rounded-3xl shadow-md overflow-hidden">
+            <BrandHeader />
+            <div className="px-8 py-8 text-center space-y-5">
+              <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto">
+                <svg className="w-8 h-8 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Request Submitted</h2>
+                <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+                  Your account request has been submitted and is pending Admin approval.
+                  You will receive an email once approved.
+                </p>
+              </div>
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-1.5 text-sm text-blue-600 font-semibold hover:underline"
+              >
+                <LogIn size={14} /> Back to Sign In
+              </Link>
             </div>
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">Request Submitted</h2>
-              <p className="text-sm text-gray-600 mt-2 leading-relaxed">
-                Your account request has been submitted and is pending Admin approval.
-                You will receive an email once approved.
-              </p>
-            </div>
-            <Link href="/login" className="inline-block text-sm text-blue-700 font-semibold hover:underline">
-              ← Back to Sign In
-            </Link>
           </div>
-          <Footer />
+          <p className="text-center text-gray-400 text-xs">
+            NxtWave &copy; {new Date().getFullYear()} &bull; Internal Use Only
+          </p>
         </div>
       </div>
     );
   }
 
-  // ── Sign-up form ─────────────────────────────────────────────────────────────
+  // ── Sign-up form ──────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-sm">
-        <Logo />
+    <div className="min-h-screen bg-[#edf2fb] flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-sm space-y-4">
 
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-          <div className="px-8 py-6 border-b border-gray-100">
-            <h2 className="text-lg font-bold text-gray-900">Create your account</h2>
-            <p className="text-sm text-gray-500 mt-0.5">Join the NxtWave Gate Pass System</p>
+        <div className="bg-white rounded-3xl shadow-md overflow-hidden">
+          <BrandHeader />
+
+          {/* Welcome line */}
+          <div className="flex items-center gap-4 px-8 pt-6 pb-2">
+            <div className="w-11 h-11 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <UserPlus size={19} className="text-blue-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 leading-tight">Create account</h2>
+              <p className="text-sm text-gray-400 mt-0.5">Join the NxtWave Gate Pass System</p>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="px-8 py-6 space-y-4">
+          <form onSubmit={handleSubmit} className="px-8 pt-5 pb-8 space-y-4">
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">
+              <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
                 {error}
               </div>
             )}
 
             {/* Full Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
+              <label className={LABEL}>Full Name</label>
               <input
                 type="text" value={form.name} onChange={set('name')} required
                 placeholder="Enter your full name"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={INPUT}
               />
             </div>
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Address</label>
+              <label className={LABEL}>Email Address</label>
               <input
                 type="email" value={form.email} onChange={set('email')} required
                 placeholder="you@example.com"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={INPUT}
               />
             </div>
 
-            {/* Role — all 4 options always shown */}
+            {/* Role */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Role</label>
+              <label className={LABEL}>Role</label>
               <select
                 value={form.roleSelect} onChange={set('roleSelect')} required
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                className={INPUT + ' cursor-pointer'}
               >
                 <option value="">Select your role…</option>
                 {DROPDOWN_OPTIONS.map((opt) => (
@@ -210,20 +235,16 @@ export default function SignupPage() {
                 ))}
               </select>
 
-              {/* Free-text input when "Other" is selected */}
               {form.roleSelect === 'other' && (
-                <div className="mt-2">
-                  <input
-                    type="text" value={form.customRole} onChange={set('customRole')} required
-                    placeholder="Enter your role (e.g. Vendor, Contractor, Visitor…)"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+                <input
+                  type="text" value={form.customRole} onChange={set('customRole')} required
+                  placeholder="Enter your role"
+                  className={INPUT + ' mt-2'}
+                />
               )}
 
-              {/* Info chip — shown whenever a role is selected */}
               {form.roleSelect && (
-                <div className={`mt-2 flex items-start gap-2 rounded-lg px-3 py-2 text-xs leading-relaxed ${
+                <div className={`mt-2 flex items-start gap-2 rounded-xl px-3 py-2.5 text-xs leading-relaxed ${
                   needsApproval
                     ? 'bg-amber-50 border border-amber-200 text-amber-700'
                     : 'bg-green-50 border border-green-200 text-green-700'
@@ -231,7 +252,7 @@ export default function SignupPage() {
                   <span className="mt-0.5 flex-shrink-0">{needsApproval ? '⏳' : '✓'}</span>
                   <span>
                     {isFirstReserved &&
-                      `You will be the first ${ROLE_DISPLAY[form.roleSelect]}. Your account will be activated immediately after signup.`}
+                      `You will be the first ${ROLE_DISPLAY[form.roleSelect]}. Your account will be activated immediately.`}
                     {isSubsequentReserved &&
                       `The ${ROLE_DISPLAY[form.roleSelect]} role is already assigned. Your request will be sent to Admin for approval.`}
                     {form.roleSelect === 'other' &&
@@ -243,76 +264,86 @@ export default function SignupPage() {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Password <span className="text-gray-400 font-normal">(min. 8 characters)</span>
+              <label className={LABEL}>
+                Password <span className="text-gray-400 font-normal text-xs">(min. 8 characters)</span>
               </label>
-              <input
-                type="password" value={form.password} onChange={set('password')} required
-                minLength={8} placeholder="Create a strong password"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={form.password} onChange={set('password')} required
+                  minLength={8} placeholder="Create a strong password"
+                  className={INPUT + ' pr-11'}
+                />
+                <button
+                  type="button" tabIndex={-1}
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
 
             {/* Confirm Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Confirm Password</label>
-              <input
-                type="password" value={form.confirmPassword} onChange={set('confirmPassword')} required
-                placeholder="Re-enter your password"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <label className={LABEL}>Confirm Password</label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={form.confirmPassword} onChange={set('confirmPassword')} required
+                  placeholder="Re-enter your password"
+                  className={INPUT + ' pr-11'}
+                />
+                <button
+                  type="button" tabIndex={-1}
+                  onClick={() => setShowConfirmPassword((v) => !v)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
 
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading || (form.roleSelect === 'other' && !form.customRole.trim())}
-              className="w-full py-2.5 bg-blue-700 hover:bg-blue-800 disabled:opacity-60 text-white font-semibold rounded-lg text-sm transition-colors mt-2"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold rounded-xl text-sm transition-colors flex items-center justify-center gap-2 shadow-sm mt-1"
             >
               {loading ? (
-                <span className="flex items-center justify-center gap-2">
+                <>
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   {needsApproval ? 'Sending request…' : 'Creating account…'}
-                </span>
+                </>
               ) : (
                 needsApproval ? 'Send Request' : 'Create Account'
               )}
             </button>
+
+            {/* OR + Sign In */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-gray-200" />
+              <span className="text-xs text-gray-400 font-medium tracking-wide">OR</span>
+              <div className="flex-1 h-px bg-gray-200" />
+            </div>
+
+            <Link
+              href="/login"
+              className="w-full py-3 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2.5"
+            >
+              <LogIn size={16} className="text-gray-400" />
+              <span>
+                Already have an account?{' '}
+                <span className="text-blue-600 font-semibold">Sign In</span>
+              </span>
+            </Link>
           </form>
-
-          <div className="px-8 pb-6 text-center border-t border-gray-100 pt-4">
-            <p className="text-sm text-gray-500">
-              Already have an account?{' '}
-              <Link href="/login" className="text-blue-700 font-semibold hover:underline">Sign In</Link>
-            </p>
-          </div>
         </div>
 
-        <Footer />
+        <p className="text-center text-gray-400 text-xs">
+          NxtWave &copy; {new Date().getFullYear()} &bull; Internal Use Only
+        </p>
       </div>
     </div>
-  );
-}
-
-function Logo() {
-  return (
-    <div className="text-center mb-8">
-      <div className="flex justify-center mb-4">
-        <div className="bg-white rounded-2xl px-5 py-3 shadow-lg">
-          <img
-            src="https://www.image2url.com/r2/default/images/1779254824307-0fca63d9-e1eb-4ccf-bfb4-4c663ca4ae5e.jpeg"
-            alt="NxtWave" className="h-12 w-auto object-contain"
-          />
-        </div>
-      </div>
-      <p className="text-blue-300 text-sm mt-1 tracking-wide">Gate Pass System</p>
-    </div>
-  );
-}
-
-function Footer() {
-  return (
-    <p className="text-center text-blue-400 text-xs mt-6">
-      NxtWave &copy; {new Date().getFullYear()} &bull; Internal Use Only
-    </p>
   );
 }
