@@ -38,6 +38,9 @@ export default function NewEntryPage() {
   const [created, setCreated] = useState<(typeof form & { registrationUrl: string; emailSent: boolean; emailError: string; status: string; id: string }) | null>(null);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [resendingCreated, setResendingCreated] = useState(false);
+  const [resendCreatedSuccess, setResendCreatedSuccess] = useState('');
+  const [resendCreatedError, setResendCreatedError] = useState('');
 
   useEffect(() => {
     fetch('/api/buildings').then((r) => r.json()).then((data) => {
@@ -133,6 +136,27 @@ export default function NewEntryPage() {
     } finally { setResending(false); }
   }
 
+  async function handleResendToCreated() {
+    if (!created?.id) return;
+    setResendingCreated(true);
+    setResendCreatedError('');
+    setResendCreatedSuccess('');
+    try {
+      const res = await fetch('/api/entries/resend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entryId: created.id }),
+      });
+      const d = await res.json();
+      if (!res.ok) { setResendCreatedError(d.error ?? 'Resend failed'); return; }
+      setResendCreatedSuccess(`Invitation email sent to ${created.email}`);
+    } catch {
+      setResendCreatedError('Could not reach server. Please try again.');
+    } finally {
+      setResendingCreated(false);
+    }
+  }
+
   function reset() {
     setCreated(null);
     setForm({ name: '', email: '', mobile_number: '', role: '', purpose: 'Interview', reporting_date: '', valid_until: '', employee_id: '', poc_name: '', contact_no: '', building_name: '' });
@@ -140,6 +164,7 @@ export default function NewEntryPage() {
     setDuplicate(null); setResendSuccess('');
     setCustomBuilding(''); setIsOtherBuilding(false); setCustomRole(''); setIsOtherRole(false);
     setIsOtherPurpose(false); setCustomPurpose('');
+    setResendCreatedSuccess(''); setResendCreatedError('');
   }
 
   if (created) {
@@ -154,12 +179,24 @@ export default function NewEntryPage() {
             <p className="text-gray-500 text-sm">Status: <strong>Pending Form</strong> — registration email {created.emailSent ? 'sent' : 'failed'}.</p>
           </div>
 
-          {created.emailSent ? (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm text-blue-700">Registration form sent to <strong>{created.email}</strong>.</div>
+          {created.emailSent || resendCreatedSuccess ? (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm text-blue-700">
+              {resendCreatedSuccess || `Registration form sent to `}
+              {!resendCreatedSuccess && <strong>{created.email}</strong>}
+              {!resendCreatedSuccess && '.'}
+            </div>
           ) : (
             <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
-              <p className="font-semibold">Email failed</p>
-              <p className="text-xs mt-0.5">{created.emailError || 'Share the link below manually.'}</p>
+              <p className="font-semibold">Email failed to send</p>
+              <p className="text-xs mt-0.5">{created.emailError || 'Could not send the invite email. Use the link below or retry.'}</p>
+              {resendCreatedError && <p className="text-xs text-red-600 mt-1">{resendCreatedError}</p>}
+              <button
+                onClick={handleResendToCreated}
+                disabled={resendingCreated}
+                className="mt-2 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white text-xs font-semibold rounded-lg transition-colors"
+              >
+                {resendingCreated ? 'Sending…' : 'Retry Send Email'}
+              </button>
             </div>
           )}
 

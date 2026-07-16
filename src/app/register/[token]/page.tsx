@@ -78,29 +78,33 @@ export default function RegisterPage() {
   const fileInputRef   = useRef<HTMLInputElement>(null);
   const previewUrlRef  = useRef<string | null>(null);
 
-  const [submitStep, setSubmitStep] = useState<SubmitStep>(null);
-  const [error,      setError]      = useState('');
+  const [submitStep,   setSubmitStep]   = useState<SubmitStep>(null);
+  const [error,        setError]        = useState('');
+  const [serverError,  setServerError]  = useState(false);
 
   // Revoke object URL when component unmounts to free memory
   useEffect(() => () => { if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current); }, []);
 
   useEffect(() => {
     fetch(`/api/register/${token}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.error) {
+      .then(async (r) => {
+        let data: Record<string, unknown> = {};
+        try { data = await r.json(); } catch { /* non-JSON 500 */ }
+        if (r.status >= 500) {
+          setServerError(true);
+        } else if (data.error || r.status === 404) {
           setNotFound(true);
         } else if (data.isExpired) {
           setIsExpired(true);
         } else if (data.alreadySubmitted) {
           setAlreadySubmitted(true);
-          setEntry(data.entry);
-          if (data.entry?.status === 'Approved') router.replace(`/register/${token}/success`);
+          setEntry(data.entry as EntryData);
+          if ((data.entry as EntryData)?.status === 'Approved') router.replace(`/register/${token}/success`);
         } else {
-          setEntry(data.entry);
+          setEntry(data.entry as EntryData);
         }
       })
-      .catch(() => setNotFound(true))
+      .catch(() => setServerError(true))
       .finally(() => setLoading(false));
   }, [token, router]);
 
@@ -217,6 +221,28 @@ export default function RegisterPage() {
           </div>
           <h2 className="text-lg font-bold text-slate-800">Registration Link Expired</h2>
           <p className="text-sm text-slate-500">This registration link has expired. Please contact HR to get a new invitation link.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (serverError) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+        <div className="max-w-sm w-full bg-white rounded-2xl p-8 text-center shadow-sm border border-slate-200 space-y-4">
+          <div className="w-14 h-14 bg-yellow-100 rounded-full flex items-center justify-center mx-auto">
+            <svg className="w-7 h-7 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-bold text-slate-800">Something went wrong</h2>
+          <p className="text-sm text-slate-500">The server encountered an error. Please refresh the page and try again.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );

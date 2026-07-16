@@ -9,7 +9,13 @@ const TOKEN_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
 
 export async function GET(_req: NextRequest, { params }: Params) {
   const { token } = await params;
-  const data = await getEntryByToken(token);
+  let data;
+  try {
+    data = await getEntryByToken(token);
+  } catch (err) {
+    console.error('[Register] GET — DB error for token:', token, err instanceof Error ? err.message : err);
+    return NextResponse.json({ error: 'Server error. Please try again.', serverError: true }, { status: 500 });
+  }
   if (!data) return NextResponse.json({ error: 'Invalid or expired registration link' }, { status: 404 });
 
   const isExpired = !data.tokenUsed && (Date.now() - new Date(data.entry.created_at).getTime() > TOKEN_EXPIRY_MS);
@@ -53,7 +59,13 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
 export async function POST(req: NextRequest, { params }: Params) {
   const { token } = await params;
-  const data = await getEntryByToken(token);
+  let data;
+  try {
+    data = await getEntryByToken(token);
+  } catch (err) {
+    console.error('[Register] POST — DB error for token:', token, err instanceof Error ? err.message : err);
+    return NextResponse.json({ error: 'Server error. Please try again.' }, { status: 500 });
+  }
   if (!data) return NextResponse.json({ error: 'Invalid or expired registration link' }, { status: 404 });
   if (data.tokenUsed) return NextResponse.json({ error: 'Registration already submitted' }, { status: 409 });
 
