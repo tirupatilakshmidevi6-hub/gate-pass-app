@@ -82,7 +82,7 @@ export default function BulkUploadPage() {
   const [uploading,     setUploading]     = useState(false);
   const [results,       setResults]       = useState<{
     total: number; sent: number;
-    failed: RowResult[]; skipped: RowResult[];
+    failed: RowResult[]; skipped: RowResult[]; emailFailed: RowResult[];
   } | null>(null);
   const [error,         setError]         = useState('');
   const [emailWarnings, setEmailWarnings] = useState<{ row: string; email: string }[]>([]);
@@ -123,16 +123,17 @@ export default function BulkUploadPage() {
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? 'Upload failed'); return; }
       setResults(data);
-      if (data.failed?.length === 0 && data.skipped?.length === 0) {
+      if (data.failed?.length === 0 && data.skipped?.length === 0 && data.emailFailed?.length === 0) {
         setRows([]); setFileName(''); setEmailWarnings([]);
         if (fileRef.current) fileRef.current.value = '';
       }
     } finally { setUploading(false); }
   }
 
-  const sentCount    = results?.sent ?? 0;
-  const failedCount  = results?.failed?.length ?? 0;
-  const skippedCount = results?.skipped?.length ?? 0;
+  const sentCount        = results?.sent ?? 0;
+  const failedCount      = results?.failed?.length ?? 0;
+  const skippedCount     = results?.skipped?.length ?? 0;
+  const emailFailedCount = results?.emailFailed?.length ?? 0;
 
   return (
     <div className="page-container max-w-3xl mx-auto space-y-5 sm:space-y-6">
@@ -211,22 +212,50 @@ export default function BulkUploadPage() {
 
         {results && (
           <div className="space-y-3">
-            {/* Summary bar */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            {/* Summary bar — 4 states */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
               <div className="bg-green-50 border border-green-200 rounded-xl p-2.5 sm:p-3 text-center">
                 <div className="text-xl font-bold text-green-700">{sentCount}</div>
-                <div className="text-[11px] sm:text-xs text-green-600 font-medium leading-tight">Sent</div>
+                <div className="text-[11px] sm:text-xs text-green-600 font-medium leading-tight">Email Sent</div>
               </div>
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-2.5 sm:p-3 text-center">
-                <div className="text-xl font-bold text-amber-700">{skippedCount}</div>
-                <div className="text-[11px] sm:text-xs text-amber-600 font-medium leading-tight">Skipped</div>
+              <div className={`border rounded-xl p-2.5 sm:p-3 text-center ${emailFailedCount > 0 ? 'bg-orange-50 border-orange-200' : 'bg-gray-50 border-gray-200'}`}>
+                <div className={`text-xl font-bold ${emailFailedCount > 0 ? 'text-orange-700' : 'text-gray-400'}`}>{emailFailedCount}</div>
+                <div className={`text-[11px] sm:text-xs font-medium leading-tight ${emailFailedCount > 0 ? 'text-orange-600' : 'text-gray-400'}`}>Email Failed</div>
               </div>
-              <div className="bg-red-50 border border-red-200 rounded-xl p-2.5 sm:p-3 text-center">
-                <div className="text-xl font-bold text-red-700">{failedCount}</div>
-                <div className="text-[11px] sm:text-xs text-red-600 font-medium leading-tight">Failed</div>
+              <div className={`border rounded-xl p-2.5 sm:p-3 text-center ${skippedCount > 0 ? 'bg-amber-50 border-amber-200' : 'bg-gray-50 border-gray-200'}`}>
+                <div className={`text-xl font-bold ${skippedCount > 0 ? 'text-amber-700' : 'text-gray-400'}`}>{skippedCount}</div>
+                <div className={`text-[11px] sm:text-xs font-medium leading-tight ${skippedCount > 0 ? 'text-amber-600' : 'text-gray-400'}`}>Skipped</div>
+              </div>
+              <div className={`border rounded-xl p-2.5 sm:p-3 text-center ${failedCount > 0 ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
+                <div className={`text-xl font-bold ${failedCount > 0 ? 'text-red-700' : 'text-gray-400'}`}>{failedCount}</div>
+                <div className={`text-[11px] sm:text-xs font-medium leading-tight ${failedCount > 0 ? 'text-red-600' : 'text-gray-400'}`}>Failed</div>
               </div>
             </div>
 
+            {/* Email failed — entry exists in DB but email not sent */}
+            {results.emailFailed.length > 0 && (
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-3">
+                <div className="flex items-center gap-2 mb-2 text-xs font-bold text-orange-700 uppercase tracking-wider">
+                  <AlertTriangle size={13} /> Entry Saved — Email Not Sent
+                </div>
+                <p className="text-xs text-orange-800 mb-2 leading-relaxed">
+                  {results.emailFailed.length} candidate{results.emailFailed.length !== 1 ? 's were' : ' was'} added to the system,
+                  but the invite email could not be sent (SMTP error or rate limit).
+                  Their entries are saved — use the <strong>Resend</strong> button in the entry list to retry.
+                </p>
+                <div className="space-y-1">
+                  {results.emailFailed.map((f, i) => (
+                    <div key={i} className="text-xs text-orange-700">
+                      <span className="font-medium">{rowLabel(f)}</span>
+                      {' '}(<span className="font-mono">{f.email}</span>)
+                      {f.error ? <> — {f.error}</> : null}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Skipped — duplicate entries */}
             {results.skipped.length > 0 && (() => {
               const byDate = results.skipped.reduce<Record<string, number>>((acc, s) => {
                 const m = s.error?.match(/for (\d{4}-\d{2}-\d{2})/);
@@ -237,12 +266,12 @@ export default function BulkUploadPage() {
               return (
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
                   <div className="flex items-center gap-2 mb-2 text-xs font-bold text-amber-700 uppercase tracking-wider">
-                    <AlertTriangle size={13} /> Already Sent — Skipped
+                    <AlertTriangle size={13} /> Already Exists — Skipped
                   </div>
                   <div className="space-y-1">
                     {Object.entries(byDate).map(([date, count]) => (
                       <div key={date} className="text-xs text-amber-800">
-                        <span className="font-medium">{count} invitation{count !== 1 ? 's' : ''} skipped</span> — already sent for {formatDisplayDate(date)}
+                        <span className="font-medium">{count} invitation{count !== 1 ? 's' : ''} skipped</span> — entry already exists for {formatDisplayDate(date)}
                       </div>
                     ))}
                   </div>
@@ -250,13 +279,14 @@ export default function BulkUploadPage() {
               );
             })()}
 
+            {/* Failed — could not create entry */}
             {results.failed.length > 0 && (
               <div className="bg-red-50 border border-red-200 rounded-xl p-3">
                 <div className="flex items-center gap-2 mb-2 text-xs font-bold text-red-700 uppercase tracking-wider">
-                  <XCircle size={13} /> Could Not Send
+                  <XCircle size={13} /> Could Not Process
                 </div>
                 <p className="text-xs text-red-700 mb-2">
-                  {results.failed.length} invitation{results.failed.length !== 1 ? 's' : ''} could not be sent.
+                  {results.failed.length} row{results.failed.length !== 1 ? 's' : ''} could not be added — fix errors and re-upload these rows.
                 </p>
                 <div className="space-y-1">
                   {results.failed.map((f, i) => {
@@ -275,9 +305,10 @@ export default function BulkUploadPage() {
               </div>
             )}
 
-            {sentCount > 0 && failedCount === 0 && skippedCount === 0 && (
+            {/* All clear */}
+            {sentCount > 0 && failedCount === 0 && skippedCount === 0 && emailFailedCount === 0 && (
               <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
-                <CheckCircle size={16} /> All {sentCount} invitation emails sent successfully.
+                <CheckCircle size={16} /> All {sentCount} invitation email{sentCount !== 1 ? 's' : ''} sent successfully.
               </div>
             )}
           </div>

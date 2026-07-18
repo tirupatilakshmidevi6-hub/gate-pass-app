@@ -112,6 +112,15 @@ async function send(label: string, opts: MailOpts, retries = 2): Promise<SendRes
     const accepted = ((result.accepted ?? []) as NMAccepted).map((a) =>
       typeof a === 'string' ? a : a.address
     );
+    const rejected = ((result.rejected ?? []) as NMAccepted).map((a) =>
+      typeof a === 'string' ? a : a.address
+    );
+    if (rejected.length > 0) {
+      throw new Error(`SMTP rejected recipient(s): ${rejected.join(', ')} — address may be invalid or rate-limited`);
+    }
+    if (accepted.length === 0) {
+      throw new Error('SMTP did not confirm delivery — no accepted recipients in server response');
+    }
     console.log(`[Email] ${label} ✓ sent | messageId: ${result.messageId} | accepted: ${accepted.join(', ')}`);
     return { messageId: result.messageId, accepted };
   } catch (err: unknown) {
@@ -164,15 +173,15 @@ export async function sendTestEmail(to: string, name: string) {
 
 // ─── Candidate emails ─────────────────────────────────────────────────────────
 
-export async function sendInviteEmail(to: string, name: string, registrationUrl: string) {
-  if (!to?.trim()) { console.error('[Email] sendInviteEmail — skipped: recipient email is empty'); return; }
+export async function sendInviteEmail(to: string, name: string, registrationUrl: string, maxRetries = 2) {
+  if (!to?.trim()) throw new Error('Cannot send invite — recipient email is empty');
   return send('sendInviteEmail', {
     from: fromAddress(),
     to,
     subject: 'Your NxtWave Office Entry Registration',
     html: inviteHtml(name, registrationUrl),
     text: `Dear ${name},\n\nYou have been invited to register for office entry at NxtWave.\n\nPlease fill your registration form here:\n${registrationUrl}\n\nThis link is unique to you. Do not share it with anyone.\n\nNxtWave Gate Pass System\nnxtwave.co.in`,
-  });
+  }, maxRetries);
 }
 
 export async function sendGatePassEmail(to: string, name: string, data: GatePassData, viewUrl?: string) {
