@@ -32,7 +32,6 @@ export default function NewEntryPage() {
   const [isOtherRole, setIsOtherRole] = useState(false);
   const [isOtherPurpose, setIsOtherPurpose] = useState(false);
   const [customPurpose, setCustomPurpose] = useState('');
-  const [confirmEmail, setConfirmEmail] = useState('');
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [created, setCreated] = useState<(typeof form & { registrationUrl: string; emailSent: boolean; emailError: string; status: string; id: string }) | null>(null);
@@ -97,10 +96,6 @@ export default function NewEntryPage() {
     const finalPurpose = isOtherPurpose ? customPurpose.trim() : form.purpose;
     if (!finalBuilding) { setError('Building name is required'); return; }
     if (!finalPurpose) { setError('Purpose is required'); return; }
-    if (form.email.toLowerCase() !== confirmEmail.toLowerCase()) {
-      setError('Email addresses do not match. Please re-enter the Confirm Email field.');
-      return;
-    }
     setSubmitting(true); setError(''); setDuplicate(null); setResendSuccess('');
     try {
       const res = await fetch('/api/entries', {
@@ -160,7 +155,6 @@ export default function NewEntryPage() {
   function reset() {
     setCreated(null);
     setForm({ name: '', email: '', mobile_number: '', role: '', purpose: 'Interview', reporting_date: '', valid_until: '', employee_id: '', poc_name: '', contact_no: '', building_name: '' });
-    setConfirmEmail('');
     setDuplicate(null); setResendSuccess('');
     setCustomBuilding(''); setIsOtherBuilding(false); setCustomRole(''); setIsOtherRole(false);
     setIsOtherPurpose(false); setCustomPurpose('');
@@ -254,25 +248,6 @@ export default function NewEntryPage() {
             <Field label="Email *"><input name="email" type="email" value={form.email} onChange={handleChange} required placeholder="candidate@example.com" className="input" /></Field>
             <Field label="Mobile *"><input name="mobile_number" type="tel" value={form.mobile_number} onChange={handleChange} onBlur={() => handleMobileBlur('mobile_number')} required placeholder="+91 9876543210" className="input" /></Field>
           </div>
-
-          <Field label="Confirm Email *">
-            <input
-              type="email"
-              value={confirmEmail}
-              onChange={(e) => setConfirmEmail(e.target.value)}
-              required
-              placeholder="Re-enter candidate email to confirm"
-              className={`input ${confirmEmail && form.email && confirmEmail.toLowerCase() !== form.email.toLowerCase() ? 'border-red-400 bg-red-50' : confirmEmail && form.email && confirmEmail.toLowerCase() === form.email.toLowerCase() ? 'border-green-400' : ''}`}
-              onPaste={(e) => e.preventDefault()}
-            />
-            {confirmEmail && form.email && confirmEmail.toLowerCase() !== form.email.toLowerCase() && (
-              <p className="text-xs text-red-500 mt-1">Email addresses do not match.</p>
-            )}
-            {confirmEmail && form.email && confirmEmail.toLowerCase() === form.email.toLowerCase() && (
-              <p className="text-xs text-green-600 mt-1">✓ Emails match</p>
-            )}
-            <p className="text-xs text-gray-400 mt-1">Typos in email = bounced invitations. Paste is disabled — type carefully.</p>
-          </Field>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Role *">
