@@ -163,6 +163,7 @@ export default function BulkUploadPage() {
             ))}
           </div>
           <p className="text-gray-400 mt-2">Blue = required &nbsp;·&nbsp; Gray = optional</p>
+          <p className="text-amber-600 mt-1.5 font-medium">Dates (reporting_date, valid_until) must be in <span className="font-mono">YYYY-MM-DD</span> format, e.g. <span className="font-mono">2026-09-05</span></p>
         </div>
 
         {parseError && (

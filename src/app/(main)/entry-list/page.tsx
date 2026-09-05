@@ -40,6 +40,62 @@ function timeAgo(isoDate: string) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
+// ─── Pagination ───────────────────────────────────────────────────────────────
+
+function getPageNumbers(current: number, total: number): (number | '...')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  if (current <= 4) return [1, 2, 3, 4, 5, '...', total];
+  if (current >= total - 3) return [1, '...', total - 4, total - 3, total - 2, total - 1, total];
+  return [1, '...', current - 1, current, current + 1, '...', total];
+}
+
+function EntryListPagination({
+  page, totalPages, total, pageSize, onPage,
+}: {
+  page: number; totalPages: number; total: number; pageSize: number; onPage: (p: number) => void;
+}) {
+  const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const to   = Math.min(page * pageSize, total);
+  const nums = getPageNumbers(page, totalPages);
+  if (totalPages <= 1 && total === 0) return null;
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <span className="text-xs text-gray-500">Showing {from} to {to} of {total} entries</span>
+      {totalPages > 1 && (
+        <div className="flex items-center gap-1">
+          {([
+            { label: '«', action: () => onPage(1),          disabled: page === 1 },
+            { label: '‹', action: () => onPage(page - 1),   disabled: page === 1 },
+          ] as const).map(({ label, action, disabled }) => (
+            <button key={label} onClick={action} disabled={disabled}
+              className="w-8 h-8 rounded-lg border border-gray-300 text-gray-600 text-xs font-semibold hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center">
+              {label}
+            </button>
+          ))}
+          {nums.map((p, i) =>
+            p === '...'
+              ? <span key={`d${i}`} className="w-8 h-8 flex items-center justify-center text-gray-400 text-xs select-none">…</span>
+              : <button key={p} onClick={() => onPage(p as number)}
+                  className={`w-8 h-8 rounded-lg text-xs font-semibold transition-colors ${p === page ? 'bg-blue-600 text-white' : 'border border-gray-300 text-gray-600 hover:bg-gray-50'}`}>
+                  {p}
+                </button>
+          )}
+          {([
+            { label: '›', action: () => onPage(page + 1),    disabled: page === totalPages },
+            { label: '»', action: () => onPage(totalPages),  disabled: page === totalPages },
+          ] as const).map(({ label, action, disabled }) => (
+            <button key={label} onClick={action} disabled={disabled}
+              className="w-8 h-8 rounded-lg border border-gray-300 text-gray-600 text-xs font-semibold hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center">
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Entry Detail Modal ───────────────────────────────────────────────────────
 
 function EntryModal({
@@ -507,33 +563,13 @@ export default function EntryListPage() {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-1.5 py-2">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={safePage === 1}
-            className="px-3 py-1.5 text-xs font-medium border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600"
-          >
-            ← Prev
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPage(p)}
-              className={`w-8 h-8 text-xs font-semibold rounded-lg transition-colors ${p === safePage ? 'bg-blue-600 text-white' : 'border border-gray-300 text-gray-600 hover:bg-gray-50'}`}
-            >
-              {p}
-            </button>
-          ))}
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={safePage === totalPages}
-            className="px-3 py-1.5 text-xs font-medium border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600"
-          >
-            Next →
-          </button>
-        </div>
-      )}
+      <EntryListPagination
+        page={safePage}
+        totalPages={totalPages}
+        total={filtered.length}
+        pageSize={PAGE_SIZE}
+        onPage={setPage}
+      />
 
       {/* Entry Detail Modal */}
       {selected && (

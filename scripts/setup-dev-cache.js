@@ -1,15 +1,20 @@
 #!/usr/bin/env node
 /**
- * Permanent fix for "EPERM: operation not permitted, unlink .next" on Windows
- * when the project lives inside an OneDrive-synced folder.
+ * Permanent fix for OneDrive-related Node.js errors on Windows.
  *
- * Root cause: OneDrive holds file locks on .next files while uploading them.
- * Next.js dev server tries to delete/replace those locked files → EPERM.
+ * Problems solved:
+ *   1. "EPERM: operation not permitted, unlink .next"
+ *      OneDrive locks .next files while uploading → Next.js can't rebuild.
+ *      Fix: Junction .next → %LOCALAPPDATA%/gate-pass-app-next-cache
+ *           (OneDrive never follows junctions, so it never sees those files.)
  *
- * Fix: Create a Windows junction point at .next that points to a real
- * directory under %LOCALAPPDATA% (outside OneDrive's sync scope).
- * OneDrive does not follow junction points, so it never locks the build files.
- * Next.js sees .next as normal and works without any changes.
+ *   2. "UNKNOWN: unknown error, read" from node_modules
+ *      OneDrive Files On-Demand makes some node_modules files cloud-only
+ *      (placeholder on disk, real bytes in the cloud). Node.js can't read them.
+ *      Fix: attrib -U +P on the node_modules folder forces OneDrive to keep
+ *           every file fully downloaded locally (pinned = always available offline).
+ *           We cannot junction node_modules because npm removes junctions during
+ *           `npm install --reify`, which would recreate a real directory in OneDrive.
  *
  * Run automatically via the "predev" npm script before every `npm run dev`.
  */
@@ -20,52 +25,64 @@ const path = require('path');
 const os = require('os');
 
 const projectRoot = path.join(__dirname, '..');
+
+// ── 1. Junction .next → outside OneDrive ─────────────────────────────────────
+
 const nextInProject = path.join(projectRoot, '.next');
+const nextTarget = path.join(os.homedir(), 'AppData', 'Local', 'gate-pass-app-next-cache');
 
-// Build output goes here — outside OneDrive, never synced
-const buildTarget = path.join(
-  os.homedir(), 'AppData', 'Local', 'gate-pass-app-next-cache'
-);
+fs.mkdirSync(nextTarget, { recursive: true });
 
-// Ensure target directory exists
-fs.mkdirSync(buildTarget, { recursive: true });
-
-// If .next is already a junction/symlink pointing to the right place, skip
 if (fs.existsSync(nextInProject)) {
   try {
     const stat = fs.lstatSync(nextInProject);
     if (stat.isSymbolicLink()) {
-      const target = fs.readlinkSync(nextInProject);
-      if (target === buildTarget) {
-        console.log(`[predev] .next junction already set → ${buildTarget}`);
-        process.exit(0);
+      const current = fs.readlinkSync(nextInProject);
+      if (current === nextTarget) {
+        console.log(`[predev] .next junction already correct → ${nextTarget}`);
+      } else {
+        fs.rmSync(nextInProject, { recursive: true, force: true });
+        createJunction(nextInProject, nextTarget);
       }
-      // Wrong target — remove and recreate
-      fs.rmSync(nextInProject, { recursive: true, force: true });
     } else {
-      // Regular directory — remove it so we can create the junction
-      fs.rmSync(nextInProject, { recursive: true, force: true });
-      console.log('[predev] Removed regular .next directory');
+      // Regular directory — remove and replace with junction
+      try { fs.rmSync(nextInProject, { recursive: true, force: true }); } catch {
+        try { execSync(`rd /s /q "${nextInProject}"`, { shell: 'cmd.exe', stdio: 'pipe' }); } catch { /* ignore */ }
+      }
+      createJunction(nextInProject, nextTarget);
     }
   } catch {
-    // On Windows, lstatSync may throw for junction points in edge cases
-    // Try to remove and recreate
+    try { execSync(`rd /s /q "${nextInProject}"`, { shell: 'cmd.exe', stdio: 'pipe' }); } catch { /* ignore */ }
+    createJunction(nextInProject, nextTarget);
+  }
+} else {
+  createJunction(nextInProject, nextTarget);
+}
+
+function createJunction(link, target) {
+  if (process.platform === 'win32') {
+    execSync(`mklink /J "${link}" "${target}"`, { shell: 'cmd.exe', stdio: 'pipe' });
+  } else {
+    fs.symlinkSync(target, link, 'dir');
+  }
+  console.log(`[predev] ✓ Junction created: .next → ${target}`);
+}
+
+// ── 2. Pin node_modules so OneDrive keeps all files available offline ─────────
+
+if (process.platform === 'win32') {
+  const nodeModulesPath = path.join(projectRoot, 'node_modules');
+  if (fs.existsSync(nodeModulesPath)) {
     try {
-      execSync(`rd /s /q "${nextInProject}"`, { shell: 'cmd.exe', stdio: 'pipe' });
-    } catch { /* ignore */ }
+      // -U removes "Unpinned" (cloud-only) attribute; +P sets "Pinned" (always local)
+      execSync(`attrib -U +P "${nodeModulesPath}" /S /D`, {
+        shell: 'cmd.exe',
+        stdio: 'pipe',
+      });
+      console.log('[predev] ✓ node_modules pinned — OneDrive will keep all files local');
+    } catch {
+      // attrib fails silently on non-OneDrive drives — that is fine
+      console.log('[predev] node_modules attrib skipped (not an OneDrive path or no cloud files)');
+    }
   }
 }
-
-// Create the junction (does NOT require admin rights on Windows)
-if (process.platform === 'win32') {
-  execSync(`mklink /J "${nextInProject}" "${buildTarget}"`, {
-    shell: 'cmd.exe',
-    stdio: 'pipe',
-  });
-  console.log(`[predev] ✓ Junction created: .next → ${buildTarget}`);
-} else {
-  // macOS / Linux fallback: regular symlink
-  fs.symlinkSync(buildTarget, nextInProject, 'dir');
-  console.log(`[predev] ✓ Symlink created: .next → ${buildTarget}`);
-}
-

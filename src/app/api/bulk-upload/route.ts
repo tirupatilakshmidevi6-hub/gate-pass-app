@@ -16,6 +16,18 @@ type RowResult = {
 
 const REQUIRED_FIELDS = ['name', 'email', 'purpose', 'reporting_date', 'poc_name', 'contact_no', 'building_name'];
 
+// Normalise any date string to YYYY-MM-DD so it matches the dashboard's strict
+// string-equality filter (e.reporting_date === "YYYY-MM-DD").
+// Accepts: "YYYY-MM-DD" and ISO datetime strings ("YYYY-MM-DDT...").
+// Returns null for unrecognised/invalid formats so the row can be rejected.
+function normalizeDate(raw: string | undefined): string | null {
+  if (!raw) return null;
+  const s = raw.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  if (/^\d{4}-\d{2}-\d{2}T/.test(s)) return s.slice(0, 10);
+  return null;
+}
+
 // Delay between SMTP sends to avoid Gmail rate limiting (≤ 20 msgs/sec hard limit).
 // 200 ms ≈ 5 msgs/sec — well within Gmail's limits while keeping bulk upload fast.
 const INTER_SEND_DELAY_MS = 200;
@@ -60,14 +72,31 @@ export async function POST(req: NextRequest) {
       continue;
     }
 
+    // Normalise dates to YYYY-MM-DD before anything else so both the duplicate
+    // check and the DB insert use the same canonical format as single entries.
+    const normalizedReportingDate = normalizeDate(row.reporting_date);
+    if (!normalizedReportingDate) {
+      console.warn(`[BulkUpload] Row ${rowIndex}: invalid reporting_date format "${row.reporting_date}" — expected YYYY-MM-DD`);
+      failed.push({ name, email, success: false, error: `Invalid reporting_date format "${row.reporting_date}" — use YYYY-MM-DD (e.g. ${new Date().toISOString().slice(0, 10)})`, rowIndex });
+      continue;
+    }
+
+    const rawValidUntil = row.valid_until?.trim() || '';
+    const normalizedValidUntil = rawValidUntil ? normalizeDate(rawValidUntil) : undefined;
+    if (rawValidUntil && !normalizedValidUntil) {
+      console.warn(`[BulkUpload] Row ${rowIndex}: invalid valid_until format "${row.valid_until}" — expected YYYY-MM-DD`);
+      failed.push({ name, email, success: false, error: `Invalid valid_until format "${row.valid_until}" — use YYYY-MM-DD (e.g. ${new Date().toISOString().slice(0, 10)})`, rowIndex });
+      continue;
+    }
+
     // Duplicate check — same email + same reporting_date already exists
     let isDuplicate = false;
     try {
-      const existing = await checkDuplicateEntry(email, row.reporting_date.trim());
+      const existing = await checkDuplicateEntry(email, normalizedReportingDate);
       if (existing) {
         isDuplicate = true;
-        console.log(`[BulkUpload] Row ${rowIndex}: duplicate — entry already exists for ${email} on ${row.reporting_date}`);
-        skipped.push({ name, email, success: false, skipped: true, error: `Entry already exists for ${row.reporting_date}`, rowIndex });
+        console.log(`[BulkUpload] Row ${rowIndex}: duplicate — entry already exists for ${email} on ${normalizedReportingDate}`);
+        skipped.push({ name, email, success: false, skipped: true, error: `Entry already exists for ${normalizedReportingDate}`, rowIndex });
       }
     } catch (dupErr) {
       console.warn(`[BulkUpload] Row ${rowIndex}: duplicate check failed —`, dupErr instanceof Error ? dupErr.message : dupErr);
@@ -83,8 +112,8 @@ export async function POST(req: NextRequest) {
         mobile_number: row.mobile_number?.trim() || row.mobile?.trim() || undefined,
         role:          row.role?.trim()          || undefined,
         purpose:       row.purpose.trim(),
-        reporting_date: row.reporting_date.trim(),
-        valid_until:   row.valid_until?.trim()   || undefined,
+        reporting_date: normalizedReportingDate,
+        valid_until:   normalizedValidUntil ?? undefined,
         employee_id:   row.employee_id?.trim()   || undefined,
         poc_name:      row.poc_name.trim(),
         contact_no:    row.contact_no.trim(),
@@ -96,7 +125,7 @@ export async function POST(req: NextRequest) {
       // Unique constraint = duplicate slipped past the earlier check
       if (msg.toLowerCase().includes('unique') || msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('already exists')) {
         console.log(`[BulkUpload] Row ${rowIndex}: duplicate (DB constraint) for ${email}`);
-        skipped.push({ name, email, success: false, skipped: true, error: `Entry already exists for ${row.reporting_date}`, rowIndex });
+        skipped.push({ name, email, success: false, skipped: true, error: `Entry already exists for ${normalizedReportingDate}`, rowIndex });
       } else {
         console.error(`[BulkUpload] Row ${rowIndex}: DB entry creation FAILED for ${email} —`, msg);
         failed.push({ name, email, success: false, error: 'Could not save entry — please try again', rowIndex });

@@ -4,8 +4,75 @@ import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import {
   Users, CheckCircle, Clock, XCircle, CalendarDays,
-  MoreVertical, ChevronLeft, ChevronRight, UserPlus, Upload,
+  MoreVertical, ChevronRight, UserPlus, Upload,
 } from 'lucide-react';
+
+// ─── Pagination helpers ───────────────────────────────────────────────────────
+
+function getPageNumbers(current: number, total: number): (number | '...')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  if (current <= 4) return [1, 2, 3, 4, 5, '...', total];
+  if (current >= total - 3) return [1, '...', total - 4, total - 3, total - 2, total - 1, total];
+  return [1, '...', current - 1, current, current + 1, '...', total];
+}
+
+function PaginationBar({
+  page, totalPages, total, pageSize, onPage, onPageSize,
+}: {
+  page: number; totalPages: number; total: number; pageSize: number;
+  onPage: (p: number) => void; onPageSize: (ps: number) => void;
+}) {
+  const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const to   = Math.min(page * pageSize, total);
+  const nums = getPageNumbers(page, totalPages);
+
+  return (
+    <div className="px-4 sm:px-6 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="flex items-center gap-3">
+        <span className="text-xs text-gray-500">
+          Showing {from} to {to} of {total} entries
+        </span>
+        <select
+          value={pageSize}
+          onChange={(e) => { onPageSize(Number(e.target.value)); onPage(1); }}
+          className="text-xs border border-gray-300 rounded-lg px-2 py-1 bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          {[5, 10, 25, 50].map((n) => <option key={n} value={n}>{n} per page</option>)}
+        </select>
+      </div>
+      {totalPages > 1 && (
+        <div className="flex items-center gap-1">
+          {([
+            { label: '«', action: () => onPage(1),              disabled: page === 1 },
+            { label: '‹', action: () => onPage(page - 1),       disabled: page === 1 },
+          ] as const).map(({ label, action, disabled }) => (
+            <button key={label} onClick={action} disabled={disabled}
+              className="w-8 h-8 rounded-lg border border-gray-300 text-gray-600 text-xs font-semibold hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center">
+              {label}
+            </button>
+          ))}
+          {nums.map((p, i) =>
+            p === '...'
+              ? <span key={`d${i}`} className="w-8 h-8 flex items-center justify-center text-gray-400 text-xs select-none">…</span>
+              : <button key={p} onClick={() => onPage(p as number)}
+                  className={`w-8 h-8 rounded-lg text-xs font-semibold transition-colors ${p === page ? 'bg-blue-600 text-white' : 'border border-gray-300 text-gray-600 hover:bg-gray-50'}`}>
+                  {p}
+                </button>
+          )}
+          {([
+            { label: '›', action: () => onPage(page + 1),        disabled: page === totalPages },
+            { label: '»', action: () => onPage(totalPages),      disabled: page === totalPages },
+          ] as const).map(({ label, action, disabled }) => (
+            <button key={label} onClick={action} disabled={disabled}
+              className="w-8 h-8 rounded-lg border border-gray-300 text-gray-600 text-xs font-semibold hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center">
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 import { getRoleStyle } from '@/lib/constants';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -149,8 +216,6 @@ function LineChart({ data }: { data: number[] }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-const PAGE_SIZE = 5;
-
 export default function DashboardPage() {
   const today = toISO(new Date());
 
@@ -160,6 +225,7 @@ export default function DashboardPage() {
   const [userRole, setUserRole] = useState<'admin' | 'facilities' | null>(null);
   const [userName, setUserName] = useState('Admin');
   const [page,     setPage]     = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     Promise.all([
@@ -174,7 +240,7 @@ export default function DashboardPage() {
   }, []);
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { setPage(1); }, [date]);
+  useEffect(() => { setPage(1); }, [date, pageSize]);
 
   // ── Filtered entries for selected date
   const filtered = useMemo(() =>
@@ -232,8 +298,8 @@ export default function DashboardPage() {
   );
 
   // ── Pagination
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const paginated  = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   // ── Greeting
   const hour = new Date().getHours();
@@ -359,7 +425,7 @@ export default function DashboardPage() {
                     return (
                       <tr key={e.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-3 sm:px-4 py-3 text-gray-400 text-xs font-medium">
-                          {(page - 1) * PAGE_SIZE + idx + 1}
+                          {(page - 1) * pageSize + idx + 1}
                         </td>
                         <td className="px-3 sm:px-4 py-3">
                           <div className="flex items-center gap-2">
@@ -402,33 +468,14 @@ export default function DashboardPage() {
             </div>
 
             {/* Pagination */}
-            {filtered.length > PAGE_SIZE && (
-              <div className="px-6 py-3 border-t border-gray-100 flex items-center justify-center gap-2">
-                <button
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <ChevronLeft size={14} />
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                  <button key={p} onClick={() => setPage(p)}
-                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-                      p === page ? 'bg-blue-600 text-white' : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    {p}
-                  </button>
-                ))}
-                <button
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                  className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <ChevronRight size={14} />
-                </button>
-              </div>
-            )}
+            <PaginationBar
+              page={page}
+              totalPages={totalPages}
+              total={filtered.length}
+              pageSize={pageSize}
+              onPage={setPage}
+              onPageSize={setPageSize}
+            />
           </div>
 
           {/* ── Entry Summary ── */}

@@ -4,6 +4,73 @@ import { useCallback, useEffect, useState } from 'react';
 import { CheckCircle, XCircle, Clock, ChevronRight, Search } from 'lucide-react';
 import { getRoleStyle } from '@/lib/constants';
 
+// ─── Pagination helpers ───────────────────────────────────────────────────────
+
+function getPageNumbers(current: number, total: number): (number | '...')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  if (current <= 4) return [1, 2, 3, 4, 5, '...', total];
+  if (current >= total - 3) return [1, '...', total - 4, total - 3, total - 2, total - 1, total];
+  return [1, '...', current - 1, current, current + 1, '...', total];
+}
+
+function PaginationBar({
+  page, totalPages, total, pageSize, onPage, onPageSize,
+}: {
+  page: number; totalPages: number; total: number; pageSize: number;
+  onPage: (p: number) => void; onPageSize: (ps: number) => void;
+}) {
+  const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const to   = Math.min(page * pageSize, total);
+  const nums = getPageNumbers(page, totalPages);
+
+  return (
+    <div className="px-4 sm:px-6 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="flex items-center gap-3">
+        <span className="text-xs text-gray-500">
+          Showing {from} to {to} of {total} entries
+        </span>
+        <select
+          value={pageSize}
+          onChange={(e) => { onPageSize(Number(e.target.value)); onPage(1); }}
+          className="text-xs border border-gray-300 rounded-lg px-2 py-1 bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          {[10, 25, 50].map((n) => <option key={n} value={n}>{n} per page</option>)}
+        </select>
+      </div>
+      {totalPages > 1 && (
+        <div className="flex items-center gap-1">
+          {([
+            { label: '«', action: () => onPage(1),          disabled: page === 1 },
+            { label: '‹', action: () => onPage(page - 1),   disabled: page === 1 },
+          ] as const).map(({ label, action, disabled }) => (
+            <button key={label} onClick={action} disabled={disabled}
+              className="w-8 h-8 rounded-lg border border-gray-300 text-gray-600 text-xs font-semibold hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center">
+              {label}
+            </button>
+          ))}
+          {nums.map((p, i) =>
+            p === '...'
+              ? <span key={`d${i}`} className="w-8 h-8 flex items-center justify-center text-gray-400 text-xs select-none">…</span>
+              : <button key={p} onClick={() => onPage(p as number)}
+                  className={`w-8 h-8 rounded-lg text-xs font-semibold transition-colors ${p === page ? 'bg-blue-600 text-white' : 'border border-gray-300 text-gray-600 hover:bg-gray-50'}`}>
+                  {p}
+                </button>
+          )}
+          {([
+            { label: '›', action: () => onPage(page + 1),    disabled: page === totalPages },
+            { label: '»', action: () => onPage(totalPages),  disabled: page === totalPages },
+          ] as const).map(({ label, action, disabled }) => (
+            <button key={label} onClick={action} disabled={disabled}
+              className="w-8 h-8 rounded-lg border border-gray-300 text-gray-600 text-xs font-semibold hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center">
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 type Entry = {
   id: string; name: string; email: string | null; mobile_number: string | null;
   role: string | null; purpose: string; reporting_date: string;
@@ -44,6 +111,8 @@ export default function FacilitiesApprovals({ userRole }: { userRole: string }) 
   const [tab,         setTab]         = useState<Tab>('pending');
   const [toast,       setToast]       = useState<{ type: 'approve' | 'reject'; email: string | null } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [page,        setPage]        = useState(1);
+  const [pageSize,    setPageSize]    = useState(10);
 
   const fetchEntries = useCallback(async () => {
     setLoading(true);
@@ -67,6 +136,7 @@ export default function FacilitiesApprovals({ userRole }: { userRole: string }) 
     setToast({ type: action, email });
     setProcessing(null);
     setTab(action === 'approve' ? 'approved' : 'rejected');
+    setPage(1);
     setTimeout(() => setToast(null), 6000);
   }
 
@@ -83,6 +153,12 @@ export default function FacilitiesApprovals({ userRole }: { userRole: string }) 
     { key: 'approved' as Tab, label: 'Approved', count: approved.length, active: 'border-green-500 text-green-700 bg-green-50' },
     { key: 'rejected' as Tab, label: 'Rejected', count: rejected.length, active: 'border-red-500 text-red-700 bg-red-50' },
   ];
+
+  // Active list for the current tab — used for pagination
+  const activeList = tab === 'pending' ? pending : tab === 'approved' ? approved : rejected;
+  const totalPages = Math.max(1, Math.ceil(activeList.length / pageSize));
+  const safePage   = Math.min(page, totalPages);
+  const paginated  = activeList.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   if (loading) return <div className="text-sm text-gray-400 p-4">Loading…</div>;
 
@@ -120,7 +196,7 @@ export default function FacilitiesApprovals({ userRole }: { userRole: string }) 
 
       <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-full sm:w-fit overflow-x-auto">
         {tabs.map((t) => (
-          <button key={t.key} onClick={() => setTab(t.key)}
+          <button key={t.key} onClick={() => { setTab(t.key); setPage(1); }}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === t.key ? t.active + ' shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
             {t.label}
             <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${tab === t.key ? 'bg-white/70' : 'bg-gray-200 text-gray-600'}`}>{t.count}</span>
@@ -145,7 +221,7 @@ export default function FacilitiesApprovals({ userRole }: { userRole: string }) 
               <>
                 {/* Mobile card view */}
                 <div className="sm:hidden divide-y divide-gray-100">
-                  {pending.map((e) => (
+                  {paginated.map((e) => (
                     <div key={e.id} className="p-4 space-y-3">
                       <div className="flex items-center gap-3">
                         {e.photo_url
@@ -194,7 +270,7 @@ export default function FacilitiesApprovals({ userRole }: { userRole: string }) 
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      {pending.map((e) => (
+                      {paginated.map((e) => (
                         <tr key={e.id} className="hover:bg-gray-50">
                           <td className="px-4 py-3">
                             {e.photo_url
@@ -245,7 +321,7 @@ export default function FacilitiesApprovals({ userRole }: { userRole: string }) 
               <>
                 {/* Mobile card view */}
                 <div className="sm:hidden divide-y divide-gray-100">
-                  {approved.map((e) => (
+                  {paginated.map((e) => (
                     <div key={e.id} className="p-4 space-y-2.5">
                       <div className="flex items-center gap-3">
                         {e.photo_url
@@ -275,9 +351,9 @@ export default function FacilitiesApprovals({ userRole }: { userRole: string }) 
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50"><tr>{['#','Photo','Name','Role','Purpose','Date','Building','Pass ID'].map((h) => <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>)}</tr></thead>
                     <tbody className="divide-y divide-gray-100">
-                      {approved.map((e, i) => (
+                      {paginated.map((e, i) => (
                         <tr key={e.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 text-gray-400 text-xs">{i + 1}</td>
+                          <td className="px-4 py-3 text-gray-400 text-xs">{(safePage - 1) * pageSize + i + 1}</td>
                           <td className="px-4 py-3">{e.photo_url ? <img src={e.photo_url} alt="" className="w-9 h-9 rounded-full object-cover border border-gray-200" /> : <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs font-bold">{e.name.charAt(0)}</div>}</td>
                           <td className="px-4 py-3 font-medium text-gray-900">{e.name}</td>
                           <td className="px-4 py-3"><RoleBadge role={e.role} /></td>
@@ -304,7 +380,7 @@ export default function FacilitiesApprovals({ userRole }: { userRole: string }) 
               <>
                 {/* Mobile card view */}
                 <div className="sm:hidden divide-y divide-gray-100">
-                  {rejected.map((e) => (
+                  {paginated.map((e) => (
                     <div key={e.id} className="p-4 space-y-2.5">
                       <div className="flex items-center gap-3">
                         <div className="w-11 h-11 rounded-full bg-red-100 flex items-center justify-center text-red-600 font-bold flex-shrink-0">{e.name.charAt(0)}</div>
@@ -326,9 +402,9 @@ export default function FacilitiesApprovals({ userRole }: { userRole: string }) 
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50"><tr>{['#','Name','Email','Role','Purpose','Date'].map((h) => <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>)}</tr></thead>
                     <tbody className="divide-y divide-gray-100">
-                      {rejected.map((e, i) => (
+                      {paginated.map((e, i) => (
                         <tr key={e.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 text-gray-400 text-xs">{i + 1}</td>
+                          <td className="px-4 py-3 text-gray-400 text-xs">{(safePage - 1) * pageSize + i + 1}</td>
                           <td className="px-4 py-3 font-medium text-gray-900">{e.name}</td>
                           <td className="px-4 py-3 text-gray-500 text-xs">{e.email ?? '—'}</td>
                           <td className="px-4 py-3"><RoleBadge role={e.role} /></td>
@@ -342,6 +418,18 @@ export default function FacilitiesApprovals({ userRole }: { userRole: string }) 
               </>
             )}
           </>
+        )}
+
+        {/* Pagination — shared across all tabs */}
+        {activeList.length > 0 && (
+          <PaginationBar
+            page={safePage}
+            totalPages={totalPages}
+            total={activeList.length}
+            pageSize={pageSize}
+            onPage={setPage}
+            onPageSize={(ps) => { setPageSize(ps); setPage(1); }}
+          />
         )}
       </div>
 
