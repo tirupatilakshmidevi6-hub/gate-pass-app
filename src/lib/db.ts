@@ -414,12 +414,51 @@ export async function getAdminIds(): Promise<string[]> {
 
 // ─── Pass expiry ──────────────────────────────────────────────────────────────
 
+const MONTH_MAP: Record<string, string> = {
+  jan:'01', feb:'02', mar:'03', apr:'04', may:'05', jun:'06',
+  jul:'07', aug:'08', sep:'09', oct:'10', nov:'11', dec:'12',
+};
+
+function parseDateToISO(s: string): string | null {
+  const t = s.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t;
+  const dmy = t.match(/^(\d{1,2})[-/]([A-Za-z]{3})[-/](\d{4})$/);
+  if (dmy) {
+    const m = MONTH_MAP[dmy[2].toLowerCase()];
+    if (m) return `${dmy[3]}-${m}-${dmy[1].padStart(2, '0')}`;
+  }
+  const dmn = t.match(/^(\d{1,2})[-/](\d{2})[-/](\d{4})$/);
+  if (dmn) return `${dmn[3]}-${dmn[2]}-${dmn[1].padStart(2, '0')}`;
+  return null;
+}
+
 export async function updateExpiredPasses(): Promise<number> {
   const today = new Date().toISOString().split('T')[0];
+
+  // Restore entries that were incorrectly expired due to non-ISO date string comparison.
+  // e.g. '14-Sep-2026' < '2026-09-07' is TRUE lexicographically but wrong semantically.
+  const { data: expiredRows } = await supabase
+    .from('entries')
+    .select('id, valid_until')
+    .eq('status', 'Expired')
+    .not('valid_until', 'is', null);
+
+  const toRestore: string[] = [];
+  for (const row of expiredRows ?? []) {
+    const iso = parseDateToISO(String(row.valid_until));
+    if (iso && iso >= today) toRestore.push(String(row.id));
+  }
+  if (toRestore.length > 0) {
+    await supabase.from('entries').update({ status: 'Approved' }).in('id', toRestore);
+    console.log(`[DB] Restored ${toRestore.length} incorrectly-expired entries`);
+  }
+
+  // Expire entries where valid_until (ISO YYYY-MM-DD only) is strictly before today.
   const { data, error } = await supabase
     .from('entries')
     .update({ status: 'Expired' })
     .lt('valid_until', today)
+    .like('valid_until', '____-__-__')
     .eq('status', 'Approved')
     .select('id');
   if (error) { console.error('[DB] updateExpiredPasses:', error.message); return 0; }

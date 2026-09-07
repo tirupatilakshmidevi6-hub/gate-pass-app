@@ -18,13 +18,24 @@ const REQUIRED_FIELDS = ['name', 'email', 'purpose', 'reporting_date', 'poc_name
 
 // Normalise any date string to YYYY-MM-DD so it matches the dashboard's strict
 // string-equality filter (e.reporting_date === "YYYY-MM-DD").
-// Accepts: "YYYY-MM-DD" and ISO datetime strings ("YYYY-MM-DDT...").
+// Accepts: YYYY-MM-DD, ISO datetime, DD-Mon-YYYY, DD/Mon/YYYY, DD-MM-YYYY, DD/MM/YYYY.
 // Returns null for unrecognised/invalid formats so the row can be rejected.
+const _BULK_MONTH: Record<string, string> = {
+  jan:'01', feb:'02', mar:'03', apr:'04', may:'05', jun:'06',
+  jul:'07', aug:'08', sep:'09', oct:'10', nov:'11', dec:'12',
+};
 function normalizeDate(raw: string | undefined): string | null {
   if (!raw) return null;
   const s = raw.trim();
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
   if (/^\d{4}-\d{2}-\d{2}T/.test(s)) return s.slice(0, 10);
+  const dmy = s.match(/^(\d{1,2})[-/]([A-Za-z]{3})[-/](\d{4})$/);
+  if (dmy) {
+    const m = _BULK_MONTH[dmy[2].toLowerCase()];
+    if (m) return `${dmy[3]}-${m}-${dmy[1].padStart(2, '0')}`;
+  }
+  const dmn = s.match(/^(\d{1,2})[-/](\d{2})[-/](\d{4})$/);
+  if (dmn) return `${dmn[3]}-${dmn[2]}-${dmn[1].padStart(2, '0')}`;
   return null;
 }
 
