@@ -532,4 +532,39 @@ html.dark .summary-card:hover {
   .nxt-bot-enter { animation: none !important; opacity: 1 !important; transform: none !important; }
   .nxt-eye-group { transition: none !important; }
   .nxt-eye-group.blink { transform: none !important; }
+  .login-panel-left,
+  .login-panel-right { animation: none !important; opacity: 1 !important; transform: none !important; }
+  .login-shake { animation: none !important; }
+  .login-blob, .login-blob-2, .login-blob-3 { animation: none !important; }
 }
+
+/* ─── Login Page ──────────────────────────────────────────────────────────────── */
+
+@keyframes loginSlideLeft {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes loginSlideRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes loginShake {
+  0%, 100% { transform: translateX(0); }
+  16%      { transform: translateX(-5px); }
+  33%      { transform: translateX(5px); }
+  50%      { transform: translateX(-3px); }
+  67%      { transform: translateX(3px); }
+  83%      { transform: translateX(-1px); }
+}
+@keyframes loginBlobDrift {
+  0%, 100% { transform: translate(0, 0); }
+  33%      { transform: translate(20px, -14px); }
+  66%      { transform: translate(-14px, 10px); }
+}
+
+.login-panel-left  { animation: loginSlideLeft  0.60s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.login-panel-right { animation: loginSlideRight 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.07s both; }
+.login-shake       { animation: loginShake 0.32s ease-in-out; }
+.login-blob        { animation: loginBlobDrift 14s ease-in-out infinite; }
+.login-blob-2      { animation: loginBlobDrift 18s ease-in-out infinite reverse; animation-delay: -6s; }
+.login-blob-3      { animation: loginBlobDrift 22s ease-in-out infinite; animation-delay: -3s; }
