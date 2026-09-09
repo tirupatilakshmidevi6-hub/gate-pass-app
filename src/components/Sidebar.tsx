@@ -13,28 +13,28 @@ type Role = string;
 type NavItem = { label: string; href: string; icon: React.ElementType };
 
 const ADMIN_NAV: NavItem[] = [
-  { label: 'Dashboard',       href: '/',                   icon: LayoutDashboard },
+  { label: 'Dashboard',        href: '/',                   icon: LayoutDashboard },
   { label: 'Create Gate Pass', href: '/create-gate-pass',  icon: FilePlus2 },
-  { label: 'Entry List',      href: '/entry-list',         icon: List },
-  { label: 'Reports',         href: '/reports',            icon: BarChart2 },
-  { label: 'Activity Log',    href: '/activity',           icon: Activity },
-  { label: 'Users',           href: '/users',              icon: Users },
-  { label: 'Settings',        href: '/settings',           icon: Settings },
+  { label: 'Gate Pass History',href: '/entry-list',         icon: List },
+  { label: 'Reports',          href: '/reports',            icon: BarChart2 },
+  { label: 'Activity Log',     href: '/activity',           icon: Activity },
+  { label: 'Users',            href: '/users',              icon: Users },
+  { label: 'Settings',         href: '/settings',           icon: Settings },
 ];
 
 const TA_NAV: NavItem[] = [
-  { label: 'Dashboard',       href: '/',                   icon: LayoutDashboard },
+  { label: 'Dashboard',        href: '/',                   icon: LayoutDashboard },
   { label: 'Create Gate Pass', href: '/create-gate-pass',  icon: FilePlus2 },
-  { label: 'Entry List',      href: '/entry-list',         icon: List },
-  { label: 'Reports',         href: '/reports',            icon: BarChart2 },
-  { label: 'Activity Log',    href: '/activity',           icon: Activity },
+  { label: 'Gate Pass History',href: '/entry-list',         icon: List },
+  { label: 'Reports',          href: '/reports',            icon: BarChart2 },
+  { label: 'Activity Log',     href: '/activity',           icon: Activity },
 ];
 
 const FACILITIES_NAV: NavItem[] = [
-  { label: 'Dashboard',  href: '/',            icon: LayoutDashboard },
-  { label: 'Approvals',  href: '/approvals',   icon: Building2 },
-  { label: 'Entry List', href: '/entry-list',  icon: List },
-  { label: 'Reports',    href: '/reports',     icon: BarChart2 },
+  { label: 'Dashboard',        href: '/',           icon: LayoutDashboard },
+  { label: 'Approvals',        href: '/approvals',  icon: Building2 },
+  { label: 'Gate Pass History',href: '/entry-list', icon: List },
+  { label: 'Reports',          href: '/reports',    icon: BarChart2 },
 ];
 
 const BOTTOM_NAV_ADMIN: NavItem[] = [
@@ -115,32 +115,33 @@ function SidebarPanel({
 
   return (
     <aside
-      className={`${isMobile ? 'w-60' : isCollapsedMode ? 'w-14' : 'w-44'} h-full bg-gray-900 text-white flex flex-col overflow-y-auto overflow-x-hidden transition-all duration-300 ease-in-out`}
+      className={`${isMobile ? 'w-60' : isCollapsedMode ? 'w-14' : 'w-44'} h-full text-white flex flex-col overflow-y-auto overflow-x-hidden transition-all duration-300 ease-in-out`}
+      style={{ backgroundColor: '#0B1324' }}
     >
       {/* ── Header: logo + toggle ── */}
-      <div className={`border-b border-gray-700 flex items-center ${isCollapsedMode ? 'px-2 py-2.5 justify-center flex-col gap-2' : 'px-3 py-2 justify-between'}`}>
+      <div className={`border-b flex items-center ${isCollapsedMode ? 'px-2 py-3 justify-center flex-col gap-2' : 'px-3 py-3 justify-between'}`} style={{ borderColor: '#1A2540' }}>
         {isCollapsedMode ? (
-          <Link href="/" className="w-8 h-8 bg-white rounded-md flex items-center justify-center hover:opacity-90 transition-opacity flex-shrink-0">
-            <Shield size={16} className="text-blue-700" />
+          <Link href="/" className="w-9 h-9 rounded-xl flex items-center justify-center hover:opacity-90 transition-opacity flex-shrink-0" style={{ background: 'linear-gradient(135deg,#146EF5,#2563EB)' }}>
+            <Shield size={17} className="text-white" />
           </Link>
         ) : (
-          <Link href="/" className="inline-block" onClick={isMobile ? onClose : undefined}>
-            <div className="bg-white rounded-md px-2 py-1 hover:opacity-90 transition-opacity">
-              <img
-                src="https://www.image2url.com/r2/default/images/1779254824307-0fca63d9-e1eb-4ccf-bfb4-4c663ca4ae5e.jpeg"
-                alt="NxtWave"
-                className="h-4 w-auto object-contain"
-              />
+          <Link href="/" className="flex items-center gap-2.5 group min-w-0" onClick={isMobile ? onClose : undefined}>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-105" style={{ background: 'linear-gradient(135deg,#146EF5,#2563EB)' }}>
+              <Shield size={15} className="text-white" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[13px] font-bold text-white leading-tight tracking-tight">NxtWave</div>
+              <div className="text-[9.5px] leading-tight" style={{ color: '#6B85B0' }}>Gate Pass System</div>
             </div>
           </Link>
         )}
 
         {isMobile ? (
-          <button onClick={onClose} className="p-1.5 bg-gray-700 rounded-lg text-gray-300 hover:text-white transition-colors" aria-label="Close menu">
+          <button onClick={onClose} className="p-1.5 rounded-lg text-gray-400 hover:text-white transition-colors flex-shrink-0" style={{ backgroundColor: '#1A2540' }} aria-label="Close menu">
             <X size={18} />
           </button>
         ) : onToggle && (
-          <button onClick={onToggle} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0" aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+          <button onClick={onToggle} className="p-1.5 text-gray-500 hover:text-white rounded-lg transition-colors flex-shrink-0" style={{ ['--hover-bg' as string]: '#1A2540' }} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
             {collapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
           </button>
         )}
@@ -158,10 +159,11 @@ function SidebarPanel({
               <div key={href} className="relative group mb-0.5">
                 <Link href={href}
                   className={`flex items-center justify-center p-2.5 rounded-lg transition-all duration-200 ${
-                    active
-                      ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
-                      : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                    active ? 'nav-active-glow text-white' : 'text-gray-500 hover:text-white'
                   }`}
+                  style={!active ? { ['--hover-bg' as string]: '#1A2540' } : undefined}
+                  onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.backgroundColor = '#1A2540'; }}
+                  onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.backgroundColor = ''; }}
                 >
                   <Icon size={18} className="nav-icon" />
                   {hasPendingBadge && (
@@ -179,10 +181,10 @@ function SidebarPanel({
           return (
             <Link key={href} href={href} onClick={isMobile ? onClose : undefined}
               className={`nav-link group relative flex items-center gap-2.5 mx-1.5 px-2.5 py-2 text-sm rounded-lg transition-all duration-200 ${
-                active
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                active ? 'nav-active-glow text-white' : 'text-gray-400 hover:text-white'
               }`}
+              onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.backgroundColor = '#1A2540'; }}
+              onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.backgroundColor = ''; }}
             >
               {active && (
                 <span className="absolute left-0 top-1 bottom-1 w-[3px] bg-white/40 rounded-r-full" />
@@ -203,38 +205,41 @@ function SidebarPanel({
       {/* ── Promo banner (hidden when collapsed on desktop) ── */}
       {!isCollapsedMode && (
         <div className="px-3 pb-2">
-          <div className="flex items-center gap-2 bg-blue-900/40 rounded-lg px-3 py-2">
-            <Shield size={13} className="text-blue-400 flex-shrink-0" />
-            <p className="text-[10px] text-blue-300 leading-tight">Secure Every Entry</p>
+          <div className="flex items-center gap-2 rounded-lg px-3 py-2" style={{ backgroundColor: 'rgba(20,110,245,0.12)', border: '1px solid rgba(20,110,245,0.2)' }}>
+            <Shield size={13} style={{ color: '#60A5FA' }} className="flex-shrink-0" />
+            <p className="text-[10px] leading-tight" style={{ color: '#93C5FD' }}>Secure Every Entry</p>
           </div>
         </div>
       )}
 
       {/* ── User + Logout ── */}
       {isCollapsedMode ? (
-        <div className="border-t border-gray-700 py-3 flex flex-col items-center gap-1 px-1.5">
+        <div className="py-3 flex flex-col items-center gap-1 px-1.5" style={{ borderTop: '1px solid #1A2540' }}>
           <div className="relative group">
-            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ background: 'linear-gradient(135deg,#146EF5,#2563EB)' }}>
               {userName ? userName.charAt(0).toUpperCase() : '?'}
             </div>
             <NavTooltip label={userName ?? ''} />
           </div>
           <div className="relative group mt-1">
-            <button onClick={onLogout} className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors" aria-label="Sign out">
+            <button onClick={onLogout} className="p-2 text-gray-500 hover:text-white rounded-lg transition-colors"
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '#1A2540'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = ''; }}
+              aria-label="Sign out">
               <LogOut size={16} />
             </button>
             <NavTooltip label="Sign out" />
           </div>
         </div>
       ) : (
-        <div className="border-t border-gray-700 px-4 py-4 space-y-2">
+        <div className="px-4 py-4 space-y-2" style={{ borderTop: '1px solid #1A2540' }}>
           {userName && (
             <div>
               <p className="text-xs text-white font-medium truncate">{userName}</p>
               <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${badge.cls}`}>{badge.label}</span>
             </div>
           )}
-          <button onClick={onLogout} className="flex items-center gap-2 text-sm text-gray-400 hover:text-white w-full mt-1 transition-colors">
+          <button onClick={onLogout} className="flex items-center gap-2 text-sm text-gray-500 hover:text-white w-full mt-1 transition-colors">
             <LogOut size={15} /><span>Sign out</span>
           </button>
         </div>

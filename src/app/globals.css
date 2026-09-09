@@ -1,5 +1,22 @@
 @import "tailwindcss";
 
+/* ─── Design Tokens ──────────────────────────────────────────────────────────── */
+
+:root {
+  --brand:         #146EF5;
+  --brand-dark:    #0F52DA;
+  --brand-light:   #3B82F6;
+  --navy:          #0B1324;
+  --navy-border:   #1A2540;
+  --bg-page:       #F5F8FC;
+  --bg-soft:       #EEF5FF;
+  --text:          #111827;
+  --text-secondary:#64748B;
+  --border:        #E5EAF1;
+  --shadow-card:   0 2px 16px rgba(0,56,179,0.06), 0 1px 4px rgba(0,0,0,0.04);
+  --shadow-hover:  0 8px 30px rgba(20,110,245,0.10), 0 2px 8px rgba(0,0,0,0.06);
+}
+
 /* ─── Base ─────────────────────────────────────────────────────────────────── */
 
 html {
@@ -8,7 +25,7 @@ html {
 }
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', Arial, Helvetica, sans-serif;
   -webkit-overflow-scrolling: touch;
   overflow-x: hidden;
   min-font-size: 14px;
@@ -32,6 +49,76 @@ a, button, [role="button"] {
 /* Minimum body text on mobile */
 @media (max-width: 640px) {
   p, span, td, th, li { font-size: max(14px, 1em); }
+}
+
+/* ─── Page background ────────────────────────────────────────────────────────── */
+
+.gp-bg {
+  background: linear-gradient(135deg, #F8FAFF 0%, #F4F7FF 50%, #F8FAFC 100%);
+}
+html.dark .gp-bg { background: #0B1220; }
+
+/* ─── Sidebar brand ──────────────────────────────────────────────────────────── */
+
+.nav-active-glow {
+  background: linear-gradient(135deg, #146EF5 0%, #2563EB 100%);
+  box-shadow: 0 0 18px rgba(20, 110, 245, 0.38), 0 2px 8px rgba(20, 110, 245, 0.25);
+}
+.sidebar-hover-bg { background-color: #1A2540; }
+
+/* ─── Stat card tints ────────────────────────────────────────────────────────── */
+
+.stat-tint-blue  { background: linear-gradient(135deg, #ffffff 0%, #EEF5FF 100%); border-color: #BFDBFE !important; }
+.stat-tint-green { background: linear-gradient(135deg, #ffffff 0%, #F0FDF4 100%); border-color: #BBF7D0 !important; }
+.stat-tint-amber { background: linear-gradient(135deg, #ffffff 0%, #FFFBEB 100%); border-color: #FDE68A !important; }
+.stat-tint-red   { background: linear-gradient(135deg, #ffffff 0%, #FFF5F5 100%); border-color: #FECACA !important; }
+
+html.dark .stat-tint-blue,
+html.dark .stat-tint-green,
+html.dark .stat-tint-amber,
+html.dark .stat-tint-red {
+  background: #1e293b;
+  border-color: #334155 !important;
+}
+
+/* ─── Bot animations ─────────────────────────────────────────────────────────── */
+
+@keyframes botFloat {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-5px); }
+}
+@keyframes botEntrance {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.nxt-bot-float {
+  animation: botFloat 3s ease-in-out infinite;
+  will-change: transform;
+}
+.nxt-bot-enter {
+  animation: botEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Bot eye group — blink via scaleY */
+.nxt-eye-group {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.11s ease-in-out;
+}
+.nxt-eye-group.blink {
+  transform: scaleY(0.06);
+}
+
+/* Bot hover lift */
+.nxt-bot-enter:hover {
+  transform: translateY(-3px);
+  transition: transform 0.2s ease;
+}
+.nxt-bot-float:hover {
+  animation-play-state: paused;
+  transform: translateY(-3px);
+  transition: transform 0.2s ease;
 }
 
 /* ─── Component utilities ───────────────────────────────────────────────────── */
@@ -441,4 +528,8 @@ html.dark .summary-card:hover {
   .stat-card:hover,
   .summary-card:hover { transform: none !important; box-shadow: inherit !important; }
   .nav-icon { transition: none !important; }
+  .nxt-bot-float { animation: none !important; }
+  .nxt-bot-enter { animation: none !important; opacity: 1 !important; transform: none !important; }
+  .nxt-eye-group { transition: none !important; }
+  .nxt-eye-group.blink { transform: none !important; }
 }

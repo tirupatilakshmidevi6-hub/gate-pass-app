@@ -11,7 +11,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/create-gate-pass':   'Create Gate Pass',
   '/new-entry':          'New Entry',
   '/bulk-upload':        'Bulk Upload',
-  '/entry-list':         'Entry List',
+  '/entry-list':         'Gate Pass History',
   '/reports':            'Reports',
   '/settings':           'Settings',
   '/approvals':          'Approvals',

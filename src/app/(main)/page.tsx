@@ -6,6 +6,7 @@ import {
   Users, CheckCircle, Clock, XCircle, CalendarDays,
   MoreVertical, ChevronRight, UserPlus, Upload,
 } from 'lucide-react';
+import NxtBot from '@/components/NxtBot';
 
 // ─── Pagination helpers ───────────────────────────────────────────────────────
 
@@ -314,13 +315,16 @@ export default function DashboardPage() {
 
       {/* ── Greeting + Date picker ── */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 animate-fade-in-up" style={{ animationDelay: '0ms' }}>
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-            {greeting}, {userName} 👋
-          </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Gate entries {isToday ? 'today' : `on ${date}`}.
-          </p>
+        <div className="flex items-center gap-4">
+          <NxtBot size={56} float className="hidden sm:block" />
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+              {greeting}, {userName}!
+            </h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Gate entries {isToday ? 'today' : `on ${date}`}.
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <CalendarDays size={15} className="text-gray-400 flex-shrink-0" />
@@ -353,22 +357,22 @@ export default function DashboardPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 animate-fade-in-up" style={{ animationDelay: '70ms' }}>
             <StatCard
               label="Total Entries Today" value={total}
-              change={pctChange(total, yTotal)}
+              change={pctChange(total, yTotal)} variant="blue"
               icon={<div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0"><Users size={22} className="text-blue-600" /></div>}
             />
             <StatCard
               label="Approved Today" value={approved}
-              change={pctChange(approved, yApproved)}
+              change={pctChange(approved, yApproved)} variant="green"
               icon={<div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0"><CheckCircle size={22} className="text-green-600" /></div>}
             />
             <StatCard
               label="Pending Approval" value={pending}
-              change={pctChange(pending, yPending)}
+              change={pctChange(pending, yPending)} variant="amber"
               icon={<div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0"><Clock size={22} className="text-orange-500" /></div>}
             />
             <StatCard
               label="Rejected Today" value={rejected}
-              change={pctChange(rejected, yRejected)}
+              change={pctChange(rejected, yRejected)} variant="red"
               icon={<div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0"><XCircle size={22} className="text-red-500" /></div>}
             />
           </div>
@@ -402,15 +406,13 @@ export default function DashboardPage() {
                 <tbody className="divide-y divide-gray-100">
                   {paginated.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="px-4 py-14 text-center">
+                      <td colSpan={9} className="px-4 py-10 text-center">
                         <div className="flex flex-col items-center gap-3">
-                          <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center">
-                            <CalendarDays size={22} className="text-gray-300" />
-                          </div>
+                          <NxtBot size={52} />
                           <div>
                             <p className="text-sm font-medium text-gray-500">No entries for this date</p>
                             {userRole === 'admin' && (
-                              <Link href="/new-entry" className="text-xs text-blue-600 hover:underline mt-1 inline-block">+ Add a new entry</Link>
+                              <Link href="/create-gate-pass" className="text-xs text-blue-600 hover:underline mt-1 inline-block">+ Create a gate pass</Link>
                             )}
                           </div>
                         </div>
@@ -516,10 +518,8 @@ export default function DashboardPage() {
           <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
             <h3 className="text-sm font-semibold text-gray-900 mb-4">Recent Activity</h3>
             {recentActivity.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-4">
-                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                  <CheckCircle size={16} className="text-gray-300" />
-                </div>
+              <div className="flex flex-col items-center gap-2 py-3">
+                <NxtBot size={40} />
                 <p className="text-xs text-gray-400">No recent approvals</p>
               </div>
             ) : (
@@ -660,13 +660,21 @@ function DashboardSkeleton() {
   );
 }
 
+const STAT_TINT: Record<string, string> = {
+  blue:  'stat-tint-blue',
+  green: 'stat-tint-green',
+  amber: 'stat-tint-amber',
+  red:   'stat-tint-red',
+};
+
 function StatCard({
-  label, value, change, icon,
+  label, value, change, icon, variant,
 }: {
   label: string;
   value: number;
   change: { pct: number; up: boolean | null };
   icon: React.ReactNode;
+  variant?: 'blue' | 'green' | 'amber' | 'red';
 }) {
   const [display, setDisplay] = useState(0);
 
@@ -690,8 +698,10 @@ function StatCard({
   const changeColor = up === true ? 'text-green-600' : up === false ? 'text-red-500' : 'text-gray-400';
   const arrow       = up === true ? '↑' : up === false ? '↓' : '—';
 
+  const tintClass = variant ? (STAT_TINT[variant] ?? '') : '';
+
   return (
-    <div className="stat-card bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-3 sm:p-5 shadow-sm cursor-default select-none">
+    <div className={`stat-card bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-3 sm:p-5 shadow-sm cursor-default select-none ${tintClass}`}>
       <div className="flex items-center gap-2 sm:gap-4 mb-2 sm:mb-4">
         <div className="[&>div]:w-9 [&>div]:h-9 sm:[&>div]:w-12 sm:[&>div]:h-12 [&_svg]:!w-4 [&_svg]:!h-4 sm:[&_svg]:!w-[22px] sm:[&_svg]:!h-[22px]">
           {icon}

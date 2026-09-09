@@ -41,7 +41,7 @@ export default function ShellLayout({ children, role, userName, pendingCount, pe
   const effectiveCollapsed = mounted ? collapsed : false;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen gp-bg">
       <Sidebar
         role={role}
         pendingCount={pendingCount}
