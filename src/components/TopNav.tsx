@@ -154,13 +154,15 @@ export default function TopNav({
       {/* Search — hidden on mobile, icon only */}
       <div className="flex-1 flex justify-center">
         <div className="relative w-72 xl:w-96 hidden sm:block" ref={searchRef}>
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10" />
-          <input type="text" value={query} onChange={(e) => { setQuery(e.target.value); setShowSearch(true); }}
-            onFocus={handleFocus} placeholder="Search entries by name, phone, email…"
-            className="w-full pl-9 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white" />
-          {query && <button onClick={() => { setQuery(''); setShowSearch(false); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={14} /></button>}
+          <div className="relative rounded-xl transition-shadow duration-200 focus-within:shadow-[0_0_0_4px_rgba(59,130,246,0.10)]">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10" />
+            <input type="text" value={query} onChange={(e) => { setQuery(e.target.value); setShowSearch(true); }}
+              onFocus={handleFocus} placeholder="Search entries by name, phone, email…"
+              className="w-full pl-9 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200" />
+            {query && <button onClick={() => { setQuery(''); setShowSearch(false); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={14} /></button>}
+          </div>
           {showSearch && query.trim().length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-80 overflow-y-auto">
+            <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-80 overflow-y-auto animate-scale-in">
               {fetching && <div className="px-4 py-3 text-sm text-gray-400 text-center">Searching…</div>}
               {!fetching && results.length === 0 && <div className="px-4 py-3 text-sm text-gray-400 text-center">No matching entries found</div>}
               {!fetching && results.map((e) => {
@@ -210,7 +212,7 @@ export default function TopNav({
           </button>
 
           {showNotifDrop && (
-            <div className="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-1rem)] bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden">
+            <div className="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-1rem)] bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden animate-scale-in">
               <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                 <div>
                   <span className="font-semibold text-gray-900 text-sm">Notifications</span>

@@ -159,9 +159,13 @@ function SidebarPanel({
             return (
               <div key={href} className="relative group mb-0.5">
                 <Link href={href}
-                  className={`flex items-center justify-center p-2.5 rounded-lg transition-colors ${active ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
+                  className={`flex items-center justify-center p-2.5 rounded-lg transition-all duration-200 ${
+                    active
+                      ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
+                      : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                  }`}
                 >
-                  <Icon size={18} />
+                  <Icon size={18} className="nav-icon" />
                   {hasPendingBadge && (
                     <span className="absolute top-0.5 right-0.5 bg-orange-500 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center font-semibold">{pendingCount}</span>
                   )}
@@ -176,9 +180,16 @@ function SidebarPanel({
 
           return (
             <Link key={href} href={href} onClick={isMobile ? onClose : undefined}
-              className={`flex items-center gap-2.5 px-3 py-2 text-sm transition-colors ${active ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
+              className={`nav-link group relative flex items-center gap-2.5 mx-1.5 px-2.5 py-2 text-sm rounded-lg transition-all duration-200 ${
+                active
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+              }`}
             >
-              <Icon size={16} className="flex-shrink-0" />
+              {active && (
+                <span className="absolute left-0 top-1 bottom-1 w-[3px] bg-white/40 rounded-r-full" />
+              )}
+              <Icon size={16} className="nav-icon flex-shrink-0" />
               <span className="truncate">{label}</span>
               {hasPendingBadge && (
                 <span className="ml-auto bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold flex-shrink-0">{pendingCount}</span>

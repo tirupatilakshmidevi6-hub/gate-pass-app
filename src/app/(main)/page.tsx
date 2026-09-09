@@ -307,22 +307,13 @@ export default function DashboardPage() {
   const isToday  = date === today;
 
   // ─── Loading state
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-gray-400">Loading dashboard…</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <DashboardSkeleton />;
 
   return (
     <div className="page-container space-y-4 sm:space-y-6">
 
       {/* ── Greeting + Date picker ── */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 animate-fade-in-up" style={{ animationDelay: '0ms' }}>
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
             {greeting}, {userName} 👋
@@ -359,7 +350,7 @@ export default function DashboardPage() {
         <div className="flex-1 min-w-0 space-y-5">
 
           {/* Stat cards — 2 col on mobile, 4 col on lg+ */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 animate-fade-in-up" style={{ animationDelay: '70ms' }}>
             <StatCard
               label="Total Entries Today" value={total}
               change={pctChange(total, yTotal)}
@@ -383,7 +374,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Entries table */}
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm animate-fade-in-up" style={{ animationDelay: '140ms' }}>
             <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 min-w-0">
                 <h2 className="text-sm sm:text-base font-semibold text-gray-900 truncate">Entries for {isToday ? 'Today' : date}</h2>
@@ -411,25 +402,31 @@ export default function DashboardPage() {
                 <tbody className="divide-y divide-gray-100">
                   {paginated.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="px-4 py-10 text-center text-gray-400 text-sm">
-                        No entries for this date.{' '}
-                        {userRole === 'admin' && (
-                          <Link href="/new-entry" className="text-blue-600 hover:underline">Add one</Link>
-                        )}
+                      <td colSpan={9} className="px-4 py-14 text-center">
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center">
+                            <CalendarDays size={22} className="text-gray-300" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-500">No entries for this date</p>
+                            {userRole === 'admin' && (
+                              <Link href="/new-entry" className="text-xs text-blue-600 hover:underline mt-1 inline-block">+ Add a new entry</Link>
+                            )}
+                          </div>
+                        </div>
                       </td>
                     </tr>
                   ) : paginated.map((e, idx) => {
                     const rs  = getRoleStyle(e.role ?? '');
-                    const sc  = STATUS_CLS[e.status] ?? 'bg-gray-100 text-gray-600';
                     const col = avatarColor(e.name);
                     return (
-                      <tr key={e.id} className="hover:bg-gray-50 transition-colors">
+                      <tr key={e.id} className="hover:bg-gray-50/70 transition-colors duration-100 group">
                         <td className="px-3 sm:px-4 py-3 text-gray-400 text-xs font-medium">
                           {(page - 1) * pageSize + idx + 1}
                         </td>
                         <td className="px-3 sm:px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full ${col} flex items-center justify-center flex-shrink-0`}>
+                            <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full ${col} flex items-center justify-center flex-shrink-0 ring-2 ring-white`}>
                               <span className="text-xs font-bold text-white">{getInitials(e.name)}</span>
                             </div>
                             <span className="font-medium text-gray-900 whitespace-nowrap text-xs sm:text-sm">{e.name}</span>
@@ -453,10 +450,10 @@ export default function DashboardPage() {
                           </div>
                         </td>
                         <td className="px-3 sm:px-4 py-3">
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${sc}`}>{e.status}</span>
+                          <StatusBadge status={e.status} />
                         </td>
                         <td className="px-3 sm:px-4 py-3">
-                          <button className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
+                          <button className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                             <MoreVertical size={14} />
                           </button>
                         </td>
@@ -479,7 +476,7 @@ export default function DashboardPage() {
           </div>
 
           {/* ── Entry Summary ── */}
-          <div>
+          <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
             <h2 className="text-sm sm:text-base font-semibold text-gray-900 mb-3">Entry Summary</h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <SummaryCard
@@ -503,7 +500,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── RIGHT panel — full width on mobile, fixed on xl+ ── */}
-        <div className="w-full xl:w-72 xl:flex-shrink-0 space-y-4">
+        <div className="w-full xl:w-72 xl:flex-shrink-0 space-y-4 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
 
           {/* Today's Overview chart */}
           <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
@@ -519,7 +516,12 @@ export default function DashboardPage() {
           <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
             <h3 className="text-sm font-semibold text-gray-900 mb-4">Recent Activity</h3>
             {recentActivity.length === 0 ? (
-              <p className="text-xs text-gray-400">No recent approvals.</p>
+              <div className="flex flex-col items-center gap-2 py-4">
+                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                  <CheckCircle size={16} className="text-gray-300" />
+                </div>
+                <p className="text-xs text-gray-400">No recent approvals</p>
+              </div>
             ) : (
               <div className="space-y-3">
                 {recentActivity.map(e => (
@@ -572,6 +574,92 @@ export default function DashboardPage() {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
+const STATUS_DOT: Record<string, string> = {
+  'Pending Form':     'bg-gray-400',
+  'Pending Approval': 'bg-orange-500',
+  'Approved':         'bg-green-500',
+  'Rejected':         'bg-red-500',
+};
+
+function StatusBadge({ status }: { status: string }) {
+  const cls = STATUS_CLS[status] ?? 'bg-gray-100 text-gray-600';
+  const dot = STATUS_DOT[status] ?? 'bg-gray-400';
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${cls}`}>
+      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dot}`} />
+      {status}
+    </span>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="page-container space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div className="space-y-2">
+          <div className="skeleton h-7 w-52" />
+          <div className="skeleton h-4 w-36" />
+        </div>
+        <div className="skeleton h-9 w-44 rounded-lg" />
+      </div>
+      <div className="flex flex-col xl:flex-row gap-5 items-start">
+        <div className="flex-1 min-w-0 space-y-5">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-3 sm:p-5 shadow-sm">
+                <div className="flex items-center gap-2 sm:gap-4 mb-3">
+                  <div className="skeleton w-9 h-9 sm:w-12 sm:h-12 rounded-full flex-shrink-0" />
+                  <div className="flex-1 space-y-2 min-w-0">
+                    <div className="skeleton h-7 w-10" />
+                    <div className="skeleton h-3 w-full" />
+                  </div>
+                </div>
+                <div className="skeleton h-3 w-28" />
+              </div>
+            ))}
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <div className="skeleton h-5 w-44" />
+              <div className="skeleton h-8 w-20 rounded-lg" />
+            </div>
+            <div className="p-4 sm:p-5 space-y-3">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center gap-3 py-1" style={{ opacity: 1 - i * 0.12 }}>
+                  <div className="skeleton w-8 h-8 rounded-full flex-shrink-0" />
+                  <div className="flex-1 space-y-1.5 min-w-0">
+                    <div className="skeleton h-4 w-32" />
+                    <div className="skeleton h-3 w-20" />
+                  </div>
+                  <div className="skeleton h-5 w-16 rounded-full" />
+                  <div className="skeleton h-5 w-14 rounded-full hidden sm:block" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="w-full xl:w-72 xl:flex-shrink-0 space-y-4">
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+            <div className="skeleton h-4 w-32 mb-4" />
+            <div className="skeleton w-full rounded-lg" style={{ height: 120 }} />
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+            <div className="skeleton h-4 w-28 mb-4" />
+            <div className="space-y-3">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="skeleton w-6 h-6 rounded-full flex-shrink-0" />
+                  <div className="skeleton h-3 flex-1" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function StatCard({
   label, value, change, icon,
 }: {
@@ -580,19 +668,36 @@ function StatCard({
   change: { pct: number; up: boolean | null };
   icon: React.ReactNode;
 }) {
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    if (reduced) { setDisplay(value); return; }
+    const duration = 650;
+    const start = performance.now();
+    let raf = 0;
+    const frame = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - (1 - progress) ** 3;
+      setDisplay(Math.round(value * eased));
+      if (progress < 1) raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(raf);
+  }, [value]);
+
   const { pct, up } = change;
   const changeColor = up === true ? 'text-green-600' : up === false ? 'text-red-500' : 'text-gray-400';
   const arrow       = up === true ? '↑' : up === false ? '↓' : '—';
 
   return (
-    <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-3 sm:p-5 shadow-sm">
+    <div className="stat-card bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-3 sm:p-5 shadow-sm cursor-default select-none">
       <div className="flex items-center gap-2 sm:gap-4 mb-2 sm:mb-4">
-        {/* Scale icon down on mobile */}
         <div className="[&>div]:w-9 [&>div]:h-9 sm:[&>div]:w-12 sm:[&>div]:h-12 [&_svg]:!w-4 [&_svg]:!h-4 sm:[&_svg]:!w-[22px] sm:[&_svg]:!h-[22px]">
           {icon}
         </div>
         <div className="min-w-0">
-          <div className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">{value}</div>
+          <div className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight tabular-nums">{display}</div>
           <div className="text-[11px] sm:text-xs text-gray-500 mt-0.5 leading-tight">{label}</div>
         </div>
       </div>
@@ -613,7 +718,7 @@ function SummaryCard({
   bg: string;
 }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 shadow-sm flex items-center gap-2.5 sm:gap-3">
+    <div className="summary-card bg-white rounded-xl border border-gray-200 p-3 sm:p-4 shadow-sm flex items-center gap-2.5 sm:gap-3">
       <div className={`w-9 h-9 sm:w-10 sm:h-10 ${bg} rounded-xl flex items-center justify-center flex-shrink-0 [&_svg]:w-4 [&_svg]:h-4 sm:[&_svg]:w-5 sm:[&_svg]:h-5`}>
         {icon}
       </div>
