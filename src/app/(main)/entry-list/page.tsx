@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { getRoleStyle } from '@/lib/constants';
-import { CalendarDays, Search, RefreshCw, CheckCircle, XCircle, X, Clock, Send } from 'lucide-react';
+import { CalendarDays, Search, RefreshCw, CheckCircle, XCircle, X, Clock, Send, RotateCcw } from 'lucide-react';
 
 type EntryRow = {
   id: string; name: string; email: string | null; mobile_number: string | null;
@@ -99,12 +99,13 @@ function EntryListPagination({
 // ─── Entry Detail Modal ───────────────────────────────────────────────────────
 
 function EntryModal({
-  entry, userRole, onClose, onStatusUpdate,
+  entry, userRole, onClose, onStatusUpdate, onRenew,
 }: {
   entry: EntryRow;
   userRole: string;
   onClose: () => void;
   onStatusUpdate: (id: string, updated: Partial<EntryRow>) => void;
+  onRenew?: (entry: EntryRow) => void;
 }) {
   const [processing, setProcessing] = useState<'approve' | 'reject' | null>(null);
   const [resendingPass, setResendingPass] = useState(false);
@@ -297,6 +298,12 @@ function EntryModal({
               {resendingPass ? <><RefreshCw size={14} className="animate-spin" />Sending…</> : <><Send size={14} />Resend Gate Pass</>}
             </button>
           )}
+          {(entry.status === 'Expired' || entry.status === 'Rejected') && onRenew && (userRole === 'admin' || userRole === 'ta') && (
+            <button onClick={() => onRenew(entry)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl text-sm transition-colors">
+              <RotateCcw size={14} />Renew Pass
+            </button>
+          )}
           <button onClick={onClose} className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl">Close</button>
         </div>
       </div>
@@ -311,8 +318,173 @@ function formatAction(action: string) {
     entry_rejected:           'Entry rejected',
     invite_resent:            'Invite resent',
     entry_created:            'Entry created',
+    entry_renewed:            'Entry renewed',
   };
   return map[action] ?? action.replace(/_/g, ' ');
+}
+
+// ─── Renew Modal ──────────────────────────────────────────────────────────────
+
+const PURPOSES = ['Interview', 'Onboarding', 'Induction', 'Visitor', 'Other'];
+
+function RenewModal({
+  entry, onClose, onSuccess,
+}: {
+  entry: EntryRow;
+  onClose: () => void;
+  onSuccess: (newEntry: EntryRow) => void;
+}) {
+  const today = toISO(new Date());
+  const [form, setForm] = useState({
+    reporting_date: today,
+    valid_until:    '',
+    purpose:        entry.purpose,
+    role:           entry.role ?? '',
+    building_name:  entry.building_name,
+    poc_name:       entry.poc_name,
+    contact_no:     entry.contact_no,
+  });
+  const [buildings, setBuildings] = useState<string[]>([entry.building_name]);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetch('/api/buildings').then((r) => r.json()).then((d) => {
+      if (Array.isArray(d)) setBuildings(d.map((b: { name: string }) => b.name));
+    }).catch(() => {});
+  }, []);
+
+  const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/entries/${entry.id}/renew`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reporting_date: form.reporting_date,
+          valid_until:    form.valid_until || undefined,
+          purpose:        form.purpose,
+          role:           form.role || undefined,
+          building_name:  form.building_name,
+          poc_name:       form.poc_name,
+          contact_no:     form.contact_no,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? 'Failed to renew entry'); return; }
+      onSuccess(data as EntryRow);
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center sm:p-4" onClick={onClose}>
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[92dvh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-purple-900 to-purple-600 rounded-t-2xl px-5 py-4 flex items-center justify-between">
+          <div>
+            <div className="text-[10px] font-bold text-purple-200 uppercase tracking-widest mb-0.5">Smart Renew</div>
+            <div className="text-white font-bold text-lg">{entry.name}</div>
+            <div className="text-purple-200 text-xs">{entry.email ?? entry.mobile_number ?? '—'}</div>
+          </div>
+          <button onClick={onClose} className="text-purple-200 hover:text-white p-1 rounded-lg"><X size={20} /></button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="px-5 py-5 space-y-5">
+          {/* Identity — locked */}
+          <div>
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Candidate Identity (auto-copied)</div>
+            <div className="bg-gray-50 rounded-xl p-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-gray-600">
+              <div><span className="text-gray-400">Name: </span>{entry.name}</div>
+              <div><span className="text-gray-400">Email: </span>{entry.email ?? '—'}</div>
+              <div><span className="text-gray-400">Mobile: </span>{entry.mobile_number ?? '—'}</div>
+              <div><span className="text-gray-400">Employee ID: </span>{entry.employee_id ?? '—'}</div>
+            </div>
+          </div>
+
+          {/* Visit details — editable */}
+          <div>
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Visit Details (edit for this visit)</div>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Reporting Date <span className="text-red-500">*</span></label>
+                  <input type="date" required value={form.reporting_date} min={today}
+                    onChange={(e) => set('reporting_date', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Valid Until</label>
+                  <input type="date" value={form.valid_until} min={form.reporting_date}
+                    onChange={(e) => set('valid_until', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Purpose <span className="text-red-500">*</span></label>
+                  <select required value={form.purpose} onChange={(e) => set('purpose', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    {PURPOSES.map((p) => <option key={p}>{p}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Role</label>
+                  <input type="text" value={form.role} placeholder="e.g. Intern, Staff"
+                    onChange={(e) => set('role', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Building <span className="text-red-500">*</span></label>
+                <select required value={form.building_name} onChange={(e) => set('building_name', e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                  {buildings.map((b) => <option key={b}>{b}</option>)}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">POC Name <span className="text-red-500">*</span></label>
+                  <input type="text" required value={form.poc_name}
+                    onChange={(e) => set('poc_name', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Contact No <span className="text-red-500">*</span></label>
+                  <input type="text" required value={form.contact_no}
+                    onChange={(e) => set('contact_no', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {error && <p className="text-xs text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+
+          <div className="flex gap-3 pt-1">
+            <button type="button" onClick={onClose}
+              className="flex-1 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl">
+              Cancel
+            </button>
+            <button type="submit" disabled={submitting}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-60 rounded-xl">
+              {submitting ? <><RefreshCw size={14} className="animate-spin" />Renewing…</> : <><RotateCcw size={14} />Renew Pass</>}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
@@ -325,9 +497,10 @@ export default function EntryListPage() {
   const [dateFilter,  setDateFilter]  = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [userRole,    setUserRole]    = useState<string>('');
-  const [toast,       setToast]       = useState('');
-  const [resending,   setResending]   = useState<string | null>(null);
-  const [page,        setPage]        = useState(1);
+  const [toast,        setToast]        = useState('');
+  const [resending,    setResending]    = useState<string | null>(null);
+  const [page,         setPage]         = useState(1);
+  const [renewTarget,  setRenewTarget]  = useState<EntryRow | null>(null);
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 4000); };
 
@@ -396,6 +569,12 @@ export default function EntryListPage() {
 
   function handleStatusUpdate(id: string, updated: Partial<EntryRow>) {
     setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, ...updated } : e)));
+  }
+
+  function handleRenewSuccess(newEntry: EntryRow) {
+    setEntries((prev) => [newEntry, ...prev]);
+    setRenewTarget(null);
+    showToast(`Pass renewed for ${newEntry.name} — sent to Facilities for approval`);
   }
 
   const filtered = entries.filter((e) => {
@@ -497,6 +676,12 @@ export default function EntryListPage() {
                           {resending === e.id ? <><RefreshCw size={10} className="animate-spin" />…</> : <><Send size={10} />Pass</>}
                         </button>
                       )}
+                      {(e.status === 'Expired' || e.status === 'Rejected') && (userRole === 'admin' || userRole === 'ta') && (
+                        <button onClick={() => setRenewTarget(e)}
+                          className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium text-purple-700 border border-purple-200 rounded-lg hover:bg-purple-50">
+                          <RotateCcw size={10} />Renew
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -550,6 +735,13 @@ export default function EntryListPage() {
                                 {resending === e.id ? <><RefreshCw size={10} className="animate-spin" />…</> : <><Send size={10} />Pass</>}
                               </button>
                             )}
+                            {(e.status === 'Expired' || e.status === 'Rejected') && (userRole === 'admin' || userRole === 'ta') && (
+                              <button onClick={() => setRenewTarget(e)}
+                                title="Renew gate pass"
+                                className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-purple-700 border border-purple-200 rounded-lg hover:bg-purple-50 transition-colors whitespace-nowrap">
+                                <RotateCcw size={10} />Renew
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -578,6 +770,16 @@ export default function EntryListPage() {
           userRole={userRole}
           onClose={() => setSelected(null)}
           onStatusUpdate={handleStatusUpdate}
+          onRenew={(e) => { setSelected(null); setRenewTarget(e); }}
+        />
+      )}
+
+      {/* Renew Modal */}
+      {renewTarget && (
+        <RenewModal
+          entry={renewTarget}
+          onClose={() => setRenewTarget(null)}
+          onSuccess={handleRenewSuccess}
         />
       )}
     </div>

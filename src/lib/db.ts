@@ -228,6 +228,38 @@ export async function rejectEntry(id: string): Promise<EntryRow> {
   return entry;
 }
 
+export async function renewEntry(originalId: string, data: {
+  reporting_date: string;
+  valid_until?: string;
+  purpose: string;
+  role?: string;
+  building_name: string;
+  poc_name: string;
+  contact_no: string;
+  created_by?: string;
+}): Promise<EntryRow> {
+  const original = await getEntryById(originalId);
+  if (!original) throw new Error('Original entry not found');
+  const { data: entry, error } = await supabase.from('entries').insert({
+    name:           original.name,
+    email:          original.email,
+    mobile_number:  original.mobile_number,
+    employee_id:    original.employee_id,
+    photo_url:      original.photo_url,
+    reporting_date: data.reporting_date,
+    valid_until:    data.valid_until ?? null,
+    purpose:        data.purpose,
+    role:           data.role ?? null,
+    building_name:  data.building_name,
+    poc_name:       data.poc_name,
+    contact_no:     data.contact_no,
+    status:         'Pending Approval',
+    form_status:    'submitted',
+    created_by:     data.created_by ?? 'Admin',
+  }).select().single();
+  return throwOnError(entry, error);
+}
+
 export async function getPendingEntries(): Promise<EntryRow[]> {
   const { data, error } = await supabase.from('entries').select('*').eq('status', 'Pending Approval').order('created_at', { ascending: false });
   return throwOnError(data, error);
