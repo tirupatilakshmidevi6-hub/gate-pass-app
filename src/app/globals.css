@@ -536,7 +536,16 @@ html.dark .summary-card:hover {
   .login-panel-right { animation: none !important; opacity: 1 !important; transform: none !important; }
   .login-shake { animation: none !important; }
   .login-blob, .login-blob-2, .login-blob-3 { animation: none !important; }
+  .pass-col-a, .pass-col-b, .pass-col-c { animation: none !important; }
+  .auth-border-anim, .auth-orb-1, .auth-orb-2, .auth-orb-3, .auth-orb-4, .auth-ring-spin { animation: none !important; }
 }
+
+/* ─── Auth layout ────────────────────────────────────────────────────────────── */
+.auth-rp { overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
+.auth-rp::-webkit-scrollbar { display: none; }
+/* Left panel: visible on desktop, hidden on mobile */
+.auth-left { display: flex; flex-shrink: 0; }
+@media (max-width: 767px) { .auth-left { display: none !important; } }
 
 /* ─── Login Page ──────────────────────────────────────────────────────────────── */
 
@@ -568,3 +577,46 @@ html.dark .summary-card:hover {
 .login-blob        { animation: loginBlobDrift 14s ease-in-out infinite; }
 .login-blob-2      { animation: loginBlobDrift 18s ease-in-out infinite reverse; animation-delay: -6s; }
 .login-blob-3      { animation: loginBlobDrift 22s ease-in-out infinite; animation-delay: -3s; }
+
+/* ── Scrolling gate-pass card columns ── */
+@keyframes passScrollUp {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-50%); }
+}
+@keyframes passScrollDown {
+  from { transform: translateY(-50%); }
+  to   { transform: translateY(0); }
+}
+.pass-col-a { animation: passScrollUp   23s linear infinite; }
+.pass-col-b { animation: passScrollDown 31s linear infinite; animation-delay: -12s; }
+.pass-col-c { animation: passScrollUp   27s linear infinite; animation-delay: -7s; }
+
+/* ── Auth card animations ── */
+@keyframes authBorderShift {
+  0%,100% { background-position: 0% 50%; }
+  50%     { background-position: 100% 50%; }
+}
+@keyframes authOrb1 {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%     { transform: translate(12px,-16px) scale(1.14); }
+  66%     { transform: translate(-8px,10px) scale(0.93); }
+}
+@keyframes authOrb2 {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%     { transform: translate(-14px,12px) scale(0.90); }
+  66%     { transform: translate(10px,-14px) scale(1.10); }
+}
+@keyframes authOrb3 {
+  0%,100% { transform: translate(0,0) scale(1); }
+  50%     { transform: translate(15px,12px) scale(1.16); }
+}
+@keyframes authRingRotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.auth-border-anim { animation: authBorderShift 5s ease infinite; background-size: 500% 500%; }
+.auth-orb-1 { animation: authOrb1 7s ease-in-out infinite; }
+.auth-orb-2 { animation: authOrb2 9s ease-in-out infinite; animation-delay: -3s; }
+.auth-orb-3 { animation: authOrb3 6s ease-in-out infinite; animation-delay: -2s; }
+.auth-orb-4 { animation: authOrb2 8s ease-in-out infinite; animation-delay: -5s; }
+.auth-ring-spin { animation: authRingRotate 12s linear infinite; transform-origin: center center; }
