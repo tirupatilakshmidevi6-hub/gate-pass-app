@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import {
-  LayoutDashboard, UserPlus, Upload, List,
+  LayoutDashboard, FilePlus2, List,
   Building2, BarChart2, Settings, LogOut, Shield, Users, Activity,
   Menu, X, ChevronLeft, ChevronRight,
 } from 'lucide-react';
@@ -13,23 +13,21 @@ type Role = string;
 type NavItem = { label: string; href: string; icon: React.ElementType };
 
 const ADMIN_NAV: NavItem[] = [
-  { label: 'Dashboard',    href: '/',            icon: LayoutDashboard },
-  { label: 'New Entry',    href: '/new-entry',   icon: UserPlus },
-  { label: 'Bulk Upload',  href: '/bulk-upload', icon: Upload },
-  { label: 'Entry List',   href: '/entry-list',  icon: List },
-  { label: 'Reports',      href: '/reports',     icon: BarChart2 },
-  { label: 'Activity Log', href: '/activity',    icon: Activity },
-  { label: 'Users',        href: '/users',       icon: Users },
-  { label: 'Settings',     href: '/settings',    icon: Settings },
+  { label: 'Dashboard',       href: '/',                   icon: LayoutDashboard },
+  { label: 'Create Gate Pass', href: '/create-gate-pass',  icon: FilePlus2 },
+  { label: 'Entry List',      href: '/entry-list',         icon: List },
+  { label: 'Reports',         href: '/reports',            icon: BarChart2 },
+  { label: 'Activity Log',    href: '/activity',           icon: Activity },
+  { label: 'Users',           href: '/users',              icon: Users },
+  { label: 'Settings',        href: '/settings',           icon: Settings },
 ];
 
 const TA_NAV: NavItem[] = [
-  { label: 'Dashboard',    href: '/',            icon: LayoutDashboard },
-  { label: 'New Entry',    href: '/new-entry',   icon: UserPlus },
-  { label: 'Bulk Upload',  href: '/bulk-upload', icon: Upload },
-  { label: 'Entry List',   href: '/entry-list',  icon: List },
-  { label: 'Reports',      href: '/reports',     icon: BarChart2 },
-  { label: 'Activity Log', href: '/activity',    icon: Activity },
+  { label: 'Dashboard',       href: '/',                   icon: LayoutDashboard },
+  { label: 'Create Gate Pass', href: '/create-gate-pass',  icon: FilePlus2 },
+  { label: 'Entry List',      href: '/entry-list',         icon: List },
+  { label: 'Reports',         href: '/reports',            icon: BarChart2 },
+  { label: 'Activity Log',    href: '/activity',           icon: Activity },
 ];
 
 const FACILITIES_NAV: NavItem[] = [
@@ -40,17 +38,17 @@ const FACILITIES_NAV: NavItem[] = [
 ];
 
 const BOTTOM_NAV_ADMIN: NavItem[] = [
-  { label: 'Dashboard', href: '/',            icon: LayoutDashboard },
-  { label: 'New Entry', href: '/new-entry',   icon: UserPlus },
-  { label: 'Approvals', href: '/approvals',   icon: Building2 },
-  { label: 'List',      href: '/entry-list',  icon: List },
+  { label: 'Dashboard', href: '/',                  icon: LayoutDashboard },
+  { label: 'Create',    href: '/create-gate-pass',  icon: FilePlus2 },
+  { label: 'Approvals', href: '/approvals',         icon: Building2 },
+  { label: 'List',      href: '/entry-list',        icon: List },
 ];
 
 const BOTTOM_NAV_TA: NavItem[] = [
-  { label: 'Dashboard', href: '/',            icon: LayoutDashboard },
-  { label: 'New Entry', href: '/new-entry',   icon: UserPlus },
-  { label: 'List',      href: '/entry-list',  icon: List },
-  { label: 'Reports',   href: '/reports',     icon: BarChart2 },
+  { label: 'Dashboard', href: '/',                  icon: LayoutDashboard },
+  { label: 'Create',    href: '/create-gate-pass',  icon: FilePlus2 },
+  { label: 'List',      href: '/entry-list',        icon: List },
+  { label: 'Reports',   href: '/reports',           icon: BarChart2 },
 ];
 
 const BOTTOM_NAV_FACILITIES: NavItem[] = [

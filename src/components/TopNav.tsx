@@ -7,15 +7,16 @@ import { useTheme } from './ThemeProvider';
 import { getRoleStyle } from '@/lib/constants';
 
 const PAGE_TITLES: Record<string, string> = {
-  '/':            'Dashboard',
-  '/new-entry':   'New Entry',
-  '/bulk-upload': 'Bulk Upload',
-  '/entry-list':  'Entry List',
-  '/reports':     'Reports',
-  '/settings':    'Settings',
-  '/approvals':   'Approvals',
-  '/users':       'Manage Users',
-  '/activity':    'Activity Log',
+  '/':                   'Dashboard',
+  '/create-gate-pass':   'Create Gate Pass',
+  '/new-entry':          'New Entry',
+  '/bulk-upload':        'Bulk Upload',
+  '/entry-list':         'Entry List',
+  '/reports':            'Reports',
+  '/settings':           'Settings',
+  '/approvals':          'Approvals',
+  '/users':              'Manage Users',
+  '/activity':           'Activity Log',
 };
 
 const STATUS_COLORS: Record<string, string> = {

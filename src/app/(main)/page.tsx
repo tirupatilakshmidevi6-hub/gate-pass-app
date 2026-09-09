@@ -549,14 +549,14 @@ export default function DashboardPage() {
             <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
               <h3 className="text-sm font-semibold text-gray-900 mb-4">Quick Actions</h3>
               <div className="grid grid-cols-2 gap-3">
-                <Link href="/new-entry"
+                <Link href="/create-gate-pass"
                   className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-dashed border-blue-200 hover:bg-blue-50 hover:border-blue-400 transition-colors group">
                   <div className="w-8 h-8 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-colors">
                     <UserPlus size={16} className="text-blue-600" />
                   </div>
-                  <span className="text-xs font-semibold text-blue-600">New Entry</span>
+                  <span className="text-xs font-semibold text-blue-600">Single Entry</span>
                 </Link>
-                <Link href="/bulk-upload"
+                <Link href="/create-gate-pass"
                   className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-dashed border-purple-200 hover:bg-purple-50 hover:border-purple-400 transition-colors group">
                   <div className="w-8 h-8 rounded-full bg-purple-100 group-hover:bg-purple-200 flex items-center justify-center transition-colors">
                     <Upload size={16} className="text-purple-600" />
