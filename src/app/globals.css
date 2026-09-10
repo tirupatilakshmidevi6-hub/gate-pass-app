@@ -514,10 +514,111 @@ html.dark .summary-card:hover {
   transform: scale(1.12);
 }
 
+/* ─── Page transitions ────────────────────────────────────────────────────── */
+
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page-enter {
+  animation: pageEnter 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ─── Premium sidebar ─────────────────────────────────────────────────────── */
+
+.nav-section-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #3B5280;
+  padding: 12px 14px 3px;
+  line-height: 1;
+  user-select: none;
+}
+.nav-section-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.05);
+  margin: 5px 12px;
+}
+.nav-item-active {
+  background: rgba(20,110,245,0.14) !important;
+  color: #93C5FD !important;
+  border-left: 2.5px solid #146EF5 !important;
+  padding-left: calc(0.625rem - 2.5px) !important;
+}
+.nav-item-active .nav-icon { color: #60A5FA !important; }
+
+/* ─── Stat card v2 — accent top border ───────────────────────────────────── */
+
+.stat-card-v2 {
+  position: relative;
+  overflow: hidden;
+}
+.stat-card-v2::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 12px 12px 0 0;
+}
+.stat-accent-blue::before  { background: linear-gradient(90deg,#146EF5,#93C5FD); }
+.stat-accent-green::before { background: linear-gradient(90deg,#16A34A,#86EFAC); }
+.stat-accent-amber::before { background: linear-gradient(90deg,#D97706,#FDE68A); }
+.stat-accent-red::before   { background: linear-gradient(90deg,#DC2626,#FCA5A5); }
+
+html.dark .stat-card-v2 { background-color: #1e293b !important; border-color: #334155 !important; }
+
+/* ─── Premium table rows ──────────────────────────────────────────────────── */
+
+.trow { transition: background 0.12s ease; }
+.trow:hover { background: #F8FAFF !important; }
+html.dark .trow:hover { background: #162032 !important; }
+
+/* ─── Panel cards (sidebar panels) ───────────────────────────────────────── */
+
+.panel-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E8EEF8;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 2px 10px rgba(0,0,0,0.04);
+  padding: 20px;
+}
+html.dark .panel-card { background: #1e293b; border-color: #334155; }
+
+/* ─── Top nav search ──────────────────────────────────────────────────────── */
+
+.topnav-search {
+  background: #F4F7FD;
+  border: 1px solid #E5EBF5;
+  transition: background 0.18s, border-color 0.18s, box-shadow 0.18s;
+}
+.topnav-search:focus-within {
+  background: white;
+  border-color: #93C5FD;
+  box-shadow: 0 0 0 3px rgba(147,197,253,0.2);
+}
+html.dark .topnav-search { background: #1e293b; border-color: #334155; }
+html.dark .topnav-search:focus-within { background: #263148; border-color: #3b82f6; }
+
+/* ─── Status badges v2 ────────────────────────────────────────────────────── */
+
+.badge-pending-form     { background:#F1F5F9; color:#475569; border:1px solid #CBD5E1; }
+.badge-pending-approval { background:#FFF7ED; color:#C2410C; border:1px solid #FED7AA; }
+.badge-approved         { background:#F0FDF4; color:#15803D; border:1px solid #BBF7D0; }
+.badge-rejected         { background:#FEF2F2; color:#B91C1C; border:1px solid #FECACA; }
+.badge-expired          { background:#1F2937; color:#9CA3AF; border:1px solid #374151; }
+
+html.dark .badge-pending-form     { background:#1e293b; color:#94a3b8; border-color:#334155; }
+html.dark .badge-pending-approval { background:#431407; color:#fb923c; border-color:#7c2d12; }
+html.dark .badge-approved         { background:#052e16; color:#4ade80; border-color:#14532d; }
+html.dark .badge-rejected         { background:#450a0a; color:#f87171; border-color:#7f1d1d; }
+
 /* prefers-reduced-motion: disable all custom motion */
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in-up,
-  .animate-scale-in {
+  .animate-scale-in,
+  .page-enter {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
@@ -538,6 +639,8 @@ html.dark .summary-card:hover {
   .login-blob, .login-blob-2, .login-blob-3 { animation: none !important; }
   .pass-col-a, .pass-col-b, .pass-col-c { animation: none !important; }
   .auth-border-anim, .auth-orb-1, .auth-orb-2, .auth-orb-3, .auth-orb-4, .auth-ring-spin { animation: none !important; }
+  .trow { transition: none !important; }
+  .topnav-search { transition: none !important; }
 }
 
 /* ─── Auth layout ────────────────────────────────────────────────────────────── */

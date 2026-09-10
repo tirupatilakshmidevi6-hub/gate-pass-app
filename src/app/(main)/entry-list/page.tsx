@@ -12,12 +12,12 @@ type EntryRow = {
   created_at: string; created_by: string; invite_token: string | null;
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  'Pending Form':     'bg-gray-100 text-gray-600',
-  'Pending Approval': 'bg-orange-100 text-orange-700',
-  'Approved':         'bg-green-100 text-green-700',
-  'Rejected':         'bg-red-100 text-red-700',
-  'Expired':          'bg-red-900/20 text-red-900',
+const STATUS_BADGE: Record<string, string> = {
+  'Pending Form':     'badge-pending-form',
+  'Pending Approval': 'badge-pending-approval',
+  'Approved':         'badge-approved',
+  'Rejected':         'badge-rejected',
+  'Expired':          'badge-expired',
 };
 
 function toISO(d: Date) {
@@ -189,7 +189,7 @@ function EntryModal({
             <button onClick={onClose} className="text-blue-200 hover:text-white p-1 rounded-lg flex-shrink-0"><X size={20} /></button>
           </div>
           <div className="mt-3 flex items-center gap-2 flex-wrap">
-            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${STATUS_COLORS[entry.status] ?? 'bg-gray-100 text-gray-600'}`}>{entry.status}</span>
+            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${STATUS_BADGE[entry.status] ?? 'badge-pending-form'}`}>{entry.status}</span>
             {entry.pass_id && <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">{entry.pass_id}</span>}
             {entry.role && (() => { const rs = getRoleStyle(entry.role!); return <span style={{ background: rs.bg, color: rs.text, border: `1px solid ${rs.border}` }} className="px-2.5 py-0.5 rounded-full text-xs font-semibold">{entry.role}</span>; })()}
             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">{entry.purpose}</span>
@@ -590,51 +590,107 @@ export default function EntryListPage() {
 
   useEffect(() => { setPage(1); }, [dateFilter, searchQuery]);
 
-  if (loading) return <div className="text-sm text-gray-400 p-4 sm:p-6">Loading entries…</div>;
+  if (loading) return (
+    <div className="page-container space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="space-y-2"><div className="skeleton h-7 w-48 rounded-lg" /><div className="skeleton h-4 w-32 rounded" /></div>
+        <div className="skeleton h-9 w-56 rounded-xl" />
+      </div>
+      <div className="skeleton h-10 w-80 rounded-xl" />
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="px-5 py-3 border-b border-gray-100"><div className="skeleton h-4 w-32 rounded" /></div>
+        <div className="p-4 space-y-3">
+          {[0,1,2,3,4,5].map((i) => (
+            <div key={i} className="flex items-center gap-3" style={{ opacity: 1 - i * 0.1 }}>
+              <div className="skeleton w-8 h-8 rounded-full" />
+              <div className="flex-1 space-y-1.5"><div className="skeleton h-4 w-36 rounded" /><div className="skeleton h-3 w-24 rounded" /></div>
+              <div className="skeleton h-5 w-20 rounded-full" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 
-  const COLS = ['#', 'Name', 'Role', 'Purpose', 'Phone', 'Building', 'POC Name', 'Date', 'Valid Until', 'Status', 'Actions'];
+  const COLS = ['#', 'Visitor', 'Role', 'Purpose', 'Phone', 'Building', 'POC', 'Date', 'Valid Until', 'Status', 'Actions'];
 
   return (
     <div className="page-container space-y-4">
       {/* Toast */}
       {toast && (
-        <div className="fixed top-4 right-4 left-4 sm:left-auto sm:right-6 z-50 bg-gray-900 text-white text-sm px-4 py-3 rounded-xl shadow-xl flex items-center gap-2">
+        <div className="fixed top-4 right-4 left-4 sm:left-auto sm:right-6 z-50 bg-gray-900 text-white text-sm px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2 animate-scale-in">
           <CheckCircle size={15} className="text-green-400 flex-shrink-0" /><span className="flex-1">{toast}</span>
         </div>
       )}
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Entry List</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 animate-fade-in-up" style={{ animationDelay: '0ms' }}>
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Gate Pass History</h1>
+          <p className="text-sm text-gray-500 mt-0.5">All gate pass entries and their current status</p>
+        </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <CalendarDays size={15} className="text-gray-400 flex-shrink-0" />
-          <input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 min-w-0" />
-          <button onClick={() => setDateFilter('')} className="px-3 py-1.5 text-xs font-semibold border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-600">All</button>
-          <button onClick={() => setDateFilter(today)} className="px-3 py-1.5 text-xs font-semibold border border-blue-300 rounded-lg hover:bg-blue-50 text-blue-600">Today</button>
+          <div className="relative">
+            <CalendarDays size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}
+              className="border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm" />
+          </div>
+          <button onClick={() => setDateFilter('')}
+            className={`px-3 py-2 text-xs font-semibold rounded-xl border transition-all ${!dateFilter ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-gray-600 hover:bg-gray-50 bg-white'}`}>
+            All
+          </button>
+          <button onClick={() => setDateFilter(today)}
+            className={`px-3 py-2 text-xs font-semibold rounded-xl border transition-all ${dateFilter === today ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-200 text-gray-600 hover:bg-gray-50 bg-white'}`}>
+            Today
+          </button>
           {(userRole === 'admin' || userRole === 'ta') && (
-            <a href="/new-entry" className="px-3 py-1.5 bg-blue-600 text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-blue-700">+ New</a>
+            <a href="/create-gate-pass"
+              className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
+              + New Pass
+            </a>
           )}
         </div>
       </div>
 
       {/* Search */}
-      <div className="relative w-full sm:max-w-sm">
-        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+      <div className="relative w-full sm:max-w-sm animate-fade-in-up" style={{ animationDelay: '40ms' }}>
+        <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
         <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search name, phone, building, POC…"
-          className="w-full pl-9 pr-4 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          className="w-full pl-9 pr-4 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm" />
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="px-4 sm:px-6 py-2.5 border-b border-gray-100 text-xs sm:text-sm text-gray-500 font-medium">
-          {filtered.length} {filtered.length === 1 ? 'entry' : 'entries'}
-          {totalPages > 1 && <span className="ml-2 text-gray-400">(page {safePage} of {totalPages})</span>}
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm animate-fade-in-up" style={{ animationDelay: '80ms' }}>
+        <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid #F3F4F6' }}>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-gray-900">
+              {dateFilter ? `Entries for ${dateFilter}` : 'All Entries'}
+            </span>
+            <span className="bg-gray-100 text-gray-600 text-[11px] font-bold px-2 py-0.5 rounded-full">
+              {filtered.length}
+            </span>
+          </div>
+          {totalPages > 1 && (
+            <span className="text-xs text-gray-400">Page {safePage} of {totalPages}</span>
+          )}
         </div>
 
         {filtered.length === 0 ? (
-          <div className="px-4 py-10 text-center text-gray-400 text-sm">No entries found.</div>
+          <div className="px-4 py-16 text-center">
+            <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+              <Search size={20} className="text-gray-400" />
+            </div>
+            <p className="text-sm font-semibold text-gray-600">No entries found</p>
+            <p className="text-xs text-gray-400 mt-1">
+              {searchQuery ? `No results for "${searchQuery}"` : dateFilter ? 'No entries for this date' : 'No gate passes yet'}
+            </p>
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="mt-3 text-xs text-blue-600 font-semibold hover:text-blue-800">
+                Clear search
+              </button>
+            )}
+          </div>
         ) : (
           <>
             {/* Mobile card list — hidden on sm+ */}
@@ -651,7 +707,7 @@ export default function EntryListPage() {
                           <div className="text-xs text-gray-500 truncate">{e.email ?? e.mobile_number ?? '—'}</div>
                         </div>
                       </div>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${STATUS_COLORS[e.status] ?? 'bg-gray-100 text-gray-600'}`}>{e.status}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${STATUS_BADGE[e.status] ?? 'badge-pending-form'}`}>{e.status}</span>
                     </div>
                     <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs bg-gray-50 rounded-lg p-3">
                       <div><span className="text-gray-400">Date: </span><span className="text-gray-700">{e.reporting_date}</span></div>
@@ -700,7 +756,7 @@ export default function EntryListPage() {
                   {paginated.map((e, idx) => {
                     const rs = getRoleStyle(e.role ?? '');
                     return (
-                      <tr key={e.id} className="hover:bg-gray-50">
+                      <tr key={e.id} className="trow border-b border-gray-50 last:border-0">
                         <td className="px-3 sm:px-4 py-3 text-gray-400 text-xs font-medium">{(safePage - 1) * PAGE_SIZE + idx + 1}</td>
                         <td className="px-3 sm:px-4 py-3 font-medium text-gray-900 whitespace-nowrap text-xs sm:text-sm">{e.name}</td>
                         <td className="px-3 sm:px-4 py-3">
@@ -714,7 +770,7 @@ export default function EntryListPage() {
                         <td className="px-3 sm:px-4 py-3 text-gray-600 whitespace-nowrap text-xs">{e.reporting_date}</td>
                         <td className="px-3 sm:px-4 py-3 text-gray-600 whitespace-nowrap text-xs">{e.valid_until ?? '—'}</td>
                         <td className="px-3 sm:px-4 py-3">
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[e.status] ?? 'bg-gray-100 text-gray-600'}`}>{e.status}</span>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_BADGE[e.status] ?? 'badge-pending-form'}`}>{e.status}</span>
                         </td>
                         <td className="px-3 sm:px-4 py-3">
                           <div className="flex items-center gap-1">
