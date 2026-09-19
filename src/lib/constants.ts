@@ -1,5 +1,5 @@
 // ─── Building options ─────────────────────────────────────────────────────────
-export const BUILDING_OPTIONS = ['Brigade Towers', 'iSprout', 'WeWork'] as const;
+export const BUILDING_OPTIONS = ['Brigade Towers', 'iSprout', 'Ramky Selenium', 'WeWork'] as const;
 export type BuildingOption = (typeof BUILDING_OPTIONS)[number];
 
 // ─── Role options ─────────────────────────────────────────────────────────────

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { getRoleStyle } from '@/lib/constants';
-import { CalendarDays, Search, RefreshCw, CheckCircle, XCircle, X, Clock, Send, RotateCcw } from 'lucide-react';
+import { CalendarDays, Search, RefreshCw, CheckCircle, XCircle, X, Clock, Send, RotateCcw, MapPin } from 'lucide-react';
 
 type EntryRow = {
   id: string; name: string; email: string | null; mobile_number: string | null;
@@ -99,13 +99,14 @@ function EntryListPagination({
 // ─── Entry Detail Modal ───────────────────────────────────────────────────────
 
 function EntryModal({
-  entry, userRole, onClose, onStatusUpdate, onRenew,
+  entry, userRole, onClose, onStatusUpdate, onRenew, onEditLocation,
 }: {
   entry: EntryRow;
   userRole: string;
   onClose: () => void;
   onStatusUpdate: (id: string, updated: Partial<EntryRow>) => void;
   onRenew?: (entry: EntryRow) => void;
+  onEditLocation?: (entry: EntryRow) => void;
 }) {
   const [processing, setProcessing] = useState<'approve' | 'reject' | null>(null);
   const [resendingPass, setResendingPass] = useState(false);
@@ -304,6 +305,12 @@ function EntryModal({
               <RotateCcw size={14} />Renew Pass
             </button>
           )}
+          {onEditLocation && (userRole === 'admin' || userRole === 'ta') && (
+            <button onClick={() => onEditLocation(entry)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-semibold rounded-xl text-sm transition-colors">
+              <MapPin size={14} />Edit Location
+            </button>
+          )}
           <button onClick={onClose} className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl">Close</button>
         </div>
       </div>
@@ -487,6 +494,81 @@ function RenewModal({
   );
 }
 
+// ─── Edit Location Modal ──────────────────────────────────────────────────────
+
+function EditLocationModal({
+  entry, onClose, onSuccess,
+}: {
+  entry: EntryRow;
+  onClose: () => void;
+  onSuccess: (updated: EntryRow) => void;
+}) {
+  const [building,   setBuilding]   = useState(entry.building_name);
+  const [buildings,  setBuildings]  = useState<string[]>([entry.building_name]);
+  const [submitting, setSubmitting] = useState(false);
+  const [error,      setError]      = useState('');
+
+  useEffect(() => {
+    fetch('/api/buildings').then((r) => r.json()).then((d) => {
+      if (Array.isArray(d)) setBuildings(d.map((b: { name: string }) => b.name));
+    }).catch(() => {});
+  }, []);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/entries/${entry.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ building_name: building }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError((data as { error?: string }).error ?? 'Failed to update location'); return; }
+      onSuccess(data as EntryRow);
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div>
+            <div className="flex items-center gap-1.5 font-bold text-gray-900"><MapPin size={16} className="text-blue-600" />Edit Location</div>
+            <div className="text-xs text-gray-500 mt-0.5">{entry.name} · currently at <strong>{entry.building_name}</strong></div>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg"><X size={20} /></button>
+        </div>
+        <form onSubmit={handleSubmit} className="px-5 py-5 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">New Building / Location <span className="text-red-500">*</span></label>
+            <select required value={building} onChange={(e) => setBuilding(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+              {buildings.map((b) => <option key={b}>{b}</option>)}
+            </select>
+          </div>
+          {error && <p className="text-xs text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+          <div className="flex gap-3">
+            <button type="button" onClick={onClose}
+              className="flex-1 py-2.5 border border-gray-300 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50">
+              Cancel
+            </button>
+            <button type="submit" disabled={submitting || building === entry.building_name}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-colors">
+              {submitting ? <><RefreshCw size={13} className="animate-spin" />Saving…</> : 'Save Location'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function EntryListPage() {
@@ -500,7 +582,8 @@ export default function EntryListPage() {
   const [toast,        setToast]        = useState('');
   const [resending,    setResending]    = useState<string | null>(null);
   const [page,         setPage]         = useState(1);
-  const [renewTarget,  setRenewTarget]  = useState<EntryRow | null>(null);
+  const [renewTarget,        setRenewTarget]        = useState<EntryRow | null>(null);
+  const [editLocationTarget, setEditLocationTarget] = useState<EntryRow | null>(null);
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 4000); };
 
@@ -575,6 +658,12 @@ export default function EntryListPage() {
     setEntries((prev) => [newEntry, ...prev]);
     setRenewTarget(null);
     showToast(`Pass renewed for ${newEntry.name} — sent to Facilities for approval`);
+  }
+
+  function handleEditLocationSuccess(updated: EntryRow) {
+    setEntries((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+    setEditLocationTarget(null);
+    showToast(`Location updated to ${updated.building_name} for ${updated.name}`);
   }
 
   const filtered = entries.filter((e) => {
@@ -827,6 +916,7 @@ export default function EntryListPage() {
           onClose={() => setSelected(null)}
           onStatusUpdate={handleStatusUpdate}
           onRenew={(e) => { setSelected(null); setRenewTarget(e); }}
+          onEditLocation={(e) => { setSelected(null); setEditLocationTarget(e); }}
         />
       )}
 
@@ -836,6 +926,15 @@ export default function EntryListPage() {
           entry={renewTarget}
           onClose={() => setRenewTarget(null)}
           onSuccess={handleRenewSuccess}
+        />
+      )}
+
+      {/* Edit Location Modal */}
+      {editLocationTarget && (
+        <EditLocationModal
+          entry={editLocationTarget}
+          onClose={() => setEditLocationTarget(null)}
+          onSuccess={handleEditLocationSuccess}
         />
       )}
     </div>

@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import {
   Users, CheckCircle, Clock, XCircle, CalendarDays,
-  ChevronRight, UserPlus, Upload, TrendingUp, TrendingDown, Minus,
+  ChevronRight, UserPlus, TrendingUp, TrendingDown, Minus,
   ArrowRight, LayoutDashboard,
 } from 'lucide-react';
 import { getRoleStyle } from '@/lib/constants';
@@ -701,38 +701,6 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* Quick actions (admin only) */}
-          {userRole === 'admin' && (
-            <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
-              <h3 className="text-[13px] font-bold text-gray-900 mb-3">Quick Actions</h3>
-              <div className="space-y-2">
-                <Link
-                  href="/create-gate-pass"
-                  className="flex items-center gap-3 p-3 rounded-xl border border-blue-100 bg-blue-50 hover:bg-blue-100 hover:border-blue-200 transition-all group"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-700 transition-colors">
-                    <UserPlus size={14} className="text-white" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-blue-900">Single Entry</div>
-                    <div className="text-[10px] text-blue-600">Create a gate pass</div>
-                  </div>
-                </Link>
-                <Link
-                  href="/create-gate-pass"
-                  className="flex items-center gap-3 p-3 rounded-xl border border-purple-100 bg-purple-50 hover:bg-purple-100 hover:border-purple-200 transition-all group"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-purple-600 flex items-center justify-center flex-shrink-0 group-hover:bg-purple-700 transition-colors">
-                    <Upload size={14} className="text-white" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-purple-900">Bulk Upload</div>
-                    <div className="text-[10px] text-purple-600">Import from CSV</div>
-                  </div>
-                </Link>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

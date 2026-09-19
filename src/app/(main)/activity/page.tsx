@@ -133,7 +133,7 @@ export default function ActivityPage() {
           {logs.map((log) => {
             const meta = ACTION_META[log.action] ?? DEFAULT_META;
             return (
-              <div key={log.id} className="flex items-start gap-3 sm:gap-4 px-4 sm:px-5 py-3.5 sm:py-4 hover:bg-gray-50 transition-colors">
+              <div key={log.id} className="list-row flex items-start gap-3 sm:gap-4 px-4 sm:px-5 py-3.5 sm:py-4">
                 <div className={`flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full border flex items-center justify-center [&_svg]:w-3 [&_svg]:h-3 sm:[&_svg]:w-3.5 sm:[&_svg]:h-3.5 ${meta.color}`}>
                   {meta.icon}
                 </div>

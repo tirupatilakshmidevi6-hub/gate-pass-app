@@ -54,9 +54,26 @@ a, button, [role="button"] {
 /* ─── Page background ────────────────────────────────────────────────────────── */
 
 .gp-bg {
-  background: linear-gradient(135deg, #F8FAFF 0%, #F4F7FF 50%, #F8FAFC 100%);
+  background: #EDF1F7;
 }
 html.dark .gp-bg { background: #0B1220; }
+
+/* ─── Create Gate Pass animations ────────────────────────────────────────────── */
+
+@keyframes cgpSlideUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes cgpTabSwitch {
+  from { opacity: 0; transform: translateX(12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.cgp-s1 { animation: cgpSlideUp 0.4s cubic-bezier(0.16,1,0.3,1) 0.04s both; }
+.cgp-s2 { animation: cgpSlideUp 0.4s cubic-bezier(0.16,1,0.3,1) 0.13s both; }
+.cgp-s3 { animation: cgpSlideUp 0.4s cubic-bezier(0.16,1,0.3,1) 0.22s both; }
+.cgp-s4 { animation: cgpSlideUp 0.4s cubic-bezier(0.16,1,0.3,1) 0.31s both; }
+.cgp-tab-in { animation: cgpTabSwitch 0.28s cubic-bezier(0.16,1,0.3,1) both; }
 
 /* ─── Sidebar brand ──────────────────────────────────────────────────────────── */
 
@@ -129,6 +146,78 @@ html.dark .stat-tint-red {
     min-height: 44px;
     font-size: 16px;
   }
+
+  .gp-input {
+    width: 100%;
+    background: #F0F6FF;
+    border: 1.5px solid #C7DDFB;
+    border-radius: 10px;
+    color: #1E3A5F;
+    padding: 0.6rem 0.875rem;
+    font-size: 0.875rem;
+    min-height: 42px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    appearance: auto;
+  }
+  .gp-input:focus {
+    border-color: #2563EB;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
+    background: #EBF3FF;
+  }
+  .gp-input::placeholder {
+    color: #9DB8D9;
+  }
+  .gp-input option {
+    background: white;
+    color: #1E3A5F;
+  }
+
+  .dark-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 10px;
+    color: white;
+    padding: 0.6rem 0.875rem;
+    font-size: 0.875rem;
+    min-height: 42px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    appearance: auto;
+  }
+  .dark-input:focus {
+    border-color: rgba(96, 165, 250, 0.55);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+  }
+  .dark-input::placeholder {
+    color: rgba(255, 255, 255, 0.22);
+  }
+  .dark-input option {
+    background: #0d1b3e;
+    color: white;
+  }
+
+  /* Create Gate Pass — clean white inputs */
+  .cgp-input {
+    width: 100%;
+    background: #FFFFFF;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 10px;
+    color: #1E293B;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    min-height: 44px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    appearance: auto;
+  }
+  .cgp-input:focus {
+    border-color: #4F46E5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.10);
+  }
+  .cgp-input::placeholder { color: #CBD5E1; }
+  .cgp-input option { background: white; color: #1E293B; }
 
   /* Safe-area helpers for iPhone notch & home bar */
   .safe-area-top {
@@ -243,9 +332,14 @@ html.dark .text-gray-600 { color: #94a3b8; }
 html.dark .text-gray-500 { color: #64748b; }
 html.dark .text-gray-400 { color: #475569; }
 
-html.dark .hover\:bg-gray-50:hover  { background-color: #263148; }
-html.dark .hover\:bg-gray-100:hover { background-color: #334155; }
-html.dark .hover\:bg-gray-200:hover { background-color: #3d4e68; }
+/* Light mode — make hover clearly visible on white backgrounds */
+.hover\:bg-gray-50:hover  { background-color: #EEF2FF !important; }
+.hover\:bg-gray-100:hover { background-color: #E0E7FF !important; }
+
+/* Dark mode overrides */
+html.dark .hover\:bg-gray-50:hover  { background-color: #1e2d45 !important; }
+html.dark .hover\:bg-gray-100:hover { background-color: #263148 !important; }
+html.dark .hover\:bg-gray-200:hover { background-color: #334155 !important; }
 
 html.dark header { background-color: #1e293b !important; border-color: #334155 !important; }
 
@@ -571,9 +665,27 @@ html.dark .stat-card-v2 { background-color: #1e293b !important; border-color: #3
 
 /* ─── Premium table rows ──────────────────────────────────────────────────── */
 
-.trow { transition: background 0.12s ease; }
-.trow:hover { background: #F8FAFF !important; }
-html.dark .trow:hover { background: #162032 !important; }
+.trow { transition: background 0.15s ease, box-shadow 0.15s ease; }
+.trow:hover {
+  background: #EEF2FF !important;
+  box-shadow: inset 3px 0 0 #818CF8 !important;
+}
+html.dark .trow:hover {
+  background: #1a2845 !important;
+  box-shadow: inset 3px 0 0 #4F46E5 !important;
+}
+
+/* ─── List row hover — for non-table list items ──────────────────────────── */
+
+.list-row {
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.list-row:hover {
+  background: #EEF2FF !important;
+}
+html.dark .list-row:hover {
+  background: #1a2845 !important;
+}
 
 /* ─── Panel cards (sidebar panels) ───────────────────────────────────────── */
 

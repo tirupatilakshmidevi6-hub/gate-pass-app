@@ -260,6 +260,12 @@ export async function renewEntry(originalId: string, data: {
   return throwOnError(entry, error);
 }
 
+export async function updateEntryBuilding(id: string, building_name: string): Promise<EntryRow | null> {
+  const { data, error } = await supabase.from('entries').update({ building_name }).eq('id', id).select().single();
+  if (error) { console.error('[DB] updateEntryBuilding:', error.message); return null; }
+  return data;
+}
+
 export async function getPendingEntries(): Promise<EntryRow[]> {
   const { data, error } = await supabase.from('entries').select('*').eq('status', 'Pending Approval').order('created_at', { ascending: false });
   return throwOnError(data, error);

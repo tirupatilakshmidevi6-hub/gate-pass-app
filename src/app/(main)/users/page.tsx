@@ -171,7 +171,7 @@ export default function UsersPage() {
                 {active.length === 0 ? (
                   <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400 text-sm">No active users.</td></tr>
                 ) : active.map((u, i) => (
-                  <tr key={u.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={u.id} className="trow">
                     <td className="px-4 py-3 text-gray-400 text-xs">{i + 1}</td>
                     <td className="px-4 py-3 font-semibold text-gray-900 whitespace-nowrap">{u.name}</td>
                     <td className="px-4 py-3 text-gray-500 text-xs">{u.email}</td>
@@ -219,7 +219,7 @@ export default function UsersPage() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {others.map((u) => (
-                  <tr key={u.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={u.id} className="trow">
                     <td className="px-4 py-3 font-semibold text-gray-900 whitespace-nowrap">{u.name}</td>
                     <td className="px-4 py-3 text-gray-500 text-xs">{u.email}</td>
                     <td className="px-4 py-3">

@@ -409,7 +409,7 @@ export default function ReportsPage() {
                     const rs = getRoleStyle(e.role ?? '');
                     const sp = STATUS_PALETTE[e.status] ?? { bg: '#f3f4f6', text: '#4b5563' };
                     return (
-                      <tr key={e.id} className="hover:bg-gray-50 transition-colors duration-100">
+                      <tr key={e.id} className="trow">
                         <td className="px-4 py-3 text-gray-400 text-xs font-medium">
                           {(page - 1) * PAGE_SIZE + i + 1}
                         </td>
