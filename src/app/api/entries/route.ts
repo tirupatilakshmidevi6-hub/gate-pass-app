@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
-import { getAllEntries, createEntry, createRegistrationToken, checkDuplicateEntry } from '@/lib/db';
+import { getAllEntries, createEntry, createRegistrationToken, checkDuplicateEntry, logActivity } from '@/lib/db';
 import { sendInviteEmail } from '@/lib/email';
 import { getAppUrl } from '@/lib/app-url';
+import { getSession } from '@/lib/auth';
 
 export async function GET() {
   return NextResponse.json(await getAllEntries());
 }
 
 export async function POST(req: NextRequest) {
+  const session = await getSession();
   const body = await req.json();
   const { name, email, mobile_number, role, purpose, reporting_date, valid_until, employee_id, poc_name, contact_no, building_name } = body;
 
@@ -35,8 +37,17 @@ export async function POST(req: NextRequest) {
 
   let entry;
   try {
-    entry = await createEntry({ name, email, mobile_number, role, purpose, reporting_date, valid_until, employee_id, poc_name, contact_no, building_name });
+    entry = await createEntry({ name, email, mobile_number, role, purpose, reporting_date, valid_until, employee_id, poc_name, contact_no, building_name, created_by: session?.name ?? 'Admin' });
     console.log(`[NewEntry] Step 1 ✓ — Entry created | id=${entry.id}`);
+    if (session) {
+      logActivity({
+        action: 'entry_created',
+        performed_by: session.id,
+        performed_by_name: session.name,
+        entry_id: entry.id,
+        candidate_name: entry.name,
+      }).catch(() => {});
+    }
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('[NewEntry] Step 1 ✗ — createEntry failed:', msg);

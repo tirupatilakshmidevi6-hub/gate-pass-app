@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { createEntry, createRegistrationToken, checkDuplicateEntry } from '@/lib/db';
 import { sendInviteEmail } from '@/lib/email';
 import { getAppUrl } from '@/lib/app-url';
+import { getSession } from '@/lib/auth';
 
 type RowResult = {
   name: string;
@@ -44,6 +45,7 @@ function normalizeDate(raw: string | undefined): string | null {
 const INTER_SEND_DELAY_MS = 200;
 
 export async function POST(req: NextRequest) {
+  const session = await getSession();
   const { rows } = await req.json();
 
   if (!Array.isArray(rows) || rows.length === 0) {
@@ -129,6 +131,7 @@ export async function POST(req: NextRequest) {
         poc_name:      row.poc_name.trim(),
         contact_no:    row.contact_no.trim(),
         building_name: row.building_name.trim(),
+        created_by:    session?.name ?? 'Admin',
       });
       console.log(`[BulkUpload] Row ${rowIndex}: entry created (id=${entry.id}) for ${email}`);
     } catch (dbErr) {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo, useRef } from 'react';
-import { CalendarDays, Filter, Download, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
+import { CalendarDays, Filter, Download, ChevronLeft, ChevronRight, ChevronDown, Users } from 'lucide-react';
 import { getRoleStyle } from '@/lib/constants';
 
 const PAGE_SIZE = 8;
@@ -17,6 +17,7 @@ const STATUS_PALETTE: Record<string, { bg: string; text: string; dot: string }> 
 type EntryRow = {
   id: string; name: string; role: string | null; purpose: string;
   reporting_date: string; building_name: string; status: string; created_at: string;
+  created_by: string;
 };
 
 function toISO(d: Date) {
@@ -147,7 +148,9 @@ export default function ReportsPage() {
   const byRole     = useMemo(() => countBy(byDate, 'role'),          [byDate]);
   const byBuilding = useMemo(() => countBy(byDate, 'building_name'), [byDate]);
   const byStatus   = useMemo(() => countBy(byDate, 'status'),        [byDate]);
+  const byCreator  = useMemo(() => countBy(entries, 'created_by'),   [entries]);
   const maxBldg    = Math.max(...byBuilding.map(([, v]) => v), 1);
+  const maxCreator = Math.max(...byCreator.map(([, v]) => v), 1);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const pageData   = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -309,6 +312,45 @@ export default function ReportsPage() {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* ── By Team Member ──────────────────────────────────────────────── */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 shadow-sm">
+            <div className="flex items-center gap-2 mb-4 sm:mb-5">
+              <Users size={14} className="text-indigo-500 flex-shrink-0" />
+              <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[2.5px]">By Team Member</h3>
+              <span className="ml-auto text-[10px] font-semibold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">All time</span>
+            </div>
+            {byCreator.length === 0 ? (
+              <EmptyChart />
+            ) : (
+              <div className="space-y-3.5">
+                {byCreator.map(([person, cnt], i) => (
+                  <div key={person}>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
+                          style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}>
+                          {person.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="text-xs font-medium text-gray-700 truncate max-w-[160px] sm:max-w-xs">{person}</span>
+                        {i === 0 && <span className="text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full flex-shrink-0">Top</span>}
+                      </div>
+                      <span className="text-xs font-bold text-gray-900 flex-shrink-0">{cnt} pass{cnt !== 1 ? 'es' : ''}</span>
+                    </div>
+                    <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${(cnt / maxCreator) * 100}%`,
+                          background: `linear-gradient(90deg, ${CHART_COLORS[i % CHART_COLORS.length]}, ${CHART_COLORS[i % CHART_COLORS.length]}99)`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* ── Entries Table ────────────────────────────────────────────────── */}
