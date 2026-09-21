@@ -200,185 +200,199 @@ export default function RegisterPage() {
 
   const submitting = submitStep !== null;
 
+  const PageShell = ({ children }: { children: React.ReactNode }) => (
+    <div className="min-h-screen flex items-center justify-center px-4 py-10"
+      style={{ background: 'linear-gradient(135deg, #e8f0fe 0%, #f8faff 50%, #eef2ff 100%)' }}>
+      {children}
+    </div>
+  );
+
   // ── Loading state ──────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <PageShell>
         <div className="text-center space-y-3">
           <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm text-slate-500">Loading registration form…</p>
+          <p className="text-sm text-slate-500 font-medium">Loading your registration…</p>
         </div>
-      </div>
+      </PageShell>
     );
   }
 
   if (isExpired) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-        <div className="max-w-sm w-full bg-white rounded-2xl p-8 text-center shadow-sm border border-slate-200 space-y-4">
-          <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
+      <PageShell>
+        <div className="max-w-sm w-full bg-white rounded-2xl p-8 text-center shadow-lg border border-slate-100 space-y-4">
+          <div className="w-14 h-14 bg-amber-50 border border-amber-200 rounded-full flex items-center justify-center mx-auto">
             <svg className="w-7 h-7 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           </div>
-          <h2 className="text-lg font-bold text-slate-800">Registration Link Expired</h2>
-          <p className="text-sm text-slate-500">This registration link has expired. Please contact HR to get a new invitation link.</p>
+          <div><h2 className="text-lg font-bold text-slate-800">Link Expired</h2>
+          <p className="text-sm text-slate-500 mt-1">This registration link has expired. Please contact HR to get a new invitation.</p></div>
         </div>
-      </div>
+      </PageShell>
     );
   }
 
   if (serverError) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-        <div className="max-w-sm w-full bg-white rounded-2xl p-8 text-center shadow-sm border border-slate-200 space-y-4">
-          <div className="w-14 h-14 bg-yellow-100 rounded-full flex items-center justify-center mx-auto">
+      <PageShell>
+        <div className="max-w-sm w-full bg-white rounded-2xl p-8 text-center shadow-lg border border-slate-100 space-y-4">
+          <div className="w-14 h-14 bg-yellow-50 border border-yellow-200 rounded-full flex items-center justify-center mx-auto">
             <svg className="w-7 h-7 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h2 className="text-lg font-bold text-slate-800">Something went wrong</h2>
-          <p className="text-sm text-slate-500">The server encountered an error. Please refresh the page and try again.</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-6 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors"
-          >
+          <div><h2 className="text-lg font-bold text-slate-800">Something went wrong</h2>
+          <p className="text-sm text-slate-500 mt-1">The server encountered an error. Please refresh the page and try again.</p></div>
+          <button onClick={() => window.location.reload()}
+            className="px-6 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors">
             Try Again
           </button>
         </div>
-      </div>
+      </PageShell>
     );
   }
 
   if (notFound) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-        <div className="max-w-sm w-full bg-white rounded-2xl p-8 text-center shadow-sm border border-slate-200">
-          <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <PageShell>
+        <div className="max-w-sm w-full bg-white rounded-2xl p-8 text-center shadow-lg border border-slate-100 space-y-4">
+          <div className="w-14 h-14 bg-red-50 border border-red-200 rounded-full flex items-center justify-center mx-auto">
             <svg className="w-7 h-7 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </div>
-          <h2 className="text-lg font-bold text-slate-800 mb-2">Invalid Link</h2>
-          <p className="text-sm text-slate-500">This registration link is invalid or has expired. Please contact the HR team.</p>
+          <div><h2 className="text-lg font-bold text-slate-800">Invalid Link</h2>
+          <p className="text-sm text-slate-500 mt-1">This registration link is invalid or has already been used. Please contact the HR team.</p></div>
         </div>
-      </div>
+      </PageShell>
     );
   }
 
   if (alreadySubmitted && entry?.status !== 'Approved') {
     const isRejected = entry?.status === 'Rejected';
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-        <div className="max-w-sm w-full bg-white rounded-2xl p-8 text-center shadow-sm border border-slate-200 space-y-4">
-          <div className={`w-14 h-14 ${isRejected ? 'bg-red-100' : 'bg-blue-100'} rounded-full flex items-center justify-center mx-auto`}>
-            <svg className={`w-7 h-7 ${isRejected ? 'text-red-600' : 'text-blue-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <PageShell>
+        <div className="max-w-sm w-full bg-white rounded-2xl p-8 text-center shadow-lg border border-slate-100 space-y-4">
+          <div className={`w-14 h-14 ${isRejected ? 'bg-red-50 border border-red-200' : 'bg-blue-50 border border-blue-200'} rounded-full flex items-center justify-center mx-auto`}>
+            <svg className={`w-7 h-7 ${isRejected ? 'text-red-500' : 'text-blue-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isRejected ? 'M6 18L18 6M6 6l12 12' : 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'} />
             </svg>
           </div>
-          <h2 className="text-lg font-bold text-slate-800">{isRejected ? 'Entry Rejected' : 'Pending Approval'}</h2>
-          <p className="text-sm text-slate-500">
-            {isRejected
-              ? `Sorry ${entry?.name}, your entry request was not approved. Please contact HR.`
-              : 'You have already completed your registration. Your gate pass request is being reviewed by the Facilities Team. Please check your email for updates.'
-            }
-          </p>
+          <div>
+            <h2 className="text-lg font-bold text-slate-800">{isRejected ? 'Entry Rejected' : 'Pending Approval'}</h2>
+            <p className="text-sm text-slate-500 mt-1">
+              {isRejected
+                ? `Sorry ${entry?.name}, your entry request was not approved. Please contact HR.`
+                : 'Your registration is complete and is being reviewed by the Facilities Team. You will receive an email once approved.'
+              }
+            </p>
+          </div>
         </div>
-      </div>
+      </PageShell>
     );
   }
 
   // ── Registration form ──────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4">
-      <div className="max-w-md mx-auto">
-        {/* Header */}
-        <div className="text-center mb-6">
-          <div className="flex justify-center mb-3">
-            <img
-              src="https://www.image2url.com/r2/default/images/1779254824307-0fca63d9-e1eb-4ccf-bfb4-4c663ca4ae5e.jpeg"
-              alt="NxtWave"
-              className="h-14 w-auto object-contain"
-            />
+    <PageShell>
+      <div className="w-full max-w-md">
+
+        {/* Card */}
+        <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+
+          {/* Card header — branded */}
+          <div style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%)' }} className="px-6 pt-6 pb-5">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-1.5">
+                <span style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900, letterSpacing: '-0.5px' }}
+                  className="text-white text-lg">NXT</span>
+                <span style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900, letterSpacing: '-0.5px', background: 'linear-gradient(90deg,#60a5fa,#a5b4fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+                  className="text-lg">WAVE</span>
+              </div>
+              <span className="text-blue-300 text-xs">•</span>
+              <span className="text-blue-200 text-xs font-medium">Office Entry</span>
+            </div>
+            <h1 className="text-white font-bold text-xl leading-tight">Hello, {entry?.name}!</h1>
+            <p className="text-blue-200 text-xs mt-1 leading-relaxed">Upload your photo to complete registration. The Facilities Team will review and send your gate pass by email.</p>
+            {/* Visit summary pills */}
+            <div className="flex flex-wrap gap-2 mt-3">
+              <span className="inline-flex items-center gap-1 bg-white/15 text-white text-xs px-2.5 py-1 rounded-full">
+                <svg className="w-3 h-3 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                {entry?.reporting_date}
+              </span>
+              <span className="inline-flex items-center gap-1 bg-white/15 text-white text-xs px-2.5 py-1 rounded-full">
+                <svg className="w-3 h-3 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                {entry?.building_name}
+              </span>
+              <span className="inline-flex items-center gap-1 bg-white/15 text-white text-xs px-2.5 py-1 rounded-full">
+                <svg className="w-3 h-3 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                {entry?.purpose}
+              </span>
+            </div>
           </div>
-          <p className="text-sm text-slate-500 mt-1">Office Entry Registration</p>
-        </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-5 text-sm text-blue-800">
-          <p className="font-semibold mb-1">Hello, {entry?.name}!</p>
-          <p className="text-blue-700 text-xs leading-relaxed">Please upload your photo to complete registration. Once submitted, the Facilities Team will review and send your gate pass to your email.</p>
-        </div>
-
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <form onSubmit={handleSubmit} className="divide-y divide-slate-100">
+          {/* Form body */}
+          <form onSubmit={handleSubmit}>
 
             {/* Error banner */}
             {error && (
-              <div className="px-5 py-3 bg-red-50 border-b border-red-100 flex items-start gap-2">
+              <div className="mx-5 mt-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
                 <svg className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 <p className="text-sm text-red-600">{error}</p>
               </div>
             )}
 
             {/* Read-only personal info */}
-            <div className="px-5 py-4 space-y-3">
-              <SectionLabel>Your Details (Pre-filled)</SectionLabel>
+            <div className="px-6 pt-5 pb-4 space-y-3">
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Your Details</p>
               {[
                 { label: 'Full Name',     value: entry?.name ?? '' },
                 { label: 'Email',         value: entry?.email ?? '' },
                 { label: 'Mobile Number', value: entry?.mobile_number ?? '' },
-              ].map((f) => (
+              ].filter((f) => f.value).map((f) => (
                 <div key={f.label}>
                   <label className="block text-xs font-medium text-slate-500 mb-1">{f.label}</label>
-                  <input value={f.value} readOnly className="w-full px-3 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-600 text-sm cursor-not-allowed" />
+                  <input value={f.value} readOnly
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 text-sm cursor-not-allowed select-none" />
                 </div>
               ))}
             </div>
 
+            {/* Divider */}
+            <div className="mx-6 border-t border-slate-100" />
+
             {/* Photo upload */}
-            <div className="px-5 py-4 space-y-3">
-              <SectionLabel>Photo Upload *</SectionLabel>
+            <div className="px-6 pt-4 pb-5 space-y-3">
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Photo <span className="text-red-400">*</span></p>
 
-              <div className="flex flex-col items-center gap-3 py-2">
-                <div className="relative">
-                  {photoPreview ? (
-                    <img
-                      src={photoPreview}
-                      alt="Preview"
-                      className="w-36 h-36 rounded-full object-cover object-top border-4 border-blue-500 shadow-md"
-                    />
-                  ) : (
-                    <div className="w-36 h-36 rounded-full bg-slate-100 border-4 border-dashed border-slate-300 flex flex-col items-center justify-center gap-1">
-                      <svg className="w-10 h-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                      <span className="text-xs text-slate-400">Your photo</span>
-                    </div>
-                  )}
-                </div>
+              <div className="flex flex-col items-center gap-4 py-2">
+                {photoPreview ? (
+                  <img src={photoPreview} alt="Preview"
+                    className="w-28 h-28 rounded-full object-cover object-top border-4 border-blue-500 shadow-md" />
+                ) : (
+                  <div className="w-28 h-28 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex flex-col items-center justify-center gap-1.5">
+                    <svg className="w-9 h-9 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                    <span className="text-[11px] text-slate-400">Your photo</span>
+                  </div>
+                )}
 
-                <div className="flex flex-col items-center gap-1.5">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif"
-                    onChange={handlePhotoChange}
-                    className="hidden"
-                    id="photo-input"
-                    disabled={submitting}
-                  />
-                  <label
-                    htmlFor="photo-input"
-                    className={`inline-block px-5 py-2 text-white text-sm font-medium rounded-lg ${submitting ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-800 cursor-pointer hover:bg-slate-700'}`}
-                  >
+                <input ref={fileInputRef} type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif"
+                  onChange={handlePhotoChange} className="hidden" id="photo-input" disabled={submitting} />
+                <div className="flex flex-col items-center gap-1">
+                  <label htmlFor="photo-input"
+                    className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl transition-colors ${submitting ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-slate-800 text-white cursor-pointer hover:bg-slate-700'}`}>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                     {photoFile ? 'Change Photo' : 'Choose from Gallery'}
                   </label>
-                  {photoFile && <p className="text-xs text-slate-500 max-w-[220px] truncate text-center">{photoFile.name}</p>}
+                  {photoFile && <p className="text-xs text-slate-400 max-w-[200px] truncate text-center">{photoFile.name}</p>}
                 </div>
               </div>
             </div>
 
             {/* Submit */}
-            <div className="px-5 py-4 space-y-3">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full py-3 bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 disabled:opacity-60 text-white font-bold rounded-xl text-sm shadow-md shadow-blue-200"
-              >
+            <div className="px-6 pb-6">
+              <button type="submit" disabled={submitting}
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold rounded-xl text-sm transition-colors shadow-sm">
                 {submitting ? (
                   <span className="flex items-center justify-center gap-2">
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -387,9 +401,9 @@ export default function RegisterPage() {
                 ) : 'Submit Registration'}
               </button>
 
-              {/* Progress steps shown while submitting */}
+              {/* Progress steps */}
               {submitting && (
-                <div className="flex items-center justify-center gap-4 pt-1">
+                <div className="flex items-center justify-center gap-6 mt-3">
                   {(['compressing', 'uploading', 'submitting'] as const).map((step, i) => {
                     const steps: SubmitStep[] = ['compressing', 'uploading', 'submitting'];
                     const currentIdx = steps.indexOf(submitStep);
@@ -398,13 +412,9 @@ export default function RegisterPage() {
                     return (
                       <div key={step} className="flex flex-col items-center gap-1">
                         <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                          isDone   ? 'bg-green-500 text-white' :
-                          isActive ? 'bg-blue-600 text-white' :
-                                     'bg-slate-200 text-slate-400'
-                        }`}>
-                          {isDone ? '✓' : i + 1}
-                        </div>
-                        <span className={`text-[10px] ${isActive ? 'text-blue-600 font-semibold' : 'text-slate-400'}`}>
+                          isDone ? 'bg-green-500 text-white' : isActive ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-400'
+                        }`}>{isDone ? '✓' : i + 1}</div>
+                        <span className={`text-[10px] font-medium ${isActive ? 'text-blue-600' : 'text-slate-400'}`}>
                           {step === 'compressing' ? 'Compress' : step === 'uploading' ? 'Upload' : 'Submit'}
                         </span>
                       </div>
@@ -416,12 +426,8 @@ export default function RegisterPage() {
           </form>
         </div>
 
-        <p className="text-center text-xs text-slate-400 mt-5">NxtWave &copy; {new Date().getFullYear()} &nbsp;|&nbsp; Gate Pass System</p>
+        <p className="text-center text-xs text-slate-400 mt-5">NxtWave &copy; {new Date().getFullYear()} &nbsp;·&nbsp; Gate Pass System</p>
       </div>
-    </div>
+    </PageShell>
   );
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{children}</p>;
 }
