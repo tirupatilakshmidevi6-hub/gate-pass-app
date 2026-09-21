@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { getRoleStyle } from '@/lib/constants';
-import { CalendarDays, Search, RefreshCw, CheckCircle, XCircle, X, Clock, Send, RotateCcw, MapPin } from 'lucide-react';
+import { CalendarDays, Search, RefreshCw, CheckCircle, XCircle, X, Send, RotateCcw, MapPin } from 'lucide-react';
 
 type EntryRow = {
   id: string; name: string; email: string | null; mobile_number: string | null;
@@ -108,207 +108,108 @@ function EntryModal({
   onRenew?: (entry: EntryRow) => void;
   onEditLocation?: (entry: EntryRow) => void;
 }) {
-  const [processing, setProcessing] = useState<'approve' | 'reject' | null>(null);
+  const [processing,   setProcessing]   = useState<'approve' | 'reject' | null>(null);
   const [resendingPass, setResendingPass] = useState(false);
-  const [modalToast, setModalToast] = useState('');
-  const [activityLogs, setActivityLogs] = useState<{ action: string; performed_by_name: string; created_at: string }[]>([]);
-
-  useEffect(() => {
-    fetch(`/api/activity?entry_id=${entry.id}&limit=20`)
-      .then((r) => r.json())
-      .then((d) => Array.isArray(d) && setActivityLogs(d))
-      .catch(() => {});
-  }, [entry.id]);
+  const [modalToast,   setModalToast]   = useState('');
 
   async function handleAction(action: 'approve' | 'reject') {
     setProcessing(action);
     try {
       const res = await fetch(`/api/approvals/${entry.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action }),
       });
-      if (res.ok) {
-        const updated = await res.json();
-        onStatusUpdate(entry.id, updated);
-        onClose();
-      }
+      if (res.ok) { onStatusUpdate(entry.id, await res.json()); onClose(); }
     } finally { setProcessing(null); }
   }
 
-  const timeline = [
-    {
-      label: 'Entry Created',
-      done: true,
-      detail: `By ${entry.created_by}`,
-      time: entry.created_at,
-    },
-    {
-      label: 'Invite Sent',
-      done: !!entry.invite_token || entry.status !== 'Pending Form',
-      detail: entry.email ?? '—',
-      time: entry.created_at,
-    },
-    {
-      label: 'Form Submitted',
-      done: entry.form_status === 'submitted' || entry.status === 'Pending Approval' || entry.status === 'Approved' || entry.status === 'Rejected',
-      detail: entry.status === 'Pending Form' ? 'Waiting for candidate' : 'Submitted',
-      time: null,
-    },
-    {
-      label: 'Facilities Review',
-      done: entry.status === 'Approved' || entry.status === 'Rejected',
-      detail: entry.status === 'Approved' ? 'Approved' : entry.status === 'Rejected' ? 'Rejected' : 'Pending',
-      time: null,
-    },
-    {
-      label: 'Gate Pass',
-      done: entry.status === 'Approved',
-      detail: entry.status === 'Approved' ? `Pass ID: ${entry.pass_id ?? '—'}` : 'Not yet',
-      time: null,
-    },
-  ];
+  const rs = entry.role ? getRoleStyle(entry.role) : null;
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center sm:p-4" onClick={onClose}>
-      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl max-h-[92dvh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[92dvh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
 
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-900 to-blue-600 rounded-t-2xl px-4 sm:px-6 py-4 sm:py-5">
+        <div className="bg-gradient-to-r from-blue-900 to-blue-700 rounded-t-2xl px-5 py-4">
           <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+            <div className="flex items-center gap-3 min-w-0">
               {entry.photo_url
-                ? <img src={entry.photo_url} alt="" className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-white/30 flex-shrink-0" />
-                : <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white/20 flex items-center justify-center text-white text-xl sm:text-2xl font-bold flex-shrink-0">{entry.name.charAt(0)}</div>
+                ? <img src={entry.photo_url} alt="" className="w-12 h-12 rounded-full object-cover border-2 border-white/30 flex-shrink-0" />
+                : <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white text-xl font-bold flex-shrink-0">{entry.name.charAt(0)}</div>
               }
               <div className="min-w-0">
-                <div className="text-[10px] sm:text-xs font-bold text-blue-200 uppercase tracking-widest mb-0.5 sm:mb-1">Entry Details</div>
-                <div className="text-lg sm:text-xl font-bold text-white truncate">{entry.name}</div>
-                <div className="text-blue-200 text-xs sm:text-sm mt-0.5 truncate">{entry.email ?? '—'}</div>
-              </div>
-            </div>
-            <button onClick={onClose} className="text-blue-200 hover:text-white p-1 rounded-lg flex-shrink-0"><X size={20} /></button>
-          </div>
-          <div className="mt-3 flex items-center gap-2 flex-wrap">
-            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${STATUS_BADGE[entry.status] ?? 'badge-pending-form'}`}>{entry.status}</span>
-            {entry.pass_id && <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">{entry.pass_id}</span>}
-            {entry.role && (() => { const rs = getRoleStyle(entry.role!); return <span style={{ background: rs.bg, color: rs.text, border: `1px solid ${rs.border}` }} className="px-2.5 py-0.5 rounded-full text-xs font-semibold">{entry.role}</span>; })()}
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">{entry.purpose}</span>
-          </div>
-        </div>
-
-        <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-4 sm:space-y-5">
-          {/* Candidate Information */}
-          <Sec title="Candidate Information">
-            <DR label="Mobile Number" value={entry.mobile_number ?? '—'} />
-            <DR label="Purpose"       value={entry.purpose} />
-            <DR label="Status"        value={entry.status} />
-          </Sec>
-
-          {/* Entry Details */}
-          <Sec title="Entry Details">
-            <DR label="Pass ID"        value={entry.pass_id ?? '—'} />
-            <DR label="Reporting Date" value={entry.reporting_date} />
-            <DR label="Valid Until"    value={entry.valid_until ?? '—'} />
-            <DR label="Building"       value={entry.building_name} />
-            <DR label="POC Name"       value={entry.poc_name} />
-            <DR label="Employee ID"    value={entry.employee_id ?? '—'} />
-            <DR label="Contact No"     value={entry.contact_no} />
-          </Sec>
-
-          {/* Registration Timeline */}
-          <div>
-            <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Registration Timeline</div>
-            <div className="relative pl-6">
-              <div className="absolute left-2 top-2 bottom-2 w-0.5 bg-gray-200" />
-              {timeline.map((step, i) => (
-                <div key={i} className="relative mb-4 last:mb-0">
-                  <div className={`absolute -left-6 top-1 w-4 h-4 rounded-full border-2 flex items-center justify-center ${step.done ? 'bg-green-500 border-green-500' : 'bg-white border-gray-300'}`}>
-                    {step.done && <CheckCircle size={10} className="text-white" />}
-                  </div>
-                  <div className="pl-2">
-                    <div className={`text-sm font-semibold ${step.done ? 'text-gray-900' : 'text-gray-400'}`}>{step.label}</div>
-                    <div className="text-xs text-gray-500 mt-0.5">{step.detail}{step.time ? ` · ${timeAgo(step.time)}` : ''}</div>
-                  </div>
+                <p className="text-white font-bold text-base leading-tight truncate">{entry.name}</p>
+                <p className="text-blue-200 text-xs mt-0.5 truncate">{entry.email ?? entry.mobile_number ?? '—'}</p>
+                <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                  <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${STATUS_BADGE[entry.status] ?? 'badge-pending-form'}`}>{entry.status}</span>
+                  {entry.pass_id && <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-white/20 text-white">{entry.pass_id}</span>}
+                  {rs && entry.role && <span style={{ background: rs.bg, color: rs.text }} className="px-2 py-0.5 rounded-full text-[11px] font-semibold">{entry.role}</span>}
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Mini Activity Log */}
-          {activityLogs.length > 0 && (
-            <div>
-              <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Activity Log</div>
-              <div className="space-y-1.5">
-                {activityLogs.slice(0, 5).map((log) => (
-                  <div key={log.created_at + log.action} className="flex items-center gap-2 text-xs text-gray-600 bg-gray-50 rounded-lg px-3 py-2">
-                    <Clock size={11} className="text-gray-400 flex-shrink-0" />
-                    <span className="flex-1">{formatAction(log.action)} by <strong>{log.performed_by_name}</strong></span>
-                    <span className="text-gray-400 whitespace-nowrap">{timeAgo(log.created_at)}</span>
-                  </div>
-                ))}
               </div>
             </div>
-          )}
-
-          {/* System Info */}
-          <Sec title="System Info">
-            <DR label="Created By" value={entry.created_by} />
-            <DR label="Created At" value={new Date(entry.created_at).toLocaleString()} />
-          </Sec>
+            <button onClick={onClose} className="text-blue-200 hover:text-white p-1 rounded-lg flex-shrink-0 mt-0.5"><X size={18} /></button>
+          </div>
         </div>
 
-        {/* Footer actions */}
+        {/* Details grid */}
+        <div className="px-5 py-4">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+            <InfoCell label="Purpose"        value={entry.purpose} />
+            <InfoCell label="Mobile"         value={entry.mobile_number ?? '—'} />
+            <InfoCell label="Reporting Date" value={entry.reporting_date} />
+            <InfoCell label="Valid Until"    value={entry.valid_until ?? '—'} />
+            <InfoCell label="Building"       value={entry.building_name} />
+            <InfoCell label="POC Name"       value={entry.poc_name} />
+            <InfoCell label="Employee ID"    value={entry.employee_id ?? '—'} />
+            <InfoCell label="Contact No"     value={entry.contact_no} />
+          </div>
+        </div>
+
+        {/* Footer */}
         {modalToast && (
-          <div className="mx-6 mb-3 px-4 py-2.5 bg-gray-900 text-white text-xs rounded-xl flex items-center gap-2">
+          <div className="mx-5 mb-3 px-4 py-2.5 bg-gray-900 text-white text-xs rounded-xl flex items-center gap-2">
             <CheckCircle size={13} className="text-green-400 flex-shrink-0" />{modalToast}
           </div>
         )}
-        <div className="px-4 sm:px-6 pb-5 sm:pb-6 flex gap-2 sm:gap-3 flex-wrap">
+        <div className="px-5 pb-5 flex gap-2 flex-wrap border-t border-gray-100 pt-3">
           {entry.status === 'Pending Approval' && userRole === 'facilities' && (
             <>
               <button onClick={() => handleAction('approve')} disabled={!!processing}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-semibold rounded-xl text-sm transition-colors">
-                <CheckCircle size={15} />{processing === 'approve' ? 'Approving…' : 'Approve'}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-semibold rounded-xl text-sm transition-colors">
+                <CheckCircle size={14} />{processing === 'approve' ? 'Approving…' : 'Approve'}
               </button>
               <button onClick={() => handleAction('reject')} disabled={!!processing}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white font-semibold rounded-xl text-sm transition-colors">
-                <XCircle size={15} />{processing === 'reject' ? 'Rejecting…' : 'Reject'}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white font-semibold rounded-xl text-sm transition-colors">
+                <XCircle size={14} />{processing === 'reject' ? 'Rejecting…' : 'Reject'}
               </button>
             </>
           )}
           {entry.status === 'Approved' && entry.email && (userRole === 'admin' || userRole === 'ta') && (
-            <button
-              disabled={resendingPass}
+            <button disabled={resendingPass}
               onClick={async () => {
                 setResendingPass(true);
                 try {
                   const res = await fetch(`/api/entries/${entry.id}/resend-gate-pass`, { method: 'POST' });
                   const d = await res.json();
-                  setModalToast(res.ok ? `Gate pass resent to ${entry.email}` : (d.error ?? 'Failed to resend gate pass'));
+                  setModalToast(res.ok ? `Gate pass resent to ${entry.email}` : (d.error ?? 'Failed'));
                   setTimeout(() => setModalToast(''), 4000);
-                } catch {
-                  setModalToast('Failed to resend gate pass. Please try again.');
-                  setTimeout(() => setModalToast(''), 4000);
-                } finally {
-                  setResendingPass(false);
-                }
+                } catch { setModalToast('Failed to resend. Try again.'); setTimeout(() => setModalToast(''), 4000); }
+                finally { setResendingPass(false); }
               }}
-              className="flex items-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-semibold rounded-xl text-sm transition-colors"
-            >
-              {resendingPass ? <><RefreshCw size={14} className="animate-spin" />Sending…</> : <><Send size={14} />Resend Gate Pass</>}
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-semibold rounded-xl text-sm transition-colors">
+              {resendingPass ? <><RefreshCw size={13} className="animate-spin" />Sending…</> : <><Send size={13} />Resend Pass</>}
             </button>
           )}
           {(entry.status === 'Expired' || entry.status === 'Rejected') && onRenew && (userRole === 'admin' || userRole === 'ta') && (
             <button onClick={() => onRenew(entry)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl text-sm transition-colors">
-              <RotateCcw size={14} />Renew Pass
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl text-sm transition-colors">
+              <RotateCcw size={13} />Renew
             </button>
           )}
           {onEditLocation && (userRole === 'admin' || userRole === 'ta') && (
             <button onClick={() => onEditLocation(entry)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-semibold rounded-xl text-sm transition-colors">
-              <MapPin size={14} />Edit Location
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-semibold rounded-xl text-sm transition-colors">
+              <MapPin size={13} />Edit Location
             </button>
           )}
           <button onClick={onClose} className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl">Close</button>
@@ -316,18 +217,6 @@ function EntryModal({
       </div>
     </div>
   );
-}
-
-function formatAction(action: string) {
-  const map: Record<string, string> = {
-    candidate_submitted_form: 'Form submitted',
-    entry_approved:           'Entry approved',
-    entry_rejected:           'Entry rejected',
-    invite_resent:            'Invite resent',
-    entry_created:            'Entry created',
-    entry_renewed:            'Entry renewed',
-  };
-  return map[action] ?? action.replace(/_/g, ' ');
 }
 
 // ─── Renew Modal ──────────────────────────────────────────────────────────────
@@ -941,6 +830,14 @@ export default function EntryListPage() {
   );
 }
 
+function InfoCell({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">{label}</div>
+      <div className="text-sm text-gray-800 font-medium break-words">{value}</div>
+    </div>
+  );
+}
 function Sec({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
