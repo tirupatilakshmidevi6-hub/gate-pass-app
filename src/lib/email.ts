@@ -438,80 +438,58 @@ function inviteHtml(name: string, url: string) {
 
 function gatePassWrapper(name: string, data: GatePassData, viewUrl?: string) {
   const year = new Date().getFullYear();
+  const validUntilStr = data.validUntil ? fmtDate(data.validUntil) : null;
 
-  const detailRows: [string, string][] = [
-    ['Pass ID',            data.passId],
-    ['Reporting Date',     fmtDate(data.reportingDate)],
-    ['Valid Until',        data.validUntil ? fmtDate(data.validUntil) : '—'],
-    ['Point of Contact',   data.pocName],
-    ['POC Employee ID',    data.employeeId ?? '—'],
-    ['Contact Number',     data.contactNo ?? '—'],
-    ['Building',           data.buildingName],
+  const rows: [string, string][] = [
+    ['Pass ID',        data.passId],
+    ['Building',       data.buildingName],
+    ['Reporting Date', fmtDate(data.reportingDate)],
+    ...(validUntilStr ? [['Valid Until', validUntilStr] as [string, string]] : []),
+    ['Point of Contact', data.pocName],
   ];
 
-  const tableRows = detailRows.map(([k, v], i) => `
+  const tableRows = rows.map(([k, v], i) => `
     <tr style="${i % 2 === 0 ? 'background:#f8fafc;' : ''}">
-      <td style="padding:9px 12px;color:#64748b;width:40%;font-size:12px;border-bottom:1px solid #e2e8f0;">${esc(k)}</td>
-      <td style="padding:9px 12px;color:#0f172a;font-weight:600;font-size:13px;border-bottom:1px solid #e2e8f0;">${esc(v)}</td>
+      <td style="padding:9px 14px;color:#64748b;width:42%;font-size:12px;border-bottom:1px solid #f1f5f9;">${esc(k)}</td>
+      <td style="padding:9px 14px;color:#0f172a;font-weight:600;font-size:13px;border-bottom:1px solid #f1f5f9;">${esc(v)}</td>
     </tr>`).join('');
-
-  const validFrom  = fmtDate(data.reportingDate);
-  const validUntil = data.validUntil ? fmtDate(data.validUntil) : '—';
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
 </head>
-<body style="margin:0;padding:0;background:#f0f4ff;font-family:Arial,Helvetica,sans-serif;">
-<div style="max-width:600px;margin:24px auto 32px;">
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;">
+<div style="max-width:520px;margin:32px auto 40px;">
 
-  <div style="background:#1e40af;border-radius:12px 12px 0 0;padding:20px 28px;text-align:center;">
-    <div style="font-size:20px;font-weight:700;color:#ffffff;letter-spacing:0.3px;">NxtWave Gate Pass</div>
-    <div style="font-size:12px;color:#bfdbfe;margin-top:4px;">Gate Pass Approved</div>
+  <!-- Header -->
+  <div style="background:#1e40af;border-radius:12px 12px 0 0;padding:22px 28px;text-align:center;">
+    <div style="font-size:18px;font-weight:700;color:#ffffff;letter-spacing:0.2px;">NxtWave Gate Pass</div>
+    <div style="display:inline-block;margin-top:8px;background:#16a34a;color:#ffffff;font-size:11px;font-weight:700;padding:3px 12px;border-radius:20px;letter-spacing:0.5px;">&#10003; APPROVED</div>
   </div>
 
-  <div style="background:#ffffff;padding:20px 28px 16px;border-left:1px solid #dde8fb;border-right:1px solid #dde8fb;">
-    <p style="font-size:15px;color:#0f172a;margin:0 0 8px;font-weight:600;">Hello ${esc(name)},</p>
-    <p style="font-size:13px;color:#475569;margin:0;line-height:1.7;">Your entry request has been <strong style="color:#16a34a;">approved</strong> by the Facilities Team. Please find your Gate Pass details below. Present it at the entrance on your reporting date.</p>
-  </div>
+  <!-- Body -->
+  <div style="background:#ffffff;padding:24px 28px 8px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+    <p style="font-size:15px;color:#0f172a;margin:0 0 6px;font-weight:600;">Hello ${esc(name)},</p>
+    <p style="font-size:13px;color:#64748b;margin:0 0 20px;line-height:1.6;">Your gate pass has been approved. Present this at the entrance on your reporting date.</p>
 
-  <div style="background:#ffffff;padding:4px 28px 20px;border-left:1px solid #dde8fb;border-right:1px solid #dde8fb;">
-    <table style="width:100%;border-collapse:collapse;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
+    <table style="width:100%;border-collapse:collapse;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;margin-bottom:20px;">
       ${tableRows}
     </table>
   </div>
 
-  <div style="background:#ffffff;padding:0 28px 20px;border-left:1px solid #dde8fb;border-right:1px solid #dde8fb;">
-    <div style="background:#eef2ff;border-radius:12px;padding:14px 18px;border:1px solid #c7d7fb;">
-      <div style="font-size:10px;font-weight:800;color:#1e40af;letter-spacing:1.6px;margin-bottom:10px;">PASS VALIDITY</div>
-      <div style="display:flex;gap:10px;">
-        <div style="flex:1;background:#ffffff;border-radius:8px;padding:10px;text-align:center;border:1px solid #dde8fb;">
-          <div style="font-size:9px;font-weight:700;color:#6b7280;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:4px;">VALID FROM</div>
-          <div style="font-size:16px;font-weight:800;color:#1e40af;">${esc(validFrom)}</div>
-        </div>
-        <div style="flex:1;background:#ffffff;border-radius:8px;padding:10px;text-align:center;border:1px solid #dde8fb;">
-          <div style="font-size:9px;font-weight:700;color:#6b7280;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:4px;">VALID UNTIL</div>
-          <div style="font-size:16px;font-weight:800;color:#1e40af;">${esc(validUntil)}</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
+  <!-- CTA -->
   ${viewUrl ? `
-  <div style="background:#ffffff;padding:16px 28px 24px;text-align:center;border-left:1px solid #dde8fb;border-right:1px solid #dde8fb;">
-    <a href="${viewUrl}" style="display:inline-block;background:#1e40af;color:#ffffff;font-size:15px;font-weight:700;padding:16px 48px;border-radius:10px;text-decoration:none;letter-spacing:0.3px;">
+  <div style="background:#ffffff;padding:4px 28px 28px;text-align:center;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+    <a href="${viewUrl}" style="display:inline-block;background:#1e40af;color:#ffffff;font-size:14px;font-weight:700;padding:14px 40px;border-radius:8px;text-decoration:none;">
       View &amp; Download Gate Pass
     </a>
-    <p style="font-size:11px;color:#94a3b8;margin:10px 0 0;">Click above to view and download your gate pass.</p>
   </div>` : ''}
 
-  <div style="background:#f8fafc;border-top:1px solid #e2e8f0;border-radius:0 0 12px 12px;padding:14px 28px;text-align:center;border:1px solid #dde8fb;border-top:none;">
-    <p style="font-size:11px;color:#94a3b8;margin:0 0 4px;">Please carry a valid government-issued photo ID along with this gate pass.</p>
-    <p style="font-size:11px;color:#94a3b8;margin:0 0 4px;">NxtWave Gate Pass System &bull; nxtwave.co.in &bull; &copy; ${year}</p>
-    <p style="font-size:10px;color:#cbd5e1;margin:4px 0 0;">Hyderabad, Telangana, India</p>
+  <!-- Footer -->
+  <div style="background:#f8fafc;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px;padding:14px 28px;text-align:center;">
+    <p style="font-size:11px;color:#94a3b8;margin:0;">Carry a valid photo ID on your visit &bull; NxtWave &copy; ${year}</p>
   </div>
 
 </div>
