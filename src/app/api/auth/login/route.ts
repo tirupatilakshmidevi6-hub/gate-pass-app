@@ -5,6 +5,9 @@ import { signToken, COOKIE_NAME } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
   console.log('[Login] ─── Request received ───────────────────────────────');
+  console.log('[Login] ENV check — SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL?.slice(0, 30));
+  console.log('[Login] ENV check — has SERVICE_KEY:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+  console.log('[Login] ENV check — has ANON_KEY:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
   try {
     let email: string, password: string;
     try {
@@ -15,14 +18,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
 
-    console.log('[Login] Email:', email);
+    console.log('[Login] Email:', email, '| Password length:', password.length);
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
     // ── Try app_users first ──────────────────────────────────────────────────
-    const appUser = await getAppUserByEmail(email).catch(() => null);
-    console.log('[Login] app_users result:', appUser ? `found (status: ${appUser.status}, role: ${appUser.role})` : 'not found');
+    const appUser = await getAppUserByEmail(email).catch((e) => { console.error('[Login] getAppUserByEmail threw:', e); return null; });
+    console.log('[Login] app_users result:', appUser ? `found — status:${appUser.status} role:${appUser.role} hasHash:${!!appUser.password_hash}` : 'NOT FOUND');
 
     if (appUser) {
       if (appUser.status === 'inactive') {
