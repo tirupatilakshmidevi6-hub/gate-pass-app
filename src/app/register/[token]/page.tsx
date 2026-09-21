@@ -294,139 +294,124 @@ export default function RegisterPage() {
   // ── Registration form ──────────────────────────────────────────────────────
   return (
     <PageShell>
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-sm">
 
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
 
-          {/* Card header — branded */}
-          <div style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%)' }} className="px-6 pt-6 pb-5">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="flex items-center gap-1.5">
-                <span style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900, letterSpacing: '-0.5px' }}
-                  className="text-white text-lg">NXT</span>
-                <span style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900, letterSpacing: '-0.5px', background: 'linear-gradient(90deg,#60a5fa,#a5b4fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
-                  className="text-lg">WAVE</span>
+          {/* Branded header */}
+          <div style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%)' }} className="px-5 pt-4 pb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-1">
+                <span style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900 }} className="text-white text-base">NXT</span>
+                <span style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900, background: 'linear-gradient(90deg,#60a5fa,#a5b4fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }} className="text-base">WAVE</span>
               </div>
-              <span className="text-blue-300 text-xs">•</span>
-              <span className="text-blue-200 text-xs font-medium">Office Entry</span>
+              <span className="text-blue-300 text-[10px]">•</span>
+              <span className="text-blue-200 text-[11px] font-medium">Office Entry Registration</span>
             </div>
-            <h1 className="text-white font-bold text-xl leading-tight">Hello, {entry?.name}!</h1>
-            <p className="text-blue-200 text-xs mt-1 leading-relaxed">Upload your photo to complete registration. The Facilities Team will review and send your gate pass by email.</p>
-            {/* Visit summary pills */}
-            <div className="flex flex-wrap gap-2 mt-3">
-              <span className="inline-flex items-center gap-1 bg-white/15 text-white text-xs px-2.5 py-1 rounded-full">
-                <svg className="w-3 h-3 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <p className="text-white font-semibold text-sm">Hello, {entry?.name}!</p>
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              <span className="inline-flex items-center gap-1 bg-white/15 text-white text-[11px] px-2 py-0.5 rounded-full">
+                <svg className="w-3 h-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                 {entry?.reporting_date}
               </span>
-              <span className="inline-flex items-center gap-1 bg-white/15 text-white text-xs px-2.5 py-1 rounded-full">
-                <svg className="w-3 h-3 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <span className="inline-flex items-center gap-1 bg-white/15 text-white text-[11px] px-2 py-0.5 rounded-full">
+                <svg className="w-3 h-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 {entry?.building_name}
               </span>
-              <span className="inline-flex items-center gap-1 bg-white/15 text-white text-xs px-2.5 py-1 rounded-full">
-                <svg className="w-3 h-3 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                {entry?.purpose}
-              </span>
+              <span className="inline-flex items-center gap-1 bg-white/15 text-white text-[11px] px-2 py-0.5 rounded-full">{entry?.purpose}</span>
             </div>
           </div>
 
           {/* Form body */}
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="px-5 pt-4 pb-5 space-y-3">
 
             {/* Error banner */}
             {error && (
-              <div className="mx-5 mt-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
+              <div className="px-3 py-2.5 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
                 <svg className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <p className="text-sm text-red-600">{error}</p>
+                <p className="text-xs text-red-600">{error}</p>
               </div>
             )}
 
-            {/* Read-only personal info */}
-            <div className="px-6 pt-5 pb-4 space-y-3">
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Your Details</p>
-              {[
-                { label: 'Full Name',     value: entry?.name ?? '' },
-                { label: 'Email',         value: entry?.email ?? '' },
-                { label: 'Mobile Number', value: entry?.mobile_number ?? '' },
-              ].filter((f) => f.value).map((f) => (
-                <div key={f.label}>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">{f.label}</label>
-                  <input value={f.value} readOnly
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 text-sm cursor-not-allowed select-none" />
-                </div>
-              ))}
-            </div>
+            {/* Read-only fields */}
+            {[
+              { label: 'Full Name',     value: entry?.name ?? '' },
+              { label: 'Email',         value: entry?.email ?? '' },
+              { label: 'Mobile Number', value: entry?.mobile_number ?? '' },
+            ].filter((f) => f.value).map((f) => (
+              <div key={f.label}>
+                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1">{f.label}</label>
+                <input value={f.value} readOnly
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 text-sm cursor-not-allowed select-none" />
+              </div>
+            ))}
 
-            {/* Divider */}
-            <div className="mx-6 border-t border-slate-100" />
-
-            {/* Photo upload */}
-            <div className="px-6 pt-4 pb-5 space-y-3">
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Photo <span className="text-red-400">*</span></p>
-
-              <div className="flex flex-col items-center gap-4 py-2">
+            {/* Photo upload — horizontal layout */}
+            <div className="border-t border-slate-100 pt-3">
+              <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-2">
+                Photo <span className="text-red-400 normal-case">*</span>
+              </label>
+              <div className="flex items-center gap-4">
+                {/* Preview */}
                 {photoPreview ? (
                   <img src={photoPreview} alt="Preview"
-                    className="w-28 h-28 rounded-full object-cover object-top border-4 border-blue-500 shadow-md" />
+                    className="w-16 h-16 rounded-full object-cover object-top border-2 border-blue-500 shadow flex-shrink-0" />
                 ) : (
-                  <div className="w-28 h-28 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex flex-col items-center justify-center gap-1.5">
-                    <svg className="w-9 h-9 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                    <span className="text-[11px] text-slate-400">Your photo</span>
+                  <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex flex-col items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                   </div>
                 )}
-
-                <input ref={fileInputRef} type="file"
-                  accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif"
-                  onChange={handlePhotoChange} className="hidden" id="photo-input" disabled={submitting} />
-                <div className="flex flex-col items-center gap-1">
+                {/* Button */}
+                <div className="flex-1 min-w-0">
+                  <input ref={fileInputRef} type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif"
+                    onChange={handlePhotoChange} className="hidden" id="photo-input" disabled={submitting} />
                   <label htmlFor="photo-input"
-                    className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl transition-colors ${submitting ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-slate-800 text-white cursor-pointer hover:bg-slate-700'}`}>
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                    {photoFile ? 'Change Photo' : 'Choose from Gallery'}
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${submitting ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-slate-800 text-white cursor-pointer hover:bg-slate-700'}`}>
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    {photoFile ? 'Change' : 'Choose Photo'}
                   </label>
-                  {photoFile && <p className="text-xs text-slate-400 max-w-[200px] truncate text-center">{photoFile.name}</p>}
+                  {photoFile && <p className="text-[11px] text-slate-400 mt-1 truncate">{photoFile.name}</p>}
                 </div>
               </div>
             </div>
 
             {/* Submit */}
-            <div className="px-6 pb-6">
-              <button type="submit" disabled={submitting}
-                className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold rounded-xl text-sm transition-colors shadow-sm">
-                {submitting ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    {STEP_LABEL[submitStep!]}
-                  </span>
-                ) : 'Submit Registration'}
-              </button>
+            <button type="submit" disabled={submitting}
+              className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold rounded-xl text-sm transition-colors mt-1">
+              {submitting ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  {STEP_LABEL[submitStep!]}
+                </span>
+              ) : 'Submit Registration'}
+            </button>
 
-              {/* Progress steps */}
-              {submitting && (
-                <div className="flex items-center justify-center gap-6 mt-3">
-                  {(['compressing', 'uploading', 'submitting'] as const).map((step, i) => {
-                    const steps: SubmitStep[] = ['compressing', 'uploading', 'submitting'];
-                    const currentIdx = steps.indexOf(submitStep);
-                    const isDone    = i < currentIdx;
-                    const isActive  = i === currentIdx;
-                    return (
-                      <div key={step} className="flex flex-col items-center gap-1">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                          isDone ? 'bg-green-500 text-white' : isActive ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-400'
-                        }`}>{isDone ? '✓' : i + 1}</div>
-                        <span className={`text-[10px] font-medium ${isActive ? 'text-blue-600' : 'text-slate-400'}`}>
-                          {step === 'compressing' ? 'Compress' : step === 'uploading' ? 'Upload' : 'Submit'}
-                        </span>
+            {/* Progress steps — only visible while submitting */}
+            {submitting && (
+              <div className="flex items-center justify-center gap-6">
+                {(['compressing', 'uploading', 'submitting'] as const).map((step, i) => {
+                  const steps: SubmitStep[] = ['compressing', 'uploading', 'submitting'];
+                  const currentIdx = steps.indexOf(submitStep);
+                  const isDone = i < currentIdx; const isActive = i === currentIdx;
+                  return (
+                    <div key={step} className="flex flex-col items-center gap-1">
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${isDone ? 'bg-green-500 text-white' : isActive ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-400'}`}>
+                        {isDone ? '✓' : i + 1}
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+                      <span className={`text-[10px] font-medium ${isActive ? 'text-blue-600' : 'text-slate-400'}`}>
+                        {step === 'compressing' ? 'Compress' : step === 'uploading' ? 'Upload' : 'Submit'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </form>
         </div>
 
-        <p className="text-center text-xs text-slate-400 mt-5">NxtWave &copy; {new Date().getFullYear()} &nbsp;·&nbsp; Gate Pass System</p>
+        <p className="text-center text-xs text-slate-400 mt-4">NxtWave &copy; {new Date().getFullYear()} &nbsp;·&nbsp; Gate Pass System</p>
       </div>
     </PageShell>
   );
