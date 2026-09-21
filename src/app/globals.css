@@ -665,14 +665,18 @@ html.dark .stat-card-v2 { background-color: #1e293b !important; border-color: #3
 
 /* ─── Premium table rows ──────────────────────────────────────────────────── */
 
-.trow { transition: background 0.15s ease, box-shadow 0.15s ease; }
+.trow { transition: background 0.15s ease, box-shadow 0.2s ease, transform 0.18s ease; transform-origin: center; }
 .trow:hover {
   background: #EEF2FF !important;
-  box-shadow: inset 3px 0 0 #818CF8 !important;
+  box-shadow: 0 4px 16px rgba(99,102,241,0.13), inset 3px 0 0 #818CF8 !important;
+  transform: scale(1.012);
+  z-index: 1;
+  position: relative;
 }
 html.dark .trow:hover {
   background: #1a2845 !important;
-  box-shadow: inset 3px 0 0 #4F46E5 !important;
+  box-shadow: 0 4px 16px rgba(79,70,229,0.18), inset 3px 0 0 #4F46E5 !important;
+  transform: scale(1.012);
 }
 
 /* ─── List row hover — for non-table list items ──────────────────────────── */
