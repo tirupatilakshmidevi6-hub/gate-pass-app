@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { getRoleStyle } from '@/lib/constants';
-import { CalendarDays, Search, RefreshCw, CheckCircle, XCircle, X, Send, RotateCcw, MapPin } from 'lucide-react';
+import { CalendarDays, Search, RefreshCw, CheckCircle, XCircle, X, Send, RotateCcw, MapPin, Eye, Clock, AlertCircle } from 'lucide-react';
 
 type EntryRow = {
   id: string; name: string; email: string | null; mobile_number: string | null;
@@ -724,56 +724,64 @@ export default function EntryListPage() {
 
             {/* Desktop table — hidden on mobile */}
             <div className="hidden sm:block overflow-x-auto touch-scroll-x">
-              <table className="w-full text-sm" style={{ minWidth: 780 }}>
-                <thead className="bg-gray-50">
-                  <tr>{COLS.map((h) => (
-                    <th key={h} className="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
-                  ))}</tr>
+              <table className="w-full text-sm" style={{ minWidth: 860 }}>
+                <thead>
+                  <tr style={{ background: '#111827' }}>
+                    {COLS.map((h) => (
+                      <th key={h} className="text-left px-4 py-3.5 text-[11px] font-semibold text-gray-300 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody>
                   {paginated.map((e, idx) => {
                     const rs = getRoleStyle(e.role ?? '');
+                    const statusIcon =
+                      e.status === 'Approved'         ? <CheckCircle size={12} className="flex-shrink-0" /> :
+                      e.status === 'Rejected'         ? <XCircle     size={12} className="flex-shrink-0" /> :
+                      e.status === 'Expired'          ? <AlertCircle size={12} className="flex-shrink-0" /> :
+                      e.status === 'Pending Form'     ? <Clock       size={12} className="flex-shrink-0" /> :
+                      e.status === 'Pending Approval' ? <Clock       size={12} className="flex-shrink-0" /> : null;
                     return (
-                      <tr key={e.id} className="trow border-b border-gray-50 last:border-0">
-                        <td className="px-3 sm:px-4 py-3 text-gray-400 text-xs font-medium">{(safePage - 1) * PAGE_SIZE + idx + 1}</td>
-                        <td className="px-3 sm:px-4 py-3 font-medium text-gray-900 whitespace-nowrap text-xs sm:text-sm">{e.name}</td>
-                        <td className="px-3 sm:px-4 py-3">
-                          {e.role && <span style={{ background: rs.bg, color: rs.text, border: `1px solid ${rs.border}` }}
-                            className="px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap">{e.role}</span>}
+                      <tr key={e.id} className="trow border-b border-gray-200 last:border-0">
+                        <td className="px-4 py-5 text-gray-400 text-xs font-medium w-10">{(safePage - 1) * PAGE_SIZE + idx + 1}</td>
+                        <td className="px-4 py-5 font-semibold text-gray-900 whitespace-nowrap text-sm">{e.name}</td>
+                        <td className="px-4 py-5">
+                          {e.role && <span style={{ background: rs.bg, color: rs.text, border: `1.5px solid ${rs.border}` }}
+                            className="px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap">{e.role}</span>}
                         </td>
-                        <td className="px-3 sm:px-4 py-3 text-gray-600 text-xs">{e.purpose}</td>
-                        <td className="px-3 sm:px-4 py-3 text-gray-600 whitespace-nowrap font-mono text-xs">{e.mobile_number ?? '—'}</td>
-                        <td className="px-3 sm:px-4 py-3 text-gray-600 text-xs">{e.building_name}</td>
-                        <td className="px-3 sm:px-4 py-3 text-gray-600 whitespace-nowrap text-xs">{e.poc_name}</td>
-                        <td className="px-3 sm:px-4 py-3 text-gray-600 whitespace-nowrap text-xs">{e.reporting_date}</td>
-                        <td className="px-3 sm:px-4 py-3 text-gray-600 whitespace-nowrap text-xs">{e.valid_until ?? '—'}</td>
-                        <td className="px-3 sm:px-4 py-3">
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_BADGE[e.status] ?? 'badge-pending-form'}`}>{e.status}</span>
+                        <td className="px-4 py-5 text-gray-600 text-xs">{e.purpose}</td>
+                        <td className="px-4 py-5 text-gray-600 whitespace-nowrap text-xs">{e.mobile_number ?? '—'}</td>
+                        <td className="px-4 py-5 text-gray-600 text-xs whitespace-nowrap">{e.building_name}</td>
+                        <td className="px-4 py-5 text-gray-600 whitespace-nowrap text-xs">{e.poc_name}</td>
+                        <td className="px-4 py-5 text-gray-600 whitespace-nowrap text-xs">{e.reporting_date}</td>
+                        <td className="px-4 py-5 text-gray-600 whitespace-nowrap text-xs">{e.valid_until ?? '—'}</td>
+                        <td className="px-4 py-5">
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${STATUS_BADGE[e.status] ?? 'badge-pending-form'}`}>
+                            {statusIcon}{e.status}
+                          </span>
                         </td>
-                        <td className="px-3 sm:px-4 py-3">
-                          <div className="flex items-center gap-1">
+                        <td className="px-4 py-5">
+                          <div className="flex items-center gap-1.5">
                             <button onClick={() => setSelected(e)}
-                              className="px-2.5 py-1 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 whitespace-nowrap">
-                              View
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 border-2 border-blue-200 rounded-lg hover:bg-blue-50 transition-colors whitespace-nowrap">
+                              <Eye size={11} />View
                             </button>
                             {e.status === 'Pending Form' && e.email && (
                               <button onClick={() => handleResendInvite(e.id, e.email!)} disabled={resending === e.id}
-                                className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-amber-600 border border-amber-200 rounded-lg hover:bg-amber-50 disabled:opacity-50 transition-colors whitespace-nowrap">
-                                {resending === e.id ? <><RefreshCw size={10} className="animate-spin" />…</> : <><Send size={10} />Resend</>}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-600 border-2 border-amber-200 rounded-lg hover:bg-amber-50 disabled:opacity-50 transition-colors whitespace-nowrap">
+                                {resending === e.id ? <><RefreshCw size={10} className="animate-spin" />…</> : <><Send size={11} />Resend</>}
                               </button>
                             )}
                             {e.status === 'Approved' && e.email && (userRole === 'admin' || userRole === 'ta') && (
                               <button onClick={() => handleResendGatePass(e.id, e.email!)} disabled={resending === e.id}
-                                title="Resend gate pass email"
-                                className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-green-700 border border-green-200 rounded-lg hover:bg-green-50 disabled:opacity-50 transition-colors whitespace-nowrap">
-                                {resending === e.id ? <><RefreshCw size={10} className="animate-spin" />…</> : <><Send size={10} />Pass</>}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 border-2 border-green-200 rounded-lg hover:bg-green-50 disabled:opacity-50 transition-colors whitespace-nowrap">
+                                {resending === e.id ? <><RefreshCw size={10} className="animate-spin" />…</> : <><Send size={11} />Pass</>}
                               </button>
                             )}
                             {(e.status === 'Expired' || e.status === 'Rejected') && (userRole === 'admin' || userRole === 'ta') && (
                               <button onClick={() => setRenewTarget(e)}
-                                title="Renew gate pass"
-                                className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-purple-700 border border-purple-200 rounded-lg hover:bg-purple-50 transition-colors whitespace-nowrap">
-                                <RotateCcw size={10} />Renew
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-purple-700 border-2 border-purple-200 rounded-lg hover:bg-purple-50 transition-colors whitespace-nowrap">
+                                <RotateCcw size={11} />Renew
                               </button>
                             )}
                           </div>
