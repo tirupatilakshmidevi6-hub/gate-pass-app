@@ -70,9 +70,11 @@ async function logAudit(entryId: string, action: string, performedBy: string) {
 // ─── User functions ───────────────────────────────────────────────────────────
 
 export async function getUserByEmail(email: string): Promise<UserRow | null> {
-  const { data, error } = await supabase.from('users').select('*').eq('email', email).single();
-  if (error) return null;
-  return data;
+  const pattern = email.trim().replace(/[\\%_]/g, '\\$&');
+  const { data, error } = await supabase
+    .from('users').select('*').ilike('email', pattern).limit(1).maybeSingle();
+  if (error) throw new Error(error.message);
+  return data ?? null;
 }
 
 export async function createUser(data: {
@@ -345,8 +347,13 @@ export type AppUser = {
   created_at: string;
 };
 
+// Throws on real database/connection errors so callers can tell "user not found"
+// apart from "database unreachable". Match is case-insensitive.
 export async function getAppUserByEmail(email: string): Promise<AppUser | null> {
-  const { data } = await supabase.from('app_users').select('*').eq('email', email).single();
+  const pattern = email.trim().replace(/[\\%_]/g, '\\$&');
+  const { data, error } = await supabase
+    .from('app_users').select('*').ilike('email', pattern).limit(1).maybeSingle();
+  if (error) throw new Error(error.message);
   return data ?? null;
 }
 

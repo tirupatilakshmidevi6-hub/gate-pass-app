@@ -21,7 +21,17 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Try app_users first ──────────────────────────────────────────────────
-    const appUser = await getAppUserByEmail(email).catch(() => null);
+    let appUser;
+    try {
+      appUser = await getAppUserByEmail(email);
+    } catch (dbErr) {
+      // A database/connection failure is not a credentials problem — report it as such.
+      console.error('[Login] app_users lookup failed:', dbErr instanceof Error ? dbErr.message : dbErr);
+      return NextResponse.json(
+        { error: 'Unable to reach the server database. Please try again in a moment.' },
+        { status: 503 }
+      );
+    }
     console.log('[Login] app_users result:', appUser ? `found (status: ${appUser.status}, role: ${appUser.role})` : 'not found');
 
     if (appUser) {
@@ -72,7 +82,7 @@ export async function POST(req: NextRequest) {
       console.log('[Login] Not found in either table');
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
-    const valid = await bcrypt.compare(password, oldUser.password);
+    const valid = await bcrypt.compare(password, oldUser.password).catch(() => false);
     if (!valid) return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
 
     const token = await signToken({ id: oldUser.id, email: oldUser.email, role: oldUser.role as 'admin' | 'facilities', name: oldUser.name });
