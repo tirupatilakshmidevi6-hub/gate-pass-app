@@ -31,6 +31,11 @@ export const ROLE_COLORS: Record<string, { bg: string; text: string; border: str
   'Visitor':                      { bg: '#faf5ff', text: '#7c3aed', border: '#d8b4fe' },
 };
 
+// The app UI shows every role in one neutral style so only status badges carry colour.
+// (ROLE_COLORS above is kept for anything that still wants per-role colours.)
+const NEUTRAL_ROLE_STYLE = { bg: '#f1f5f9', text: '#475569', border: '#e2e8f0' };
+
 export function getRoleStyle(role: string) {
-  return ROLE_COLORS[role] ?? { bg: '#f1f5f9', text: '#475569', border: '#cbd5e1' };
+  void role;
+  return NEUTRAL_ROLE_STYLE;
 }

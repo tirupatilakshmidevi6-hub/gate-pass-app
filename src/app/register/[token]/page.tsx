@@ -202,7 +202,7 @@ export default function RegisterPage() {
 
   const PageShell = ({ children }: { children: React.ReactNode }) => (
     <div className="min-h-screen flex items-center justify-center px-4 py-10"
-      style={{ background: 'linear-gradient(135deg, #e8f0fe 0%, #f8faff 50%, #eef2ff 100%)' }}>
+      style={{ background: '#F8FAFC' }}>
       {children}
     </div>
   );
@@ -297,14 +297,14 @@ export default function RegisterPage() {
       <div className="w-full max-w-sm">
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden auth-rise">
 
           {/* Branded header */}
-          <div style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%)' }} className="px-5 pt-4 pb-4">
+          <div style={{ background: '#5B3CC4' }} className="px-5 pt-4 pb-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="flex items-center gap-1">
                 <span style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900 }} className="text-white text-base">NXT</span>
-                <span style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900, background: 'linear-gradient(90deg,#60a5fa,#a5b4fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }} className="text-base">WAVE</span>
+                <span style={{ fontFamily: 'Arial Black, sans-serif', fontWeight: 900, color: '#CBD5E1' }} className="text-base">WAVE</span>
               </div>
               <span className="text-blue-300 text-[10px]">•</span>
               <span className="text-blue-200 text-[11px] font-medium">Office Entry Registration</span>

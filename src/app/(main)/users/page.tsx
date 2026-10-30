@@ -99,11 +99,6 @@ export default function UsersPage() {
         </div>
       )}
 
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Manage Users</h1>
-        <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Approve, manage, and deactivate team accounts</p>
-      </div>
-
       {/* ── Pending Approvals ── */}
       {pending.length > 0 && (
         <section>
@@ -112,7 +107,7 @@ export default function UsersPage() {
             <h2 className="text-base font-semibold text-gray-800">Pending Approvals</h2>
             <span className="bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{pending.length}</span>
           </div>
-          <div className="bg-white rounded-2xl border border-amber-200 overflow-hidden shadow-sm">
+          <div className="bg-white rounded-xl border border-amber-200 overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
             <table className="w-full text-sm" style={{ minWidth: 560 }}>
               <thead className="bg-amber-50">
@@ -159,7 +154,7 @@ export default function UsersPage() {
           <h2 className="text-base font-semibold text-gray-800">Active Users</h2>
           <span className="bg-gray-200 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded-full">{active.length}</span>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-sm" style={{ minWidth: 640 }}>
               <thead className="bg-gray-50">
@@ -209,7 +204,7 @@ export default function UsersPage() {
             <XCircle size={16} className="text-gray-400" />
             <h2 className="text-base font-semibold text-gray-800">Rejected / Inactive</h2>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
             <table className="w-full text-sm" style={{ minWidth: 500 }}>
               <thead className="bg-gray-50">
@@ -250,7 +245,7 @@ export default function UsersPage() {
       {/* Reject Reason Modal */}
       {rejectModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setRejectModal(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">Reject Account</h2>

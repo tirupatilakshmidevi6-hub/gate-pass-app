@@ -127,10 +127,10 @@ function EntryModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center sm:p-4" onClick={onClose}>
-      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[92dvh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:max-w-lg max-h-[92dvh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
 
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-900 to-blue-700 rounded-t-2xl px-5 py-4">
+        <div className="bg-blue-700 rounded-t-2xl px-5 py-4">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               {entry.photo_url
@@ -202,7 +202,7 @@ function EntryModal({
           )}
           {(entry.status === 'Expired' || entry.status === 'Rejected') && onRenew && (userRole === 'admin' || userRole === 'ta') && (
             <button onClick={() => onRenew(entry)}
-              className="flex items-center gap-1.5 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl text-sm transition-colors">
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition-colors">
               <RotateCcw size={13} />Renew
             </button>
           )}
@@ -282,15 +282,15 @@ function RenewModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center sm:p-4" onClick={onClose}>
-      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[92dvh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:max-w-lg max-h-[92dvh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-900 to-purple-600 rounded-t-2xl px-5 py-4 flex items-center justify-between">
+        <div className="bg-blue-700 rounded-t-2xl px-5 py-4 flex items-center justify-between">
           <div>
-            <div className="text-[10px] font-bold text-purple-200 uppercase tracking-widest mb-0.5">Smart Renew</div>
+            <div className="text-[10px] font-bold text-blue-200 uppercase tracking-widest mb-0.5">Smart Renew</div>
             <div className="text-white font-bold text-lg">{entry.name}</div>
-            <div className="text-purple-200 text-xs">{entry.email ?? entry.mobile_number ?? '—'}</div>
+            <div className="text-blue-200 text-xs">{entry.email ?? entry.mobile_number ?? '—'}</div>
           </div>
-          <button onClick={onClose} className="text-purple-200 hover:text-white p-1 rounded-lg"><X size={20} /></button>
+          <button onClick={onClose} className="text-blue-200 hover:text-white p-1 rounded-lg"><X size={20} /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="px-5 py-5 space-y-5">
@@ -314,13 +314,13 @@ function RenewModal({
                   <label className="block text-xs font-medium text-gray-600 mb-1">Reporting Date <span className="text-red-500">*</span></label>
                   <input type="date" required value={form.reporting_date} min={today}
                     onChange={(e) => set('reporting_date', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Valid Until</label>
                   <input type="date" value={form.valid_until} min={form.reporting_date}
                     onChange={(e) => set('valid_until', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
               </div>
 
@@ -328,7 +328,7 @@ function RenewModal({
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Purpose <span className="text-red-500">*</span></label>
                   <select required value={form.purpose} onChange={(e) => set('purpose', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     {PURPOSES.map((p) => <option key={p}>{p}</option>)}
                   </select>
                 </div>
@@ -336,14 +336,14 @@ function RenewModal({
                   <label className="block text-xs font-medium text-gray-600 mb-1">Role</label>
                   <input type="text" value={form.role} placeholder="e.g. Intern, Staff"
                     onChange={(e) => set('role', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Building <span className="text-red-500">*</span></label>
                 <select required value={form.building_name} onChange={(e) => set('building_name', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                   {buildings.map((b) => <option key={b}>{b}</option>)}
                 </select>
               </div>
@@ -353,13 +353,13 @@ function RenewModal({
                   <label className="block text-xs font-medium text-gray-600 mb-1">POC Name <span className="text-red-500">*</span></label>
                   <input type="text" required value={form.poc_name}
                     onChange={(e) => set('poc_name', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Contact No <span className="text-red-500">*</span></label>
                   <input type="text" required value={form.contact_no}
                     onChange={(e) => set('contact_no', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
               </div>
             </div>
@@ -373,7 +373,7 @@ function RenewModal({
               Cancel
             </button>
             <button type="submit" disabled={submitting}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-60 rounded-xl">
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60 rounded-xl">
               {submitting ? <><RefreshCw size={14} className="animate-spin" />Renewing…</> : <><RotateCcw size={14} />Renew Pass</>}
             </button>
           </div>
@@ -425,7 +425,7 @@ function EditLocationModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <div>
             <div className="flex items-center gap-1.5 font-bold text-gray-900"><MapPin size={16} className="text-blue-600" />Edit Location</div>
@@ -575,7 +575,7 @@ export default function EntryListPage() {
         <div className="skeleton h-9 w-56 rounded-xl" />
       </div>
       <div className="skeleton h-10 w-80 rounded-xl" />
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="px-5 py-3 border-b border-gray-100"><div className="skeleton h-4 w-32 rounded" /></div>
         <div className="p-4 space-y-3">
           {[0,1,2,3,4,5].map((i) => (
@@ -590,60 +590,54 @@ export default function EntryListPage() {
     </div>
   );
 
-  const COLS = ['#', 'Visitor', 'Role', 'Purpose', 'Phone', 'Building', 'POC', 'Date', 'Valid Until', 'Status', 'Actions'];
+  const COLS = ['Visitor', 'Role', 'Building', 'Date', 'Status', 'Actions'];
 
   return (
     <div className="page-container space-y-4">
       {/* Toast */}
       {toast && (
-        <div className="fixed top-4 right-4 left-4 sm:left-auto sm:right-6 z-50 bg-gray-900 text-white text-sm px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2 animate-scale-in">
+        <div className="fixed top-4 right-4 left-4 sm:left-auto sm:right-6 z-50 bg-gray-900 text-white text-sm px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 animate-scale-in">
           <CheckCircle size={15} className="text-green-400 flex-shrink-0" /><span className="flex-1">{toast}</span>
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 animate-fade-in-up" style={{ animationDelay: '0ms' }}>
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Gate Pass History</h1>
-          <p className="text-sm text-gray-500 mt-0.5">All gate pass entries and their current status</p>
+      {/* Toolbar — the page title already shows in the top bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 animate-fade-in-up">
+        <div className="relative w-full sm:max-w-xs">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search name, phone, building, POC…"
+            className="w-full pl-9 pr-3 py-1.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            style={{ minHeight: 36 }} />
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 sm:ml-auto">
           <div className="relative">
             <CalendarDays size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             <input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}
-              className="border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm" />
+              className="border border-gray-200 rounded-lg pl-9 pr-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              style={{ minHeight: 36 }} />
           </div>
-          <button onClick={() => setDateFilter('')}
-            className={`px-3 py-2 text-xs font-semibold rounded-xl border transition-all ${!dateFilter ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-gray-600 hover:bg-gray-50 bg-white'}`}>
-            All
-          </button>
-          <button onClick={() => setDateFilter(today)}
-            className={`px-3 py-2 text-xs font-semibold rounded-xl border transition-all ${dateFilter === today ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-200 text-gray-600 hover:bg-gray-50 bg-white'}`}>
-            Today
-          </button>
-          {(userRole === 'admin' || userRole === 'ta') && (
-            <a href="/create-gate-pass"
-              className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
-              + New Pass
-            </a>
-          )}
+          <div className="inline-flex p-0.5 bg-gray-100 rounded-lg">
+            {[
+              { label: 'All',   active: !dateFilter,          onClick: () => setDateFilter('') },
+              { label: 'Today', active: dateFilter === today, onClick: () => setDateFilter(today) },
+            ].map(({ label, active, onClick }) => (
+              <button key={label} onClick={onClick}
+                className={`px-3 py-1 text-sm font-medium rounded-md transition-all ${active ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}
+                style={{ minHeight: 30 }}>
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative w-full sm:max-w-sm animate-fade-in-up" style={{ animationDelay: '40ms' }}>
-        <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-        <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search name, phone, building, POC…"
-          className="w-full pl-9 pr-4 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm" />
-      </div>
-
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm animate-fade-in-up" style={{ animationDelay: '80ms' }}>
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden animate-fade-in-up" style={{ animationDelay: '80ms' }}>
         <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid #F3F4F6' }}>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-gray-900">
-              {dateFilter ? `Entries for ${dateFilter}` : 'All Entries'}
+            <span className="text-sm font-semibold text-gray-900">
+              {dateFilter ? `Entries for ${dateFilter}` : 'All entries'}
             </span>
             <span className="bg-gray-100 text-gray-600 text-[11px] font-bold px-2 py-0.5 rounded-full">
               {filtered.length}
@@ -656,7 +650,7 @@ export default function EntryListPage() {
 
         {filtered.length === 0 ? (
           <div className="px-4 py-16 text-center">
-            <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+            <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-3">
               <Search size={20} className="text-gray-400" />
             </div>
             <p className="text-sm font-semibold text-gray-600">No entries found</p>
@@ -672,7 +666,7 @@ export default function EntryListPage() {
         ) : (
           <>
             {/* Mobile card list — hidden on sm+ */}
-            <div className="sm:hidden divide-y divide-gray-100">
+            <div className="sm:hidden divide-y divide-gray-200">
               {paginated.map((e) => {
                 const rs = getRoleStyle(e.role ?? '');
                 return (
@@ -712,7 +706,7 @@ export default function EntryListPage() {
                       )}
                       {(e.status === 'Expired' || e.status === 'Rejected') && (userRole === 'admin' || userRole === 'ta') && (
                         <button onClick={() => setRenewTarget(e)}
-                          className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium text-purple-700 border border-purple-200 rounded-lg hover:bg-purple-50">
+                          className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-50">
                           <RotateCcw size={10} />Renew
                         </button>
                       )}
@@ -724,17 +718,16 @@ export default function EntryListPage() {
 
             {/* Desktop table — hidden on mobile */}
             <div className="hidden sm:block overflow-x-auto touch-scroll-x">
-              <table className="w-full text-sm" style={{ minWidth: 860 }}>
+              <table className="w-full text-sm" style={{ minWidth: 640 }}>
                 <thead>
-                  <tr style={{ background: '#111827' }}>
+                  <tr className="bg-gray-50 border-b border-gray-200">
                     {COLS.map((h) => (
-                      <th key={h} className="text-left px-4 py-3.5 text-[11px] font-semibold text-gray-300 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                      <th key={h} className="text-left px-4 py-2.5 text-xs font-medium text-gray-500 whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {paginated.map((e, idx) => {
-                    const rs = getRoleStyle(e.role ?? '');
+                  {paginated.map((e) => {
                     const statusIcon =
                       e.status === 'Approved'         ? <CheckCircle size={12} className="flex-shrink-0" /> :
                       e.status === 'Rejected'         ? <XCircle     size={12} className="flex-shrink-0" /> :
@@ -742,45 +735,37 @@ export default function EntryListPage() {
                       e.status === 'Pending Form'     ? <Clock       size={12} className="flex-shrink-0" /> :
                       e.status === 'Pending Approval' ? <Clock       size={12} className="flex-shrink-0" /> : null;
                     return (
-                      <tr key={e.id} className="trow border-b border-gray-200 last:border-0">
-                        <td className="px-4 py-5 text-gray-400 text-xs font-medium w-10">{(safePage - 1) * PAGE_SIZE + idx + 1}</td>
-                        <td className="px-4 py-5 font-semibold text-gray-900 whitespace-nowrap text-sm">{e.name}</td>
-                        <td className="px-4 py-5">
-                          {e.role && <span style={{ background: rs.bg, color: rs.text, border: `1.5px solid ${rs.border}` }}
-                            className="px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap">{e.role}</span>}
-                        </td>
-                        <td className="px-4 py-5 text-gray-600 text-xs">{e.purpose}</td>
-                        <td className="px-4 py-5 text-gray-600 whitespace-nowrap text-xs">{e.mobile_number ?? '—'}</td>
-                        <td className="px-4 py-5 text-gray-600 text-xs whitespace-nowrap">{e.building_name}</td>
-                        <td className="px-4 py-5 text-gray-600 whitespace-nowrap text-xs">{e.poc_name}</td>
-                        <td className="px-4 py-5 text-gray-600 whitespace-nowrap text-xs">{e.reporting_date}</td>
-                        <td className="px-4 py-5 text-gray-600 whitespace-nowrap text-xs">{e.valid_until ?? '—'}</td>
-                        <td className="px-4 py-5">
-                          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${STATUS_BADGE[e.status] ?? 'badge-pending-form'}`}>
+                      <tr key={e.id} className="trow border-b border-gray-200 last:border-b-0">
+                        <td className="px-4 py-2.5 font-medium text-gray-900 whitespace-nowrap text-sm">{e.name}</td>
+                        <td className="px-4 py-2.5 text-gray-600 text-sm whitespace-nowrap">{e.role ?? '—'}</td>
+                        <td className="px-4 py-2.5 text-gray-600 text-sm whitespace-nowrap">{e.building_name}</td>
+                        <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap text-sm">{e.reporting_date}</td>
+                        <td className="px-4 py-2.5">
+                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap ${STATUS_BADGE[e.status] ?? 'badge-pending-form'}`}>
                             {statusIcon}{e.status}
                           </span>
                         </td>
-                        <td className="px-4 py-5">
+                        <td className="px-4 py-2.5">
                           <div className="flex items-center gap-1.5">
                             <button onClick={() => setSelected(e)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 border-2 border-blue-200 rounded-lg hover:bg-blue-50 transition-colors whitespace-nowrap">
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors whitespace-nowrap">
                               <Eye size={11} />View
                             </button>
                             {e.status === 'Pending Form' && e.email && (
                               <button onClick={() => handleResendInvite(e.id, e.email!)} disabled={resending === e.id}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-600 border-2 border-amber-200 rounded-lg hover:bg-amber-50 disabled:opacity-50 transition-colors whitespace-nowrap">
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 transition-colors whitespace-nowrap">
                                 {resending === e.id ? <><RefreshCw size={10} className="animate-spin" />…</> : <><Send size={11} />Resend</>}
                               </button>
                             )}
                             {e.status === 'Approved' && e.email && (userRole === 'admin' || userRole === 'ta') && (
                               <button onClick={() => handleResendGatePass(e.id, e.email!)} disabled={resending === e.id}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 border-2 border-green-200 rounded-lg hover:bg-green-50 disabled:opacity-50 transition-colors whitespace-nowrap">
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 transition-colors whitespace-nowrap">
                                 {resending === e.id ? <><RefreshCw size={10} className="animate-spin" />…</> : <><Send size={11} />Pass</>}
                               </button>
                             )}
                             {(e.status === 'Expired' || e.status === 'Rejected') && (userRole === 'admin' || userRole === 'ta') && (
                               <button onClick={() => setRenewTarget(e)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-purple-700 border-2 border-purple-200 rounded-lg hover:bg-purple-50 transition-colors whitespace-nowrap">
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors whitespace-nowrap">
                                 <RotateCcw size={11} />Renew
                               </button>
                             )}

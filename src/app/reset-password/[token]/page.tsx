@@ -44,38 +44,38 @@ export default function ResetPasswordPage() {
   }
 
   if (checking) return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 flex items-center justify-center">
-      <div className="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin" />
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
     </div>
   );
 
   if (!info?.valid) return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 flex items-center justify-center px-4">
-      <div className="max-w-sm w-full bg-white rounded-2xl p-8 text-center shadow-xl space-y-4">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+      <div className="max-w-sm w-full bg-white rounded-2xl p-8 text-center border border-gray-200 shadow-sm space-y-4 auth-rise">
         <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
           <svg className="w-7 h-7 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
         </div>
         <h2 className="text-lg font-bold text-gray-800">{info?.expired ? 'Link Expired' : 'Invalid Link'}</h2>
         <p className="text-sm text-gray-500">{info?.expired ? 'This reset link has expired. Please request a new one.' : (info?.error ?? 'This reset link is invalid or has already been used.')}</p>
-        <Link href="/forgot-password" className="inline-block px-6 py-2.5 bg-blue-700 text-white rounded-xl text-sm font-semibold hover:bg-blue-800">Request New Link</Link>
+        <Link href="/forgot-password" className="inline-block px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700">Request New Link</Link>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="bg-white rounded-2xl px-5 py-3 shadow-lg">
+            <div className="bg-white rounded-2xl px-5 py-3 border border-gray-200 shadow-sm">
               <img src="https://www.image2url.com/r2/default/images/1779254824307-0fca63d9-e1eb-4ccf-bfb4-4c663ca4ae5e.jpeg"
                 alt="NxtWave" className="h-12 w-auto object-contain" />
             </div>
           </div>
-          <p className="text-blue-300 text-sm mt-1 tracking-wide">Gate Pass System</p>
+          <p className="text-slate-500 text-sm mt-1 tracking-wide">Gate Pass System</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden auth-rise">
           <div className="px-8 py-6 border-b border-gray-100">
             <h2 className="text-lg font-bold text-gray-900">Set New Password</h2>
             <p className="text-sm text-gray-500 mt-0.5">Hello {info.name}, choose a new password below</p>
@@ -95,12 +95,12 @@ export default function ResetPasswordPage() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
             <button type="submit" disabled={loading}
-              className="w-full py-2.5 bg-blue-700 hover:bg-blue-800 disabled:opacity-60 text-white font-semibold rounded-lg text-sm transition-colors">
+              className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold rounded-lg text-sm transition-colors">
               {loading ? <span className="flex items-center justify-center gap-2"><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Resetting…</span> : 'Reset Password'}
             </button>
           </form>
         </div>
-        <p className="text-center text-blue-400 text-xs mt-6">NxtWave &copy; {new Date().getFullYear()} &bull; Internal Use Only</p>
+        <p className="text-center text-slate-400 text-xs mt-6">NxtWave &copy; {new Date().getFullYear()} &bull; Internal Use Only</p>
       </div>
     </div>
   );

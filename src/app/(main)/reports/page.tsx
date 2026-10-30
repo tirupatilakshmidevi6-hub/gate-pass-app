@@ -5,11 +5,11 @@ import { CalendarDays, Filter, Download, ChevronLeft, ChevronRight, ChevronDown,
 import { getRoleStyle } from '@/lib/constants';
 
 const PAGE_SIZE = 8;
-const CHART_COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#a855f7', '#14b8a6', '#f97316', '#ef4444', '#64748b'];
+const CHART_COLORS = ['#475569', '#22c55e', '#f59e0b', '#a855f7', '#14b8a6', '#f97316', '#ef4444', '#64748b'];
 
 const STATUS_PALETTE: Record<string, { bg: string; text: string; dot: string }> = {
   'Approved':         { bg: '#dcfce7', text: '#15803d', dot: '#22c55e' },
-  'Pending Form':     { bg: '#eff6ff', text: '#1d4ed8', dot: '#3b82f6' },
+  'Pending Form':     { bg: '#F1F5F9', text: '#0F172A', dot: '#475569' },
   'Pending Approval': { bg: '#fff7ed', text: '#c2410c', dot: '#f97316' },
   'Rejected':         { bg: '#fee2e2', text: '#dc2626', dot: '#ef4444' },
 };
@@ -169,7 +169,7 @@ export default function ReportsPage() {
   }
 
   const kpiCards = [
-    { label: 'Total on Today',    value: total,    iconColor: '#3b82f6', bgIcon: '#eff6ff', wave: 'blue'   as const, waveColor: '#3b82f6', icon: KpiIcons.total    },
+    { label: 'Total on Today',    value: total,    iconColor: '#475569', bgIcon: '#F1F5F9', wave: 'blue'   as const, waveColor: '#475569', icon: KpiIcons.total    },
     { label: 'Approved on Today', value: approved, iconColor: '#22c55e', bgIcon: '#f0fdf4', wave: 'green'  as const, waveColor: '#22c55e', icon: KpiIcons.approved },
     { label: 'Pending on Today',  value: pending,  iconColor: '#f97316', bgIcon: '#fff7ed', wave: 'orange' as const, waveColor: '#f97316', icon: KpiIcons.pending  },
     { label: 'Rejected on Today', value: rejected, iconColor: '#ef4444', bgIcon: '#fef2f2', wave: 'red'    as const, waveColor: '#ef4444', icon: KpiIcons.rejected },
@@ -216,7 +216,7 @@ export default function ReportsPage() {
           <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
             {kpiCards.map((card) => (
               <div key={card.label}
-                className="bg-white rounded-2xl border border-gray-100 p-3 sm:p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col gap-2 sm:gap-3">
+                className="bg-white rounded-xl border border-gray-100 p-3 sm:p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col gap-2 sm:gap-3">
                 <div className="flex items-start justify-between">
                   <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center flex-shrink-0 [&_svg]:w-5 [&_svg]:h-5 sm:[&_svg]:w-[22px] sm:[&_svg]:h-[22px]"
                     style={{ background: card.bgIcon }}>
@@ -234,7 +234,7 @@ export default function ReportsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
             {/* By Role */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 shadow-sm">
+            <div className="bg-white rounded-xl border border-gray-100 p-4 sm:p-5 shadow-sm">
               <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[2.5px] mb-4 sm:mb-5">By Role</h3>
               {byRole.length === 0 ? <EmptyChart /> : (
                 <div className="flex items-center gap-5">
@@ -259,7 +259,7 @@ export default function ReportsPage() {
             </div>
 
             {/* By Building */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 shadow-sm">
+            <div className="bg-white rounded-xl border border-gray-100 p-4 sm:p-5 shadow-sm">
               <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[2.5px] mb-4 sm:mb-5">By Building</h3>
               {byBuilding.length === 0 ? <EmptyChart /> : (
                 <div className="space-y-4">
@@ -274,7 +274,7 @@ export default function ReportsPage() {
                           className="h-full rounded-full transition-all duration-500"
                           style={{
                             width: `${(cnt / maxBldg) * 100}%`,
-                            background: 'linear-gradient(90deg, #3b82f6, #60a5fa)',
+                            background: '#475569',
                           }}
                         />
                       </div>
@@ -285,7 +285,7 @@ export default function ReportsPage() {
             </div>
 
             {/* By Status */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 shadow-sm">
+            <div className="bg-white rounded-xl border border-gray-100 p-4 sm:p-5 shadow-sm">
               <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[2.5px] mb-4 sm:mb-5">By Status</h3>
               {byStatus.length === 0 ? <EmptyChart /> : (
                 <div className="flex items-center gap-5">
@@ -315,9 +315,9 @@ export default function ReportsPage() {
           </div>
 
           {/* ── By Team Member ──────────────────────────────────────────────── */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 shadow-sm">
+          <div className="bg-white rounded-xl border border-gray-100 p-4 sm:p-5 shadow-sm">
             <div className="flex items-center gap-2 mb-4 sm:mb-5">
-              <Users size={14} className="text-indigo-500 flex-shrink-0" />
+              <Users size={14} className="text-blue-500 flex-shrink-0" />
               <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[2.5px]">By Team Member</h3>
               <span className="ml-auto text-[10px] font-semibold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">All time</span>
             </div>
@@ -343,7 +343,7 @@ export default function ReportsPage() {
                         className="h-full rounded-full transition-all duration-500"
                         style={{
                           width: `${(cnt / maxCreator) * 100}%`,
-                          background: `linear-gradient(90deg, ${CHART_COLORS[i % CHART_COLORS.length]}, ${CHART_COLORS[i % CHART_COLORS.length]}99)`,
+                          background: CHART_COLORS[i % CHART_COLORS.length],
                         }}
                       />
                     </div>
@@ -354,7 +354,7 @@ export default function ReportsPage() {
           </div>
 
           {/* ── Entries Table ────────────────────────────────────────────────── */}
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
 
             {/* Table toolbar */}
             <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3">

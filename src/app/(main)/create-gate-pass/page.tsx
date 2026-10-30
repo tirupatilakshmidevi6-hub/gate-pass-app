@@ -4,8 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Upload, Download, CheckCircle, XCircle, AlertTriangle,
-  UserPlus, Shield, RefreshCw, RotateCcw,
-  User, Mail, Phone, Calendar, Building2, Users,
+  UserPlus, Shield, RefreshCw, RotateCcw, Users,
 } from 'lucide-react';
 import { BUILDING_OPTIONS, ROLE_OPTIONS } from '@/lib/constants';
 
@@ -101,39 +100,44 @@ function downloadSampleCSV() {
 function FL({ label, required, hint, children }: { label: string; required?: boolean; hint?: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-[11px] font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#64748B' }}>
-        {label}{required && <span className="text-rose-400 ml-0.5">*</span>}
+      <label className="block text-xs font-medium text-gray-600 mb-1">
+        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
       </label>
       {children}
-      {hint && <p className="text-[11px] mt-1" style={{ color: '#94A3B8' }}>{hint}</p>}
+      {hint && <p className="text-[11px] mt-1 text-gray-400">{hint}</p>}
     </div>
   );
 }
 
+function FormSection({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
+  return (
+    <section className="px-5 py-5 border-b border-gray-100 last:border-b-0">
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+        <p className="text-xs text-gray-500 mt-0.5">{description}</p>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+// Used by the Bulk Entry tab: a plain card with a small grey icon beside the title.
 function StepCard({
-  icon: Icon, iconBg, iconColor, title, subtitle, animClass, children,
+  icon: Icon, title, subtitle, animClass, children,
 }: {
-  icon: React.ElementType; iconBg: string; iconColor: string;
+  icon: React.ElementType; iconBg?: string; iconColor?: string;
   title: string; subtitle: string; animClass?: string; children: React.ReactNode;
 }) {
   return (
-    <div
-      className={`bg-white rounded-2xl overflow-hidden ${animClass ?? ''}`}
-      style={{ border: '1px solid #E8EDF5', boxShadow: '0 2px 16px rgba(15,23,42,0.07), 0 1px 4px rgba(15,23,42,0.04)' }}
-    >
-      <div className="flex items-center gap-3 px-6 py-4" style={{ borderBottom: '1px solid #F1F5F9' }}>
-        <div
-          className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: iconBg }}
-        >
-          <Icon size={20} style={{ color: iconColor }} />
-        </div>
+    <div className={`bg-white rounded-lg border border-gray-200 overflow-hidden ${animClass ?? ''}`}>
+      <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-gray-100">
+        <Icon size={16} className="text-gray-500 flex-shrink-0" />
         <div>
-          <p className="font-bold" style={{ color: '#1E293B' }}>{title}</p>
-          <p className="text-xs mt-0.5" style={{ color: '#94A3B8' }}>{subtitle}</p>
+          <p className="text-sm font-semibold text-gray-900">{title}</p>
+          <p className="text-xs text-gray-500">{subtitle}</p>
         </div>
       </div>
-      <div className="px-6 py-5 space-y-4">{children}</div>
+      <div className="px-5 py-4 space-y-4">{children}</div>
     </div>
   );
 }
@@ -264,17 +268,16 @@ function SingleEntryForm() {
 
   if (created) {
     return (
-      <div className="bg-white rounded-2xl p-8 text-center space-y-5 cgp-s1"
-        style={{ border: '1px solid #E8EDF5', boxShadow: '0 4px 24px rgba(15,23,42,0.08)' }}>
+      <div className="bg-white rounded-lg border border-gray-200 p-8 text-center space-y-5 cgp-s1 max-w-xl">
         <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
-          style={{ background: 'linear-gradient(135deg,#D1FAE5,#A7F3D0)' }}>
+          style={{ background: '#D1FAE5' }}>
           <CheckCircle size={28} className="text-green-600" />
         </div>
         <div>
-          <h2 className="text-xl font-bold" style={{ color: '#1E293B' }}>Gate Pass Created!</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Gate pass created</h2>
           <p className="text-sm mt-1" style={{ color: '#94A3B8' }}>
             Registration email {created.emailSent ? 'sent to' : 'failed for'}{' '}
-            <strong style={{ color: '#4F46E5' }}>{created.email}</strong>
+            <strong className="text-gray-800">{created.email}</strong>
           </p>
         </div>
 
@@ -295,13 +298,13 @@ function SingleEntryForm() {
           </div>
         )}
 
-        <div className="rounded-xl p-4 text-left space-y-2" style={{ background: '#F5F3FF', border: '1px solid #DDD6FE' }}>
-          <p className="text-xs font-bold uppercase tracking-wide" style={{ color: '#7C3AED' }}>Registration Link</p>
+        <div className="rounded-lg p-4 text-left space-y-2 bg-gray-50 border border-gray-200">
+          <p className="text-xs font-medium text-gray-500">Registration link</p>
           <div className="flex items-center gap-2">
-            <p className="text-xs text-indigo-600 break-all flex-1 font-mono">{created.registrationUrl}</p>
+            <p className="text-xs text-gray-700 break-all flex-1 font-mono">{created.registrationUrl}</p>
             <button onClick={() => navigator.clipboard.writeText(created.registrationUrl).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2500); })}
               className="flex-shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-white transition-colors"
-              style={{ background: '#4F46E5' }}>
+              style={{ background: '#6D4AE0' }}>
               {copied ? '✓ Copied' : 'Copy'}
             </button>
           </div>
@@ -313,7 +316,7 @@ function SingleEntryForm() {
             Add Another
           </button>
           <button onClick={() => router.push('/')} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors"
-            style={{ background: 'linear-gradient(135deg,#1E3A8A,#2563EB)' }}>
+            style={{ background: '#6D4AE0' }}>
             Dashboard
           </button>
         </div>
@@ -322,146 +325,135 @@ function SingleEntryForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-3 max-w-4xl">
       {/* Alerts */}
       {error && (
-        <div className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-red-700"
-          style={{ background: '#FEF2F2', border: '1px solid #FCA5A5' }}>
+        <div className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm text-red-700 bg-red-50 border border-red-200">
           <XCircle size={15} className="flex-shrink-0" />{error}
         </div>
       )}
       {resendSuccess && (
-        <div className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-green-700"
-          style={{ background: '#F0FDF4', border: '1px solid #BBF7D0' }}>
+        <div className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm text-green-700 bg-green-50 border border-green-200">
           <CheckCircle size={15} className="flex-shrink-0" />{resendSuccess}
         </div>
       )}
       {duplicate && (
-        <div className="rounded-xl px-4 py-3 space-y-2" style={{ background: '#FFFBEB', border: '1px solid #FDE68A' }}>
-          <p className="text-sm font-semibold text-amber-800">Candidate already has an entry for this date.</p>
-          <p className="text-xs text-amber-600">Resend invite to <strong>{duplicate.email}</strong>?</p>
+        <div className="rounded-lg px-4 py-3 space-y-2 bg-amber-50 border border-amber-200">
+          <p className="text-sm font-medium text-amber-800">Candidate already has an entry for this date.</p>
+          <p className="text-xs text-amber-700">Resend invite to <strong>{duplicate.email}</strong>?</p>
           <button type="button" onClick={handleResend} disabled={resending}
-            className="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white text-xs font-semibold rounded-lg transition-colors">
+            className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white text-xs font-medium rounded-md transition-colors">
             {resending ? 'Resending…' : 'Resend Invite'}
           </button>
         </div>
       )}
 
-      {/* Section 1 — Basic Details */}
-      <StepCard icon={User} iconBg="#EEF2FF" iconColor="#4338CA"
-        title="Basic Details" subtitle="Add visitor or candidate information" animClass="cgp-s1">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <FL label="Full Name" required>
-            <input name="name" value={form.name} onChange={handleChange} required
-              placeholder="Enter full name" className="cgp-input" />
-          </FL>
-          <FL label="Email Address" required>
-            <input name="email" type="email" value={form.email} onChange={handleChange} required
-              placeholder="candidate@example.com" className="cgp-input" />
-          </FL>
-          <FL label="Mobile Number" required>
-            <input name="mobile_number" type="tel" value={form.mobile_number} onChange={handleChange}
-              onBlur={() => handleMobileBlur('mobile_number')} required
-              placeholder="+91 9876543210" className="cgp-input" />
-          </FL>
-        </div>
-      </StepCard>
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden cgp-s1">
+        {/* Visitor */}
+        <FormSection title="Visitor details" description="Who is visiting.">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <FL label="Full name" required>
+              <input name="name" value={form.name} onChange={handleChange} required
+                placeholder="Enter full name" className="cgp-input" />
+            </FL>
+            <FL label="Email address" required>
+              <input name="email" type="email" value={form.email} onChange={handleChange} required
+                placeholder="candidate@example.com" className="cgp-input" />
+            </FL>
+            <FL label="Mobile number" required>
+              <input name="mobile_number" type="tel" value={form.mobile_number} onChange={handleChange}
+                onBlur={() => handleMobileBlur('mobile_number')} required
+                placeholder="+91 9876543210" className="cgp-input" />
+            </FL>
+          </div>
+        </FormSection>
 
-      {/* Section 2 — Visit Information */}
-      <StepCard icon={Calendar} iconBg="#E0F2FE" iconColor="#0369A1"
-        title="Visit Information" subtitle="Select date, time and purpose of visit" animClass="cgp-s2">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <FL label="Entry Type">
-            <select value={isOtherRole ? '__other__' : form.role} onChange={handleRoleSelect}
-              className="cgp-input">
-              <option value="">Select entry type</option>
-              {ROLE_OPTIONS.map((r) => <option key={r} value={r}>{r}</option>)}
-              <option value="__other__">Other</option>
-            </select>
-            {isOtherRole && (
-              <input value={customRole} onChange={(e) => setCustomRole(e.target.value)}
-                required placeholder="Enter role" className="cgp-input mt-2" />
-            )}
-          </FL>
-          <FL label="Purpose of Visit" required>
-            <select value={isOtherPurpose ? '__other__' : form.purpose} onChange={handlePurposeSelect}
-              required={!isOtherPurpose} className="cgp-input">
-              <option value="">Select purpose</option>
-              {PURPOSES.map((p) => <option key={p} value={p}>{p}</option>)}
-              <option value="__other__">Other</option>
-            </select>
-            {isOtherPurpose && (
-              <input value={customPurpose} onChange={(e) => setCustomPurpose(e.target.value)}
-                required placeholder="Enter purpose" className="cgp-input mt-2" />
-            )}
-          </FL>
-          <FL label="Reporting Date" required>
-            <input name="reporting_date" type="date" value={form.reporting_date}
-              onChange={handleChange} required className="cgp-input" />
-          </FL>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <FL label="Valid Until" required hint="Auto-set to +7 days from reporting date">
-            <input name="valid_until" type="date" value={form.valid_until}
-              onChange={handleChange} required className="cgp-input" />
-          </FL>
-        </div>
-      </StepCard>
+        {/* Visit */}
+        <FormSection title="Visit details" description="When and why they are coming.">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <FL label="Entry type">
+              <select value={isOtherRole ? '__other__' : form.role} onChange={handleRoleSelect}
+                className="cgp-input">
+                <option value="">Select entry type</option>
+                {ROLE_OPTIONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                <option value="__other__">Other</option>
+              </select>
+              {isOtherRole && (
+                <input value={customRole} onChange={(e) => setCustomRole(e.target.value)}
+                  required placeholder="Enter role" className="cgp-input mt-2" />
+              )}
+            </FL>
+            <FL label="Purpose of visit" required>
+              <select value={isOtherPurpose ? '__other__' : form.purpose} onChange={handlePurposeSelect}
+                required={!isOtherPurpose} className="cgp-input">
+                <option value="">Select purpose</option>
+                {PURPOSES.map((p) => <option key={p} value={p}>{p}</option>)}
+                <option value="__other__">Other</option>
+              </select>
+              {isOtherPurpose && (
+                <input value={customPurpose} onChange={(e) => setCustomPurpose(e.target.value)}
+                  required placeholder="Enter purpose" className="cgp-input mt-2" />
+              )}
+            </FL>
+            <FL label="Reporting date" required>
+              <input name="reporting_date" type="date" value={form.reporting_date}
+                onChange={handleChange} required className="cgp-input" />
+            </FL>
+            <FL label="Valid until" required hint="Defaults to 7 days after the reporting date">
+              <input name="valid_until" type="date" value={form.valid_until}
+                onChange={handleChange} required className="cgp-input" />
+            </FL>
+          </div>
+        </FormSection>
 
-      {/* Section 3 — Host & Location */}
-      <StepCard icon={Building2} iconBg="#F0F9FF" iconColor="#0284C7"
-        title="Host & Location" subtitle="Select host and additional details" animClass="cgp-s3">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <FL label="Host Name (POC)" required>
-            <input name="poc_name" value={form.poc_name} onChange={handleChange} required
-              placeholder="Search host name or ID" className="cgp-input" />
-          </FL>
-          <FL label="Employee ID">
-            <input name="employee_id" value={form.employee_id} onChange={handleChange}
-              placeholder="e.g. NW0000001" className="cgp-input" />
-          </FL>
-          <FL label="Location / Building" required>
-            <select value={isOtherBuilding ? '__other__' : form.building_name}
-              onChange={handleBuildingSelect} required={!isOtherBuilding} className="cgp-input">
-              <option value="">Select location</option>
-              {buildings.map((b) => <option key={b.id} value={b.name}>{b.name}</option>)}
-              <option value="__other__">Other</option>
-            </select>
-            {isOtherBuilding && (
-              <input value={customBuilding} onChange={(e) => setCustomBuilding(e.target.value)}
-                required placeholder="Enter building name" className="cgp-input mt-2" />
-            )}
-          </FL>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <FL label="Contact Number" required>
-            <input name="contact_no" type="tel" value={form.contact_no} onChange={handleChange}
-              onBlur={() => handleMobileBlur('contact_no')} required
-              placeholder="POC Contact Number" className="cgp-input" />
-          </FL>
-        </div>
-      </StepCard>
+        {/* Host */}
+        <FormSection title="Host and location" description="Who they are meeting and where.">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <FL label="Host name (POC)" required>
+              <input name="poc_name" value={form.poc_name} onChange={handleChange} required
+                placeholder="Search host name or ID" className="cgp-input" />
+            </FL>
+            <FL label="Employee ID">
+              <input name="employee_id" value={form.employee_id} onChange={handleChange}
+                placeholder="e.g. NW0000001" className="cgp-input" />
+            </FL>
+            <FL label="Location / building" required>
+              <select value={isOtherBuilding ? '__other__' : form.building_name}
+                onChange={handleBuildingSelect} required={!isOtherBuilding} className="cgp-input">
+                <option value="">Select location</option>
+                {buildings.map((b) => <option key={b.id} value={b.name}>{b.name}</option>)}
+                <option value="__other__">Other</option>
+              </select>
+              {isOtherBuilding && (
+                <input value={customBuilding} onChange={(e) => setCustomBuilding(e.target.value)}
+                  required placeholder="Enter building name" className="cgp-input mt-2" />
+              )}
+            </FL>
+            <FL label="Host contact number" required>
+              <input name="contact_no" type="tel" value={form.contact_no} onChange={handleChange}
+                onBlur={() => handleMobileBlur('contact_no')} required
+                placeholder="POC contact number" className="cgp-input" />
+            </FL>
+          </div>
+        </FormSection>
 
-      {/* Footer */}
-      <div className="cgp-s4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-2">
-        <div className="flex items-center gap-2 text-xs" style={{ color: '#94A3B8' }}>
-          <Shield size={13} className="flex-shrink-0" />
-          After submission, the visitor will receive an email with the gate pass link.
-        </div>
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <button type="button" onClick={reset}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium border transition-colors hover:bg-slate-50"
-            style={{ borderColor: '#E2E8F0', color: '#64748B', background: 'white' }}>
-            <RotateCcw size={14} /> Reset
-          </button>
-          <button type="submit" disabled={submitting}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-7 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-60 transition-all shadow-md hover:shadow-lg"
-            style={{ background: 'linear-gradient(135deg,#1E3A8A,#2563EB,#0EA5E9)' }}>
-            {submitting
-              ? <><RefreshCw size={14} className="animate-spin" /> Creating…</>
-              : <>Generate Gate Pass <span className="ml-0.5">→</span></>
-            }
-          </button>
+        {/* Footer actions */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3.5 bg-gray-50 border-t border-gray-100">
+          <p className="text-xs text-gray-500">The visitor will receive an email with their gate pass link.</p>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={reset}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 transition-colors"
+              style={{ minHeight: 38 }}>
+              <RotateCcw size={14} /> Reset
+            </button>
+            <button type="submit" disabled={submitting}
+              className="btn-primary flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-medium disabled:opacity-60"
+              style={{ minHeight: 38 }}>
+              {submitting
+                ? <><RefreshCw size={14} className="animate-spin" /> Creating…</>
+                : 'Generate gate pass'}
+            </button>
+          </div>
         </div>
       </div>
     </form>
@@ -518,22 +510,22 @@ function BulkUploadForm() {
   return (
     <div className="space-y-4">
       {/* Upload card */}
-      <StepCard icon={Upload} iconBg="#EEF2FF" iconColor="#4338CA"
+      <StepCard icon={Upload} iconBg="#F1F5F9" iconColor="#334155"
         title="Upload CSV File" subtitle="Select a CSV file with visitor details" animClass="cgp-s1">
         <div className="flex items-center gap-3 flex-wrap">
-          <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-colors hover:bg-indigo-50"
-            style={{ background: '#F5F3FF', border: '1.5px solid #DDD6FE', color: '#4F46E5' }}>
+          <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-colors hover:bg-blue-50"
+            style={{ background: '#F8FAFC', border: '1.5px solid #CBD5E1', color: '#1E293B' }}>
             <Upload size={14} /> Choose CSV File
             <input ref={fileRef} type="file" accept=".csv" onChange={handleFile} className="hidden" />
           </label>
           {fileName
-            ? <span className="text-sm font-medium" style={{ color: '#4F46E5' }}>{fileName}</span>
+            ? <span className="text-sm font-medium" style={{ color: '#1E293B' }}>{fileName}</span>
             : <span className="text-sm" style={{ color: '#94A3B8' }}>No file chosen</span>
           }
         </div>
         <button onClick={downloadSampleCSV}
           className="flex items-center gap-2 text-sm font-medium transition-colors hover:underline"
-          style={{ color: '#4F46E5' }}>
+          style={{ color: '#1E293B' }}>
           <Download size={14} /> Download Sample CSV
         </button>
         <div className="rounded-xl p-4 space-y-2.5" style={{ background: '#F8FAFF', border: '1px solid #E8EDF5' }}>
@@ -542,7 +534,7 @@ function BulkUploadForm() {
             {CSV_HEADERS.map((h) => (
               <span key={h} className="px-2 py-0.5 rounded-full text-xs font-mono"
                 style={REQUIRED_CSV.includes(h)
-                  ? { background: '#EEF2FF', color: '#4F46E5', border: '1px solid #DDD6FE' }
+                  ? { background: '#F1F5F9', color: '#1E293B', border: '1px solid #CBD5E1' }
                   : { background: '#F1F5F9', color: '#64748B', border: '1px solid #E2E8F0' }}>
                 {h}
               </span>
@@ -663,7 +655,7 @@ function BulkUploadForm() {
         </div>
         <button onClick={handleUpload} disabled={!rows.length || uploading || !!parseError || !!emailWarnings.length}
           className="flex items-center gap-2 px-7 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-40 transition-all shadow-md hover:shadow-lg"
-          style={{ background: 'linear-gradient(135deg,#1E3A8A,#2563EB,#0EA5E9)' }}>
+          style={{ background: '#6D4AE0' }}>
           <Upload size={14} />
           {uploading ? 'Processing…' : `Upload & Send Invites${rows.length > 0 ? ` (${rows.length})` : ''}`}
         </button>
@@ -680,79 +672,25 @@ export default function CreateGatePassPage() {
   return (
     <div className="page-container max-w-5xl space-y-5">
 
-      {/* Hero Banner */}
-      <div className="relative rounded-2xl overflow-hidden" style={{ minHeight: 148 }}>
-        {/* Base dark gradient */}
-        <div className="absolute inset-0" style={{
-          background: 'linear-gradient(135deg, #060D1F 0%, #0D1B3E 28%, #1E3A8A 62%, #1E40AF 100%)',
-        }} />
-        {/* Dot-grid pattern — image-like texture */}
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'radial-gradient(rgba(255,255,255,0.07) 1.5px, transparent 1.5px)',
-          backgroundSize: '26px 26px',
-        }} />
-        {/* Top-right indigo glow */}
-        <div className="absolute -right-20 -top-20 w-80 h-80 rounded-full pointer-events-none" style={{
-          background: 'radial-gradient(circle, rgba(99,102,241,0.5) 0%, transparent 62%)',
-        }} />
-        {/* Bottom-left cyan glow */}
-        <div className="absolute -left-10 -bottom-10 w-60 h-60 rounded-full pointer-events-none" style={{
-          background: 'radial-gradient(circle, rgba(56,189,248,0.28) 0%, transparent 62%)',
-        }} />
-        {/* Center soft purple glow */}
-        <div className="absolute left-1/3 top-0 w-72 h-full pointer-events-none" style={{
-          background: 'radial-gradient(ellipse, rgba(139,92,246,0.18) 0%, transparent 70%)',
-        }} />
-        {/* Decorative rings */}
-        <div className="absolute right-24 -top-6 w-44 h-44 rounded-full pointer-events-none" style={{ border: '1px solid rgba(255,255,255,0.07)' }} />
-        <div className="absolute right-36 top-2 w-24 h-24 rounded-full pointer-events-none" style={{ border: '1px solid rgba(255,255,255,0.05)' }} />
-
-        {/* Content */}
-        <div className="relative px-6 sm:px-8 py-7 sm:py-8 flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-0 justify-between">
-          {/* Left: title block */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <div
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
-                style={{ background: 'rgba(99,102,241,0.22)', border: '1px solid rgba(99,102,241,0.35)' }}
-              >
-                <Shield size={10} className="text-indigo-300" />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-300">NxtWave · Gate Pass</span>
-              </div>
-            </div>
-            <h1 className="text-2xl sm:text-[28px] font-extrabold text-white leading-tight">Create Gate Pass</h1>
-            <p className="text-sm mt-1.5" style={{ color: 'rgba(148,163,184,0.9)' }}>
-              Add visitor or candidate details to generate a secure gate pass.
-            </p>
-            <div className="flex items-center gap-5 mt-3">
-              {['Secure', 'Tracked', 'Instant'].map((badge) => (
-                <div key={badge} className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  <span className="text-xs font-medium" style={{ color: 'rgba(148,163,184,0.85)' }}>{badge}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Right: Tab buttons */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {[
-              { key: 'single', label: 'Single Entry', Icon: UserPlus },
-              { key: 'bulk',   label: 'Bulk Entry',   Icon: Users },
-            ].map(({ key, label, Icon }) => (
-              <button
-                key={key}
-                onClick={() => setTab(key as 'single' | 'bulk')}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
-                style={tab === key
-                  ? { background: 'white', color: '#1E3A8A', boxShadow: '0 4px 20px rgba(0,0,0,0.35)' }
-                  : { background: 'rgba(255,255,255,0.08)', color: 'rgba(203,213,225,0.85)', border: '1px solid rgba(255,255,255,0.13)' }
-                }
-              >
-                <Icon size={15} />{label}
-              </button>
-            ))}
-          </div>
+      {/* Page header */}
+      <div className="flex items-center">
+        {/* Segmented tab switch (the page title already shows in the top bar) */}
+        <div className="inline-flex p-1 bg-gray-100 rounded-lg flex-shrink-0">
+          {[
+            { key: 'single', label: 'Single Entry', Icon: UserPlus },
+            { key: 'bulk',   label: 'Bulk Entry',   Icon: Users },
+          ].map(({ key, label, Icon }) => (
+            <button
+              key={key}
+              onClick={() => setTab(key as 'single' | 'bulk')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                tab === key ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-800'
+              }`}
+              style={{ minHeight: 36 }}
+            >
+              <Icon size={15} />{label}
+            </button>
+          ))}
         </div>
       </div>
 

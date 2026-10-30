@@ -1,13 +1,13 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import PWAComponents from '@/components/pwa/PWAComponents';
 
-const geist = Geist({ subsets: ['latin'], preload: true });
+const font = Inter({ subsets: ['latin'], preload: true, display: 'swap' });
 
 export const viewport: Viewport = {
-  themeColor: '#1E40AF',
+  themeColor: '#6D4AE0',
   width: 'device-width',
   initialScale: 1,
   minimumScale: 1,
@@ -50,12 +50,12 @@ export const metadata: Metadata = {
       { url: '/icons/icon-180x180.png', sizes: '180x180', type: 'image/png' },
     ],
     other: [
-      { rel: 'mask-icon', url: '/icons/icon-512x512.png', color: '#1E40AF' },
+      { rel: 'mask-icon', url: '/icons/icon-512x512.png', color: '#6D4AE0' },
     ],
   },
   other: {
     'mobile-web-app-capable': 'yes',
-    'msapplication-TileColor': '#1E40AF',
+    'msapplication-TileColor': '#6D4AE0',
     'msapplication-TileImage': '/icons/icon-144x144.png',
     'msapplication-tap-highlight': 'no',
   },
@@ -68,7 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body className={`${geist.className} bg-gray-50`}>
+      <body className={`${font.className} bg-gray-50`}>
         <ThemeProvider>
           {children}
           <PWAComponents />

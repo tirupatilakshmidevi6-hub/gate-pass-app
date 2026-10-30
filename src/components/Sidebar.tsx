@@ -112,11 +112,11 @@ function bottomNavFor(role: Role): NavItem[] {
 }
 
 const ROLE_BADGE: Record<string, { label: string; cls: string }> = {
-  admin:      { label: 'Admin',           cls: 'bg-purple-900/60 text-purple-300 border border-purple-800/50' },
-  ta:         { label: 'TA / HR Team',    cls: 'bg-blue-900/60   text-blue-300   border border-blue-800/50'   },
-  facilities: { label: 'Facilities Team', cls: 'bg-teal-900/60   text-teal-300   border border-teal-800/50'   },
-  staff:      { label: 'Staff',           cls: 'bg-green-900/60  text-green-300  border border-green-800/50'  },
-  other:      { label: 'Other',           cls: 'bg-gray-800/60   text-gray-400   border border-gray-700/50'   },
+  admin:      { label: 'Admin',           cls: 'bg-blue-50  text-blue-700  border border-blue-100'  },
+  ta:         { label: 'TA / HR Team',    cls: 'bg-slate-100 text-slate-700 border border-slate-200' },
+  facilities: { label: 'Facilities Team', cls: 'bg-emerald-50 text-emerald-700 border border-emerald-100' },
+  staff:      { label: 'Staff',           cls: 'bg-green-50 text-green-700 border border-green-100' },
+  other:      { label: 'Other',           cls: 'bg-gray-100 text-gray-600  border border-gray-200'  },
 };
 
 // ─── Tooltip ──────────────────────────────────────────────────────────────────
@@ -160,19 +160,16 @@ function SidebarPanel({
 
   return (
     <aside
-      className={`${isMobile ? 'w-60' : isCollapsed ? 'w-14' : 'w-44'} h-full text-white flex flex-col overflow-y-auto overflow-x-hidden transition-all duration-300 ease-in-out`}
-      style={{ backgroundColor: '#0B1324' }}
+      className={`app-sidebar ${isMobile ? 'w-60' : isCollapsed ? 'w-14' : 'w-44'} h-full flex flex-col overflow-y-auto overflow-x-hidden transition-all duration-300 ease-in-out`}
     >
       {/* ── Header ── */}
       <div
-        className={`flex items-center ${isCollapsed ? 'px-2 py-3 justify-center flex-col gap-2' : 'px-3 py-3 justify-between'} flex-shrink-0`}
-        style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+        className={`app-sidebar-divider border-b flex items-center ${isCollapsed ? 'px-2 py-3 justify-center flex-col gap-2' : 'px-3 py-3 justify-between'} flex-shrink-0`}
       >
         {isCollapsed ? (
           <Link
             href="/"
-            className="w-9 h-9 rounded-xl flex items-center justify-center hover:opacity-90 transition-opacity flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg,#146EF5,#2563EB)' }}
+            className="app-sidebar-logo w-9 h-9 rounded-lg flex items-center justify-center hover:opacity-90 transition-opacity flex-shrink-0"
           >
             <Shield size={17} className="text-white" />
           </Link>
@@ -183,14 +180,13 @@ function SidebarPanel({
             onClick={isMobile ? onClose : undefined}
           >
             <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-105"
-              style={{ background: 'linear-gradient(135deg,#146EF5,#2563EB)' }}
+              className="app-sidebar-logo w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-105"
             >
               <Shield size={15} className="text-white" />
             </div>
             <div className="min-w-0">
-              <div className="text-[13px] font-bold text-white leading-tight tracking-tight">NxtWave</div>
-              <div className="text-[9px] leading-tight font-medium" style={{ color: '#4B6BA8' }}>Gate Pass System</div>
+              <div className="app-sidebar-title text-[13px] font-bold leading-tight tracking-tight">NxtWave</div>
+              <div className="app-sidebar-sub text-[10px] leading-tight font-medium">Gate Pass System</div>
             </div>
           </Link>
         )}
@@ -198,8 +194,7 @@ function SidebarPanel({
         {isMobile ? (
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-white transition-colors flex-shrink-0"
-            style={{ backgroundColor: '#1A2540' }}
+            className="app-sidebar-ghost icon-btn p-1.5 rounded-lg transition-colors flex-shrink-0"
             aria-label="Close menu"
           >
             <X size={18} />
@@ -207,7 +202,7 @@ function SidebarPanel({
         ) : onToggle && (
           <button
             onClick={onToggle}
-            className="p-1 text-gray-600 hover:text-gray-300 rounded-lg transition-colors flex-shrink-0"
+            className="app-sidebar-ghost icon-btn p-1 rounded-lg transition-colors flex-shrink-0"
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
@@ -231,8 +226,8 @@ function SidebarPanel({
                     <div key={href} className="relative group mb-0.5">
                       <Link
                         href={href}
-                        className={`flex items-center justify-center p-2.5 rounded-lg transition-all duration-150 ${
-                          active ? 'nav-item-active text-blue-300' : 'text-gray-500 hover:text-white hover:bg-[#1A2540]'
+                        className={`nav-item flex items-center justify-center p-2.5 rounded-lg ${
+                          active ? 'nav-item-active' : ''
                         }`}
                       >
                         <Icon size={17} className="nav-icon" />
@@ -277,10 +272,8 @@ function SidebarPanel({
                     key={href}
                     href={href}
                     onClick={isMobile ? onClose : undefined}
-                    className={`nav-link group relative flex items-center gap-2.5 mx-0.5 px-2.5 py-2 text-[13px] rounded-lg transition-all duration-150 mb-0.5 ${
-                      active
-                        ? 'nav-item-active font-semibold'
-                        : 'text-gray-400 hover:text-white hover:bg-[#1A2540] font-medium'
+                    className={`nav-item nav-link group relative flex items-center gap-2.5 mx-0.5 px-2.5 py-2 text-[13px] rounded-lg mb-0.5 ${
+                      active ? 'nav-item-active font-semibold' : 'font-medium'
                     }`}
                   >
                     <Icon size={15} className="nav-icon flex-shrink-0" />
@@ -306,12 +299,9 @@ function SidebarPanel({
       {/* ── Security badge (expanded only) ── */}
       {!isCollapsed && (
         <div className="px-3 pb-2 flex-shrink-0">
-          <div
-            className="flex items-center gap-2 rounded-lg px-3 py-2"
-            style={{ backgroundColor: 'rgba(20,110,245,0.10)', border: '1px solid rgba(20,110,245,0.18)' }}
-          >
-            <Shield size={11} style={{ color: '#4B9DFF' }} className="flex-shrink-0" />
-            <p className="text-[9.5px] font-medium leading-tight" style={{ color: '#7EB4FF' }}>Secure Every Entry</p>
+          <div className="app-sidebar-note flex items-center gap-2 rounded-lg px-3 py-2">
+            <Shield size={12} className="flex-shrink-0" />
+            <p className="text-[10.5px] font-medium leading-tight">Secure Every Entry</p>
           </div>
         </div>
       )}
@@ -319,13 +309,11 @@ function SidebarPanel({
       {/* ── User + logout ── */}
       {isCollapsed ? (
         <div
-          className="py-3 flex flex-col items-center gap-2 px-1.5 flex-shrink-0"
-          style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+          className="app-sidebar-divider border-t py-3 flex flex-col items-center gap-2 px-1.5 flex-shrink-0"
         >
           <div className="relative group">
             <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
-              style={{ background: 'linear-gradient(135deg,#146EF5,#2563EB)' }}
+              className="app-sidebar-avatar w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
             >
               {userName ? userName.charAt(0).toUpperCase() : '?'}
             </div>
@@ -334,7 +322,7 @@ function SidebarPanel({
           <div className="relative group">
             <button
               onClick={onLogout}
-              className="p-2 text-gray-600 hover:text-red-400 rounded-lg transition-colors hover:bg-red-500/10"
+              className="app-sidebar-ghost app-sidebar-danger icon-btn p-2 rounded-lg transition-colors"
               aria-label="Sign out"
             >
               <LogOut size={15} />
@@ -344,19 +332,17 @@ function SidebarPanel({
         </div>
       ) : (
         <div
-          className="px-3 py-3 flex-shrink-0"
-          style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+          className="app-sidebar-divider border-t px-3 py-3 flex-shrink-0"
         >
           {userName && (
             <div className="flex items-center gap-2.5 mb-2.5 min-w-0">
               <div
-                className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
-                style={{ background: 'linear-gradient(135deg,#146EF5,#2563EB)' }}
+                className="app-sidebar-avatar w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
               >
                 {userName.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0">
-                <p className="text-xs text-white font-semibold truncate leading-tight">{userName}</p>
+                <p className="app-sidebar-name text-xs font-semibold truncate leading-tight">{userName}</p>
                 <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${badge.cls}`}>
                   {badge.label}
                 </span>
@@ -365,7 +351,7 @@ function SidebarPanel({
           )}
           <button
             onClick={onLogout}
-            className="flex items-center gap-2 text-xs text-gray-500 hover:text-red-400 w-full transition-colors py-1 hover:bg-red-500/10 rounded-lg px-1"
+            className="app-sidebar-ghost app-sidebar-danger flex items-center gap-2 text-xs w-full transition-colors py-1 rounded-lg px-1"
           >
             <LogOut size={13} /><span>Sign out</span>
           </button>
@@ -430,8 +416,7 @@ export default function Sidebar({
       {/* Mobile hamburger */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="md:hidden fixed top-3 left-3 z-40 p-2 rounded-xl text-white shadow-lg"
-        style={{ backgroundColor: '#0B1324' }}
+        className="md:hidden fixed top-3 left-3 z-40 p-2 rounded-lg bg-white text-slate-700 border border-slate-200 shadow-sm"
         aria-label="Open menu"
       >
         <Menu size={20} />
@@ -453,8 +438,7 @@ export default function Sidebar({
       {/* Mobile bottom nav */}
       {bottomItems.length > 0 && (
         <nav
-          className="md:hidden fixed bottom-0 left-0 right-0 z-30 flex safe-area-bottom"
-          style={{ backgroundColor: '#0B1324', borderTop: '1px solid rgba(255,255,255,0.07)' }}
+          className="app-bottom-nav md:hidden fixed bottom-0 left-0 right-0 z-30 flex safe-area-bottom"
         >
           {bottomItems.map(({ label, href, icon: Icon }) => {
             const active   = pathname === href || (href !== '/' && pathname.startsWith(href));
@@ -463,7 +447,7 @@ export default function Sidebar({
               <Link
                 key={href}
                 href={href}
-                className={`flex-1 flex flex-col items-center justify-center py-2 min-h-[56px] relative transition-colors ${active ? 'text-blue-400' : 'text-gray-500 hover:text-gray-300'}`}
+                className={`flex-1 flex flex-col items-center justify-center py-2 min-h-[56px] relative transition-colors ${active ? 'text-blue-600' : 'text-slate-500 hover:text-slate-800'}`}
               >
                 <div className="relative">
                   <Icon size={19} />
@@ -475,7 +459,7 @@ export default function Sidebar({
                 </div>
                 <span className="text-[10px] mt-0.5 font-semibold leading-tight">{label}</span>
                 {active && (
-                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-blue-400 rounded-t-full" />
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-blue-600 rounded-t-full" />
                 )}
               </Link>
             );

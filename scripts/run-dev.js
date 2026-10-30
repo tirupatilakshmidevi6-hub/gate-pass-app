@@ -24,6 +24,8 @@ const child = spawn('next', ['dev', '--webpack'], {
   env: {
     ...process.env,
     NODE_PATH: path.join(projectRoot, 'node_modules'),
+    // Dev-only: work around networks that hijack DNS for *.supabase.co
+    NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ''} --require "${path.join(__dirname, 'dev-dns-fix.cjs').replace(/\\/g, '/')}"`.trim(),
   },
 });
 

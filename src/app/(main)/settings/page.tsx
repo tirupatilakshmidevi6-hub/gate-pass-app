@@ -112,12 +112,6 @@ export default function SettingsPage() {
   return (
     <div className="page-container max-w-2xl space-y-5">
 
-      {/* Page header */}
-      <div>
-        <h1 className="text-xl font-bold text-gray-900">Settings</h1>
-        <p className="text-sm text-gray-400 mt-0.5">Manage your gate pass system configuration</p>
-      </div>
-
       {/* ── General Settings ───────────────────────────────────────────────── */}
       <Card icon={<Settings2 size={16} className="text-blue-600" />} title="General" desc="Organization details and gate pass defaults">
         <div className="space-y-4">

@@ -114,10 +114,7 @@ export default function ActivityPage() {
 
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Activity Log</h1>
-          <p className="text-sm text-gray-400 mt-0.5">Audit trail of all system actions</p>
-        </div>
+        <p className="text-sm text-gray-500">Audit trail of all system actions</p>
         <button onClick={fetchLogs}
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
           <RefreshCw size={13} />Refresh

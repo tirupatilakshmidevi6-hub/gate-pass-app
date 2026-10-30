@@ -328,7 +328,7 @@ export default function TopNav({
         <div className="hidden sm:flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-gray-50 transition-colors cursor-default">
           <div
             className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg,#146EF5,#2563EB)' }}
+            style={{ background: '#6D4AE0' }}
           >
             {userName.charAt(0).toUpperCase()}
           </div>

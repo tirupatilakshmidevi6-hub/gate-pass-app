@@ -57,7 +57,7 @@ export default function NxtBot({ size = 72, float = false, className = '' }: Nxt
         style={{ filter: 'drop-shadow(0 4px 12px rgba(20,110,245,0.25))' }}
       >
         {/* ── Head cube ── */}
-        <rect x="17" y="6" width="66" height="66" rx="11" fill="#146EF5" />
+        <rect x="17" y="6" width="66" height="66" rx="11" fill="#1E293B" />
         <rect x="17" y="6" width="66" height="66" rx="11" fill="none" stroke="white" strokeWidth="3.8" />
         {/* Head highlight top edge */}
         <path d="M23 11 Q50 8 77 11" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" />
@@ -86,7 +86,7 @@ export default function NxtBot({ size = 72, float = false, className = '' }: Nxt
         <rect x="39" y="72" width="22" height="10" rx="5" fill="#0D62E0" />
 
         {/* ── Body cube ── */}
-        <rect x="9" y="84" width="82" height="62" rx="11" fill="#146EF5" />
+        <rect x="9" y="84" width="82" height="62" rx="11" fill="#1E293B" />
         <rect x="9" y="84" width="82" height="62" rx="11" fill="none" stroke="white" strokeWidth="3.8" />
         {/* Body highlight */}
         <path d="M15 89 Q50 86 85 89" stroke="rgba(255,255,255,0.25)" strokeWidth="2" strokeLinecap="round" />
