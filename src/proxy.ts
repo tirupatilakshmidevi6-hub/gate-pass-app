@@ -5,6 +5,7 @@ import { verifyTokenEdge as verifyToken, COOKIE_NAME } from '@/lib/auth-edge';
 const PUBLIC_PATHS = [
   '/login', '/register', '/signup', '/forgot-password', '/reset-password',
   '/api/auth', '/api/register', '/api/signup',
+  '/api/cron', // Vercel cron has no session cookie; the route does its own auth
 ];
 
 // System roles with full/partial application access

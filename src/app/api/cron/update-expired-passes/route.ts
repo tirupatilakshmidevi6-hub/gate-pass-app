@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { updateExpiredPasses, getAdminIds, createNotificationsForUsers, logActivity } from '@/lib/db';
 
 export async function GET(req: NextRequest) {
-  // Allow Vercel cron (Authorization header) or any authenticated internal call
+  // Allow Vercel cron (Authorization header, or its user-agent when CRON_SECRET is unset)
+  // or any authenticated internal call. This job is idempotent and runs daily, which
+  // also keeps the Supabase free-tier project from being paused for inactivity.
   const authHeader = req.headers.get('authorization');
+  const isVercelCron = (req.headers.get('user-agent') ?? '').startsWith('vercel-cron/');
   if (
     process.env.NODE_ENV === 'production' &&
+    !isVercelCron &&
     authHeader !== `Bearer ${process.env.CRON_SECRET ?? 'nxtwave-cron-secret'}`
   ) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
